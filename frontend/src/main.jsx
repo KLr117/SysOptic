@@ -1,5 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import Ordenes from "./pages/OrdenTrabajo";
+import EditarOrdenTrabajo from "./pages/EditarOrdenTrabajo";
+import AgregarOrdenTrabajo from "./pages/AgregarOrdenTrabajo";
+import VerOrdenTrabajo from "./pages/VerOrdenTrabajo";
+
+
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/index.css";
 
@@ -17,8 +23,15 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/settings" element={<Settings />} />
+            <Route path="/ordenes" element={<Ordenes />} /> {/* NUEVO: dentro del layout */}
+            <Route path="/editar-orden-trabajo" element={<EditarOrdenTrabajo />} />  {/* otras rutas */}
+            <Route path="/agregar-orden-trabajo" element={<AgregarOrdenTrabajo />} />
+          <Route path="/ver-orden-trabajo/:id" element={<VerOrdenTrabajo />} />
+
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      
+
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
