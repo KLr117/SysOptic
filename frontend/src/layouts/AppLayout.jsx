@@ -9,6 +9,8 @@ export default function AppLayout() {
         <nav className="px-2 space-y-1">
           <Item to="/dashboard" label="Dashboard" />
           <Item to="/settings" label="Configuración" />
+          <Item to="/ordenes" label="Orden de Trabajo" />  
+
         </nav>
       </aside>
 
