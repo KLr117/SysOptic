@@ -1,0 +1,84 @@
+/* Tabla moderna con bordes y colores elegantes */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid #d1d5db; /* Borde externo visible y elegante */
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #fdfdfd; /* Fondo blanco suave */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  font-family: "Century Gothic", sans-serif;
+  font-size: 14px;
+}
+
+/* Encabezado */
+thead {
+  background: linear-gradient(90deg, #f87171, #fb7185); /* degradado rosa-rojizo */
+  color: #ffffff;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Celdas con bordes */
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid #e5e7eb; /* Bordes suaves entre columnas */
+}
+
+/* Bordes más definidos entre filas */
+tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Hover elegante */
+tbody tr:hover {
+  background-color: #e0f2fe; /* azul muy suave al pasar el mouse */
+  transform: scale(1.01);
+  transition: 0.2s ease-in-out;
+}
+
+/* Botones dentro de la tabla */
+button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-weight: 500;
+  border: none;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+button.agregar {
+  background-color: #2563eb; /* azul moderno */
+  color: white ;
+}
+
+button:last-of-type {
+  background-color: #1f2937; /* gris oscuro elegante */
+  color: white;
+}
+
+/* Buscador moderno */
+.input-buscador {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.input-buscador:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+  outline: none;
+}
