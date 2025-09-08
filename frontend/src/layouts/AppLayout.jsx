@@ -10,6 +10,7 @@ export default function AppLayout() {
           <Item to="/dashboard" label="Dashboard" />
           <Item to="/settings" label="Configuración" />
           <Item to="/ordenes" label="Orden de Trabajo" />  
+          <Item to="/expedientes" label="Expedientes de Pacientes" />
 
         </nav>
       </aside>
