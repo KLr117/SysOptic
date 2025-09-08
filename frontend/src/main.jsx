@@ -13,6 +13,7 @@ import AppLayout from "./layouts/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
+import Expedientes from "./pages/Expedientes";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -26,7 +27,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/ordenes" element={<Ordenes />} /> {/* NUEVO: dentro del layout */}
             <Route path="/editar-orden-trabajo" element={<EditarOrdenTrabajo />} />  {/* otras rutas */}
             <Route path="/agregar-orden-trabajo" element={<AgregarOrdenTrabajo />} />
-          <Route path="/ver-orden-trabajo/:id" element={<VerOrdenTrabajo />} />
+           <Route path="/ver-orden-trabajo/:id" element={<VerOrdenTrabajo />} />
+            <Route path="/expedientes" element={<Expedientes />} />{/*Nuevo expedientes */}
 
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
