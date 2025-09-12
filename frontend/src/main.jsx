@@ -4,6 +4,7 @@ import Ordenes from "./pages/OrdenTrabajo";
 import EditarOrdenTrabajo from "./pages/EditarOrdenTrabajo";
 import AgregarOrdenTrabajo from "./pages/AgregarOrdenTrabajo";
 import VerOrdenTrabajo from "./pages/VerOrdenTrabajo";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -20,20 +21,21 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/settings" element={<Settings />} />
-            <Route path="/ordenes" element={<Ordenes />} /> {/* NUEVO: dentro del layout */}
-            <Route path="/editar-orden-trabajo" element={<EditarOrdenTrabajo />} />  {/* otras rutas */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/ordenes" element={<Ordenes />} />
+            <Route path="/editar-orden-trabajo" element={<EditarOrdenTrabajo />} />
             <Route path="/agregar-orden-trabajo" element={<AgregarOrdenTrabajo />} />
-           <Route path="/ver-orden-trabajo/:id" element={<VerOrdenTrabajo />} />
-            <Route path="/expedientes" element={<Expedientes />} />{/*Nuevo expedientes */}
-
+            <Route path="/ver-orden-trabajo/:id" element={<VerOrdenTrabajo />} />
+            <Route path="/expedientes" element={<Expedientes />} />
+          </Route>
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      
 
+        {/* cualquier otra URL */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
