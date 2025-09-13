@@ -27,8 +27,15 @@ CREATE TABLE tbl_estados_notificacion (
     nombre_estado VARCHAR(50) NOT NULL -- Ej: pendiente, atendida, cancelada
 );
 
+-- Permisos disponibles en el sistema
+CREATE TABLE tbl_permisos (
+    pk_id_permiso INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_permiso VARCHAR(100) NOT NULL, -- Ej: ver_expedientes, crear_expedientes
+    descripcion VARCHAR(255)
+);
+
 -- ==============================================
--- TABLAS PRINCIPALES
+-- TABLAS PRINCIPALES - MAESTRAS
 -- ==============================================
 CREATE TABLE tbl_users (
     pk_id_user INT AUTO_INCREMENT PRIMARY KEY,
@@ -85,7 +92,7 @@ CREATE TABLE tbl_notificaciones (
 );
 
 -- ==============================================
--- TABLA DE BITACORA
+-- TABLAS TRANSACCIONALES
 -- ==============================================
 CREATE TABLE tbl_bitacora (
     pk_id_bitacora INT AUTO_INCREMENT PRIMARY KEY,
@@ -101,4 +108,30 @@ CREATE TABLE tbl_bitacora (
     FOREIGN KEY (fk_id_expediente) REFERENCES tbl_expedientes(pk_id_expediente),
     FOREIGN KEY (fk_id_orden) REFERENCES tbl_ordenes(pk_id_orden),
     FOREIGN KEY (fk_id_notificacion) REFERENCES tbl_notificaciones(pk_id_notificacion)
+);
+
+-- ============================
+-- TABLAS DE PERMISOS
+-- ============================
+
+-- Relación rol-permiso (qué permisos tiene cada rol por defecto)
+CREATE TABLE tbl_roles_permisos (
+    pk_id_role_permiso INT AUTO_INCREMENT PRIMARY KEY,
+    fk_id_role INT NOT NULL,
+    fk_id_permiso INT NOT NULL,
+    FOREIGN KEY (fk_id_role) REFERENCES tbl_roles(pk_id_role),
+    FOREIGN KEY (fk_id_permiso) REFERENCES tbl_permisos(pk_id_permiso),
+    UNIQUE(fk_id_role, fk_id_permiso)
+);
+
+-- Relación usuario-permiso (excepciones o permisos personalizados)
+CREATE TABLE tbl_users_permisos (
+    pk_id_user_permiso INT AUTO_INCREMENT PRIMARY KEY,
+    fk_id_user INT NOT NULL,
+    fk_id_permiso INT NOT NULL,
+    estado_permiso ENUM('otorgado', 'revocado') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (fk_id_user) REFERENCES tbl_users(pk_id_user),
+    FOREIGN KEY (fk_id_permiso) REFERENCES tbl_permisos(pk_id_permiso),
+    UNIQUE(fk_id_user, fk_id_permiso)
 );
