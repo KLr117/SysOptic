@@ -21,7 +21,7 @@ export default function AppLayout() {
         <div className="p-4 text-lg font-bold">SysOptic</div>
         <nav className="px-2 space-y-1">
           <Item to="/dashboard" label="Dashboard" />
-          <Item to="/settings" label="Configuración" />
+          <Item to="/admin" label="Panel de Administracion" />
           <Item to="/ordenes" label="Orden de Trabajo" />  
           <Item to="/expedientes" label="Expedientes de Pacientes" />
 

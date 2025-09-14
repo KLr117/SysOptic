@@ -1,0 +1,93 @@
+/* bitacora.css */
+
+.bitacora-page {
+  padding: 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f6fa;
+  min-height: 100vh;
+}
+
+.bitacora-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.bitacora-header .titulo {
+  text-align: center;
+  flex: 1;
+}
+
+.btn-close {
+  background-color: #ff4757;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.btn-close:hover {
+  background-color: #e84118;
+}
+
+.bitacora-table-wrapper {
+  overflow-x: auto;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0px 6px 15px rgba(0,0,0,0.1);
+}
+
+.bitacora-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.bitacora-table th,
+.bitacora-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.bitacora-table th {
+  background-color: #4b7bec;
+  color: white;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.bitacora-table tbody tr {
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.bitacora-table tbody tr:hover {
+  background-color: #dcdde1;
+  transform: translateX(3px);
+}
+
+.bitacora-table td {
+  color: #2f3640;
+}
+
+.bitacora-table td:first-child {
+  font-weight: 500;
+}
+
+.bitacora-table td:nth-child(3) {
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .bitacora-table th,
+  .bitacora-table td {
+    padding: 10px 8px;
+  }
+}
