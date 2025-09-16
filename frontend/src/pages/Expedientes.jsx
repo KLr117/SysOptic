@@ -1,329 +1,384 @@
 /// ===============   WENDYs    ================
 import React, { useState, useEffect } from "react";
-import "../styles/vista-expedientes.css"; 
+import "../styles/vista-expedientes.css";
 
 export default function Expedientes() {
-  const [expedientes, setExpedientes] = useState([]);
-  const [editando, setEditando] = useState(null);
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  const [filtro, setFiltro] = useState("");
+  const [expedientes, setExpedientes] = useState([]);
+  const [editando, setEditando] = useState(null);
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [filtro, setFiltro] = useState("");
 
-  // Estado para el formulario
-  const [formData, setFormData] = useState({
-    noCorrelativo: "",
-    nombre: "",
-    apellidos: "",
-    telefono: "",
-    fecha: "",
-    correo: "",
-    direccion: "",
-  });
+  // Paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [registrosPorPagina, setRegistrosPorPagina] = useState(10);
 
-  // Cargar expedientes desde localStorage al iniciar
-  useEffect(() => {
-    const expedientesGuardados = localStorage.getItem("expedientes");
-    if (expedientesGuardados) {
-      setExpedientes(JSON.parse(expedientesGuardados));
-    }
-  }, []);
+  const [formData, setFormData] = useState({
+    noCorrelativo: "",
+    nombre: "",
+    apellidos: "",
+    telefono: "",
+    fecha: "",
+    correo: "",
+    direccion: "",
+  });
 
-  // Guardar expedientes en localStorage cuando cambien
-  useEffect(() => {
-    localStorage.setItem("expedientes", JSON.stringify(expedientes));
-  }, [expedientes]);
+  // Cargar expedientes desde localStorage
+  useEffect(() => {
+    const expedientesGuardados = localStorage.getItem("expedientes");
+    if (expedientesGuardados) {
+      setExpedientes(JSON.parse(expedientesGuardados));
+    }
+  }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value});
-  };
+  // Guardar expedientes en localStorage
+  useEffect(() => {
+    localStorage.setItem("expedientes", JSON.stringify(expedientes));
+  }, [expedientes]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (editando) {
-      // Editar expediente existente
-      const expedientesActualizados = expedientes.map(exp => 
-        exp.numeroRegistro === editando ? formData : exp);
-      setExpedientes(expedientesActualizados);
-      setEditando(null);
-      alert("Expediente actualizado correctamente");
-      
-      // Limpiar formulario y volver a vista de búsqueda
-      setFormData({
-        noCorrelativo: "",
-        nombre: "",
-        apellidos: "",
-        telefono: "",
-        fecha: "",
-        correo: "",
-        direccion: "",
-      });
-      setMostrarFormulario(false);
-    } else {
-      // Crear nuevo expediente
-      // Verificar si el número de registro ya existe
-      const existe = expedientes.some(exp => exp.numeroRegistro === formData.numeroRegistro);
-      if (existe) {
-        alert("El número de registro ya existe. Por favor, use otro.");
-        return;
-      }
-      
-      setExpedientes([...expedientes, formData]);
-      alert("Expediente guardado correctamente");
-      
-      // Limpiar formulario pero mantenerlo abierto
-      setFormData({
-        noCorrelativo: "",
-        nombre: "",
-        apellidos: "",
-        telefono: "",
-        fecha: "",
-        correo: "",
-        direccion: "",
-      });
-    }
-  };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
 
-  const handleEditar = (expediente) => {
-    setFormData(expediente);
-    setEditando(expediente.numeroRegistro);
-    setMostrarFormulario(true);
-  };
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  const handleEliminar = (numeroRegistro) => {
-    if (window.confirm("¿Está seguro de que desea eliminar este expediente?")) {
-      const expedientesFiltrados = expedientes.filter(exp => exp.numeroRegistro !== numeroRegistro);
-      setExpedientes(expedientesFiltrados);
-      alert("Expediente eliminado correctamente");
-    }
-  };
+    if (editando) {
+      const expedientesActualizados = expedientes.map((exp) =>
+        exp.noCorrelativo === editando ? formData : exp
+      );
+      setExpedientes(expedientesActualizados);
+      setEditando(null);
+      alert("Expediente actualizado correctamente");
+    } else {
+      const existe = expedientes.some(
+        (exp) => exp.noCorrelativo === formData.noCorrelativo
+      );
+      if (existe) {
+        alert("El número de registro ya existe.");
+        return;
+      }
+      setExpedientes([...expedientes, formData]);
+      alert("Expediente guardado correctamente");
+    }
 
-  const handleCancelar = () => {
-    setFormData({
-      noCorrelativo: "",
-      nombre: "",
-      apellidos: "",
-      telefono: "",
-      fecha: "",
-      correo: "",
-      direccion: "",
-    });
-    setEditando(null);
-    setMostrarFormulario(false);
-  };
+    setFormData({
+      noCorrelativo: "",
+      nombre: "",
+      apellidos: "",
+      telefono: "",
+      fecha: "",
+      correo: "",
+      direccion: "",
+    });
+    setMostrarFormulario(false);
+  };
 
-  const handleSalir = () => {
-    handleCancelar(); // Limpia el formulario y sale
-  };
+  const handleEditar = (expediente) => {
+    setFormData(expediente);
+    setEditando(expediente.noCorrelativo);
+    setMostrarFormulario(true);
+  };
 
-  // Filtrar expedientes
-  const expedientesFiltrados = expedientes.filter(exp => 
-    exp.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
-    exp.apellidos.toLowerCase().includes(filtro.toLowerCase()) ||
-    exp.numeroRegistro.includes(filtro)
-  );
+  const handleEliminar = (noCorrelativo) => {
+    if (window.confirm("¿Eliminar este expediente?")) {
+      const filtrados = expedientes.filter(
+        (exp) => exp.noCorrelativo !== noCorrelativo
+      );
+      setExpedientes(filtrados);
+    }
+  };
 
-  return (
-    <div className="p-6 expedientes-container">
-      <h1 className="text-2xl font-bold mb-6">Expedientes de Pacientes</h1>
-      
-      <div className="mb-6 flex justify-between items-center">
-        <button
-          onClick={() => setMostrarFormulario(true)}
-          className="btn-primary"
-        >
-          Nuevo Expediente
-        </button>
-        
-        <div className="w-64">
-          <input
-            type="text"
-            placeholder="Buscar..."
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
-          />
-        </div>
-      </div>
+  const handleCancelar = () => {
+    setFormData({
+      noCorrelativo: "",
+      nombre: "",
+      apellidos: "",
+      telefono: "",
+      fecha: "",
+      correo: "",
+      direccion: "",
+    });
+    setEditando(null);
+    setMostrarFormulario(false);
+  };
 
-      {mostrarFormulario && (
-        <div className="p-6 rounded-lg shadow-md mb-6 formulario-expediente">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">
-              {editando ? "Editar Expediente" : "Nuevo Expediente"}
-            </h2>
-          </div>
-          
-<form onSubmit={handleSubmit} className="formulario-paciente">
-  {/* Fila superior: Fecha (izquierda) y No. Orden (derecha) */}
-  <div className="fila-superior">
-    <div className="campo-formulario">
-      <label className="block text-sm font-medium text-gray-700">Fecha *</label>
-      <input
-        type="text"
-        name="fecha"
-        value={formData.fecha}
-        onChange={handleInputChange}
-        required
-        placeholder="DD/MM/AAAA"
-        className="input-formulario"
-      />
-    </div>
-    
-    <div className="campo-formulario">
-      <label className="block text-sm font-medium text-gray-700">No. Correlativo</label>
-      <input
-        type="text"
-        name="noCorrelativo"
-        value={formData.noOrden}
-        onChange={handleInputChange}
-        placeholder="Ej: 003"
-        className="input-formulario"
-      />
-    </div>
-  </div>
-  
+  // Filtrar y ordenar (ascendente)
+  const expedientesFiltrados = expedientes
+    .filter(
+      (exp) =>
+        exp.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+        exp.apellidos.toLowerCase().includes(filtro.toLowerCase()) ||
+        exp.noCorrelativo.includes(filtro)
+    )
+    .sort((a, b) => parseInt(a.noCorrelativo) - parseInt(b.noCorrelativo));
 
-  
-  {/* Segunda fila: Nombre (izquierda) y Teléfono (derecha) */}
-  <div className="fila-formulario">
-    <div className="campo-formulario">
-      <label className="block text-sm font-medium text-gray-700">Nombre *</label>
-      <input
-        type="text"
-        name="nombre"
-        value={formData.nombre}
-        onChange={handleInputChange}
-        required
-        className="input-formulario"
-      />
-    </div>
-    
-    <div className="campo-formulario">
-      <label className="block text-sm font-medium text-gray-700">Teléfono *</label>
-      <input
-        type="tel"
-        name="telefono"
-        value={formData.telefono}
-        onChange={handleInputChange}
-        required
-        className="input-formulario"
-      />
-    </div>
-  </div>
-  
-  {/* Cuarta fila: Email (todo el ancho) */}
-  <div className="fila-formulario">
-    <div className="campo-formulario ancho-completo">
-      <label className="block text-sm font-medium text-gray-700">Correo Electrónico *</label>
-      <input
-        type="email"
-        name="correo"
-        value={formData.correo}
-        onChange={handleInputChange}
-        required
-        className="input-formulario"
-      />
-    </div>
-  </div>
-  
-  {/* Quinta fila: Dirección (todo el ancho) */}
-  <div className="fila-formulario">
-    <div className="campo-formulario ancho-completo">
-      <label className="block text-sm font-medium text-gray-700">Dirección *</label>
-      <input
-        type="text"
-        name="direccion"
-        value={formData.direccion}
-        onChange={handleInputChange}
-        required
-        className="input-formulario"
-      />
-    </div>
-  </div>
-  
-  {/* Botones de acción */}
-  <div className="botones-formulario">
-    <button
-      type="button"
-      onClick={handleCancelar}
-      className="btn-secondary"
-    >
-      Cancelar
-    </button>
-    <button
-      type="submit"
-      className="btn-success"
-    >
-      {editando ? "Actualizar" : "Guardar"}
-    </button>
-  </div>
-</form>
+  // Paginación
+  const indiceUltimo = paginaActual * registrosPorPagina;
+  const indicePrimero = indiceUltimo - registrosPorPagina;
+  const expedientesPaginados = expedientesFiltrados.slice(
+    indicePrimero,
+    indiceUltimo
+  );
+  const totalPaginas = Math.ceil(expedientesFiltrados.length / registrosPorPagina);
 
-          {/* Botón de salir en la parte inferior izquierda */}
-          <div className="mt-6 flex justify-start">
-            <button
-              onClick={handleSalir}
-              className="btn-salir"
-            >
-              Salir a Búsqueda
-            </button>
-          </div>
-        </div>
-      )}
+  return (
+    <div className="expedientes-container">
+      <h1 className="titulo-principal">Expedientes de Pacientes</h1>
 
-      {/* Mostrar tabla solo cuando hay expedientes o cuando se está buscando */}
-      {(expedientes.length > 0 || filtro) && (
-        <div className="bg-white rounded-lg shadow overflow-hidden tabla-expedientes">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. Correlativo</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellidos</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {expedientesFiltrados.length > 0 ? (
-                expedientesFiltrados.map((expediente) => (
-                  <tr key={expediente.numeroRegistro}>
-                    <td className="px-6 py-4 whitespace-nowrap">{expediente.noCorrelativo}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{expediente.nombre}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{expediente.apellidos}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{expediente.telefono}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{expediente.fecha}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleEditar(expediente)}
-                        className="btn-edit mr-3"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleEliminar(expediente.numeroRegistro)}
-                        className="btn-delete"
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                    No se encontraron expedientes
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
+      <div className="acciones-barra">
+        <button onClick={() => setMostrarFormulario(true)} className="btn-primary">
+          Nuevo Expediente
+        </button>
+        <input
+          type="text"
+          placeholder="Buscar..."
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+          className="input-buscar"
+        />
+      </div>
+
+      {mostrarFormulario && (
+        <div className="formulario-expediente">
+          <form onSubmit={handleSubmit} className="formulario-paciente">
+            <div className="fila-formulario">
+              <div className="campo-formulario fecha-ancha">
+                <label>Fecha *</label>
+                <input
+                  type="date"
+                  name="fecha"
+                  value={formData.fecha}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="campo-formulario campo-correlativo">
+                <label>No. Correlativo *</label>
+                <input
+                  type="text"
+                  name="noCorrelativo"
+                  value={formData.noCorrelativo}
+                  onChange={handleInputChange}
+                  required
+                  className="input-correlativo"
+                />
+              </div>
+            </div>
+
+            <div className="fila-formulario">
+              <div className="campo-formulario">
+                <label>Nombre *</label>
+                <input
+                  type="text"
+                  name="nombre"
+                  value={formData.nombre}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="campo-formulario">
+                <label>Teléfono *</label>
+                <input
+                  type="tel"
+                  name="telefono"
+                  value={formData.telefono}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="campo-formulario">
+              <label>Apellidos *</label>
+              <input
+                type="text"
+                name="apellidos"
+                value={formData.apellidos}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="campo-formulario">
+              <label>Correo *</label>
+              <input
+                type="email"
+                name="correo"
+                value={formData.correo}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="campo-formulario">
+              <label>Dirección *</label>
+              <input
+                type="text"
+                name="direccion"
+                value={formData.direccion}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="botones-formulario">
+              <button type="button" onClick={handleCancelar} className="btn-cancel">
+                Cancelar
+              </button>
+              <button type="submit" className="btn-success">
+                {editando ? "Actualizar" : "Guardar"}
+              </button>
+              <button type="button" onClick={handleCancelar} className="btn-salir">
+                Salir
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Tabla fija */}
+      <div className="tabla-fija">
+        {(expedientes.length > 0 || filtro) && (
+          <>
+            <table className="tabla-expedientes">
+              <thead>
+                <tr>
+                  <th>No. Correlativo</th>
+                  <th>Nombre</th>
+                  <th>Apellidos</th>
+                  <th>Teléfono</th>
+                  <th>Fecha</th>
+                  <th>Acciones</th>
+                  <th>Notificaciones</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expedientesPaginados.length > 0 ? (
+                  expedientesPaginados.map((exp) => (
+                    <tr key={exp.noCorrelativo}>
+                      <td>{exp.noCorrelativo}</td>
+                      <td>{exp.nombre}</td>
+                      <td>{exp.apellidos}</td>
+                      <td>{exp.telefono}</td>
+                      <td>{exp.fecha}</td>
+                      <td>
+                        <select
+                          className="dropdown-acciones"
+                          onChange={(e) => {
+                            if (e.target.value === "editar") handleEditar(exp);
+                            if (e.target.value === "eliminar") handleEliminar(exp.noCorrelativo);
+                          }}
+                        >
+                          <option value="">Seleccionar</option>
+                          <option value="editar">Editar</option>
+                          <option value="eliminar">Eliminar</option>
+                        </select>
+                      </td>
+                      <td>
+                        <select
+                          className="dropdown-acciones"
+                          onChange={(e) => {
+                            if (e.target.value === "editar") handleEditar(exp);
+                            if (e.target.value === "eliminar") handleEliminar(exp.noCorrelativo);
+                            if (e.target.value === "visualizar") alert("Visualizar expediente");
+                          }}
+                        >
+                          <option value="">Seleccionar</option>
+                          <option value="editar">Editar</option>
+                          <option value="eliminar">Eliminar</option>
+                          <option value="visualizar">Visualizar</option>
+                        </select>
+                      </td>
+                      <td>
+                        <select className="dropdown-acciones">
+                          <option value="activo">Activo</option>
+                          <option value="pendiente">Pendiente</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8">No se encontraron expedientes</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            <div className="paginacion">
+              <label>
+                Mostrar
+                <select
+                  value={registrosPorPagina}
+                  onChange={(e) => {
+                    setRegistrosPorPagina(Number(e.target.value));
+                    setPaginaActual(1);
+                  }}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                registros por página
+              </label>
+            </div>
+
+            <div className="navegacion-paginas">
+              <span>
+                Mostrando {indicePrimero + 1} a{" "}
+                {Math.min(indiceUltimo, expedientesFiltrados.length)} de{" "}
+                {expedientesFiltrados.length} registros
+              </span>
+
+              <div className="botones-paginacion">
+                <button
+                  onClick={() => setPaginaActual(1)}
+                  disabled={paginaActual === 1}
+                >
+                  {"<<"}
+                </button>
+                <button
+                  onClick={() => setPaginaActual(paginaActual - 1)}
+                  disabled={paginaActual === 1}
+                >
+                  {"<"}
+                </button>
+
+                {[...Array(totalPaginas)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setPaginaActual(i + 1)}
+                    className={paginaActual === i + 1 ? "activo" : ""}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => setPaginaActual(paginaActual + 1)}
+                  disabled={paginaActual === totalPaginas}
+                >
+                  {">"}
+                </button>
+                <button
+                  onClick={() => setPaginaActual(totalPaginas)}
+                  disabled={paginaActual === totalPaginas}
+                >
+                  {">>"}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
