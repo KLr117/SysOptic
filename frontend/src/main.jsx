@@ -14,6 +14,11 @@ import VerOrdenTrabajo from "./pages/VerOrdenTrabajo";
 import Expedientes from "./pages/Expedientes";
 import AdminPanel from "./pages/AdminPanel";
 import Bitacora from "./pages/bitacora";
+import Notificaciones from "./pages/Notificaciones";
+
+
+
+
 
 
 // Layout y rutas protegidas
@@ -38,6 +43,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/ver-orden-trabajo/:id" element={<VerOrdenTrabajo />} />
             <Route path="/expedientes" element={<Expedientes />} />
             <Route path="/bitacora" element={<Bitacora />} />
+            <Route path="/notificaciones" element={<Notificaciones/>} />
+
+
+
+
+
           </Route>
         </Route>
 

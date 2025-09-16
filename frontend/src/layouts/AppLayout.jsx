@@ -24,6 +24,12 @@ export default function AppLayout() {
           <Item to="/admin" label="Panel de Administracion" />
           <Item to="/ordenes" label="Orden de Trabajo" />  
           <Item to="/expedientes" label="Expedientes de Pacientes" />
+          <Item to="/notificaciones" label="Notificaciones" />
+
+
+
+
+          
 
         </nav>
       </aside>
