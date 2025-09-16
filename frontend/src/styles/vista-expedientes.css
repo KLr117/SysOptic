@@ -1,13 +1,13 @@
 /* ===============   WENDYs    ================
 /* =============== ESTILOS GENERALES ================ */
 .expedientes-container {
-  background-color: #d3a7a7;
+  background-color: #ffffff;
   min-height: 100vh;
   padding: 1.5rem;
 }
 
 .formulario-expediente {
-  background-color: #bd9292;
+  background-color: #ffffff;
 }
 
 .tabla-expedientes {
@@ -173,7 +173,7 @@ th, td {
 }
 
 th {
-  background-color: #f9fafb;
+  background-color: #e79090;
   font-weight: 600;
   color: #374151;
   font-size: 0.875rem;
