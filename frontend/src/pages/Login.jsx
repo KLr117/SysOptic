@@ -63,12 +63,19 @@ export default function Login() {
       <div className="login-right">
         <form onSubmit={handleLogin} className="login-form">
           <h2 className="login-title">Iniciar Sesión</h2>
+          
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
 
           <InputField
             label="Usuario"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Ingresa tu usuario"
+            required
           />
           <InputField
             label="Contraseña"
@@ -76,6 +83,7 @@ export default function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Ingresa tu contraseña"
+            required
           />
 
           <a href="#" className="login-link">

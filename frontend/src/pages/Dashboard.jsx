@@ -1,7 +1,7 @@
 import React from "react";
-
 import { useEffect, useState } from "react";
 import { getStats } from "../services/api";
+import "../styles/dashboard.css";
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -12,30 +12,45 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">Panel de Control</h1>
+    <div className="dashboard-container">
+      <h1 className="dashboard-title">Panel de Control</h1>
+      <p className="dashboard-subtitle">Sistema de Gestión Óptica - Resumen General</p>
 
-      {err && <p className="mt-4 text-red-600">Error: {err}</p>}
+      {err && <p className="error-state">Error: {err}</p>}
 
       {!stats ? (
-        <p className="mt-4">Cargando...</p>
+        <p className="loading-state">Cargando...</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <Card title="Expedientes" value={stats.expedientes} />
-          <Card title="Órdenes" value={stats.ordenes} />
-          <Card title="Pend. de entrega" value={stats.pendientesEntrega} />
-          <Card title="Notificaciones" value={stats.notificaciones} />
+        <div className="dashboard-grid">
+          <Card title="Expedientes" value={stats.expedientes} type="expedientes" />
+          <Card title="Órdenes" value={stats.ordenes} type="ordenes" />
+          <Card title="Pend. de entrega" value={stats.pendientesEntrega} type="pendientes" />
+          <Card title="Notificaciones" value={stats.notificaciones} type="notificaciones" />
         </div>
       )}
     </div>
   );
 }
 
-function Card({ title, value }) {
+function Card({ title, value, type }) {
+  const icons = {
+    expedientes: "📁",
+    ordenes: "📋", 
+    pendientes: "⏳",
+    notificaciones: "🔔"
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow p-4">
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="text-3xl font-semibold">{value}</p>
+    <div className={`dashboard-card card-${type}`}>
+      <div className="card-content">
+        <div className="card-info">
+          <p className="card-title">{title}</p>
+          <p className="card-value">{value}</p>
+        </div>
+        <div className="card-icon">
+          {icons[type]}
+        </div>
+      </div>
     </div>
   );
 }

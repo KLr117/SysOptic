@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { logout, getUser } from "../utils/Auth"; // importar utilidades
+import { logout, getUser } from "../utils/Auth";
+import "../styles/applayout.css";
 
 export default function AppLayout() {
   const user = getUser();
@@ -16,37 +17,38 @@ export default function AppLayout() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <aside className="w-64 bg-white border-r">
-        <div className="p-4 text-lg font-bold">SysOptic</div>
-        <nav className="px-2 space-y-1">
+    <div className="app-layout">
+      <aside className="app-sidebar">
+        <div className="app-logo">
+          <h1>SysOptic</h1>
+        </div>
+        <nav className="app-nav">
           <Item to="/dashboard" label="Dashboard" />
           <Item to="/admin" label="Panel de Administracion" />
           <Item to="/ordenes" label="Orden de Trabajo" />  
           <Item to="/expedientes" label="Expedientes de Pacientes" />
           <Item to="/notificaciones" label="Notificaciones" />
-
-
-
-
-          
-
         </nav>
       </aside>
 
-       <main className="flex-1 flex flex-col">
-        <header className="h-14 bg-white border-b flex items-center justify-between px-4">
-          <span className="text-sm text-gray-600">
-            {user ? `Hola, ${user.username}` : "Panel"}
-          </span>
+      <main className="app-main">
+        <header className="app-header">
+          <div className="user-info">
+            <div className="user-avatar">
+              {user ? user.username.charAt(0).toUpperCase() : "U"}
+            </div>
+            <span>
+              {user ? `Hola, ${user.username}` : "Panel"}
+            </span>
+          </div>
           <button
             onClick={handleLogout}
-            className="text-sm text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg"
+            className="logout-btn"
           >
             Cerrar sesión
           </button>
         </header>
-        <div className="p-4 flex-1">
+        <div className="app-content">
           <Outlet />
         </div>
       </main>
@@ -59,7 +61,7 @@ function Item({ to, label }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `block px-3 py-2 rounded-xl ${isActive ? "bg-blue-600 text-white" : "hover:bg-gray-100"}`
+        `nav-item ${isActive ? "active" : ""}`
       }
     >
       {label}
