@@ -2,28 +2,29 @@
 table {
   width: 100%;
   border-collapse: collapse;
-  border: 2px solid #d1d5db; /* Borde externo visible y elegante */
+  border: 1px solid #e2e8f0; /* Borde más sutil */
   border-radius: 12px;
   overflow: hidden;
-  background-color: #fdfdfd; /* Fondo blanco suave */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  font-family: "Century Gothic", sans-serif;
+  background-color: #ffffff; /* Fondo blanco puro */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 14px;
 }
 
 /* Encabezado */
 thead {
-  background: linear-gradient(90deg, #f87171, #fb7185); /* degradado rosa-rojizo */
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: #ffffff;
-  font-weight: bold;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 /* Celdas con bordes */
 th, td {
   padding: 0.75rem 1rem;
   text-align: left;
-  border: 1px solid #e5e7eb; /* Bordes suaves entre columnas */
+  border: 1px solid #f1f5f9; /* Bordes más sutiles */
 }
 
 /* Bordes más definidos entre filas */
@@ -37,8 +38,7 @@ tbody tr:last-child {
 
 /* Hover elegante */
 tbody tr:hover {
-  background-color: #e0f2fe; /* azul muy suave al pasar el mouse */
-  transform: scale(1.01);
+  background-color: #f8fafc; /* Gris muy suave al pasar el mouse */
   transition: 0.2s ease-in-out;
 }
 
@@ -57,69 +57,96 @@ button:hover {
 }
 
 button.agregar {
-  background-color: #2563eb; /* azul moderno */
-  color: white ;
+  background-color: #3b82f6; /* azul moderno */
+  color: white;
+  font-weight: 600;
 }
 
 button:last-of-type {
-  background-color: #1f2937; /* gris oscuro elegante */
+  background-color: #64748b; /* gris moderno */
   color: white;
+  font-weight: 600;
 }
 
 /* Buscador moderno */
 .input-buscador {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
   margin-bottom: 1rem;
   font-size: 16px;
+  font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   transition: all 0.2s;
 }
 
 .input-buscador:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   outline: none;
+}
+
+/* Contenedor con scroll horizontal */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background-color: #ffffff;
+  margin: 0 auto;
 }
 
 /* Contenedor general de la tabla */
 .users-table {
-  width: 95%;
-  max-width: 1200px;
-  margin: 0 auto; /* Centrar */
+  width: 100%;
+  min-width: 1200px; /* Ancho mínimo para mantener legibilidad */
   border-collapse: collapse;
-  border: 1px solid #d1d5db;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   overflow: hidden;
   background-color: #ffffff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  font-family: "Century Gothic", sans-serif;
-  font-size: 13px; /* Más compacto */
+  font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
 }
 
 /* Encabezado */
 .users-table thead {
-  background: linear-gradient(90deg, #f87171, #fb7185);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: #ffffff;
-  font-weight: bold;
+  font-weight: 600;
   text-transform: uppercase;
   font-size: 13px;
+  letter-spacing: 0.5px;
 }
 
-/* Celdas */
+/* Celdas con anchos optimizados */
 .users-table th, 
 .users-table td {
-  padding: 0.5rem 0.75rem; /* Más compacto */
+  padding: 0.5rem 0.75rem;
   text-align: left;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #f1f5f9;
   vertical-align: middle;
+  white-space: nowrap; /* Evita que el texto se rompa */
 }
+
+/* Anchos específicos para columnas */
+.users-table th:nth-child(1), .users-table td:nth-child(1) { width: 80px; } /* No Orden */
+.users-table th:nth-child(2), .users-table td:nth-child(2) { width: 120px; } /* Paciente */
+.users-table th:nth-child(3), .users-table td:nth-child(3) { width: 150px; } /* Dirección */
+.users-table th:nth-child(4), .users-table td:nth-child(4) { width: 180px; } /* Correo */
+.users-table th:nth-child(5), .users-table td:nth-child(5) { width: 120px; } /* Teléfono */
+.users-table th:nth-child(6), .users-table td:nth-child(6) { width: 120px; } /* Fecha Recepción */
+.users-table th:nth-child(7), .users-table td:nth-child(7) { width: 120px; } /* Fecha Entrega */
+.users-table th:nth-child(8), .users-table td:nth-child(8) { width: 80px; } /* Total */
+.users-table th:nth-child(9), .users-table td:nth-child(9) { width: 80px; } /* Adelanto */
+.users-table th:nth-child(10), .users-table td:nth-child(10) { width: 80px; } /* Saldo */
+.users-table th:nth-child(11), .users-table td:nth-child(11) { width: 100px; } /* Acciones */
+.users-table th:nth-child(12), .users-table td:nth-child(12) { width: 120px; } /* Notificaciones */
+.users-table th:nth-child(13), .users-table td:nth-child(13) { width: 120px; } /* Estado */
 
 /* Hover en filas */
 .users-table tbody tr:hover {
-  background-color: #e0f2fe;
-  transform: scale(1.01);
+  background-color: #f8fafc;
   transition: 0.2s ease-in-out;
 }
 
@@ -173,6 +200,63 @@ button:hover {
 .input-buscador:focus {
   border-color: #2563eb;
   box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+  outline: none;
+}
+
+.data-info-box {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6; /* gris claro */
+  border: 1px solid #d1d5db; /* borde suave */
+  border-radius: 0.5rem;
+  font-size: 14px;
+  color: #111827; /* texto oscuro */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-top: 0.5rem;
+}
+
+/* Alinear contenido de las celdas verticalmente */
+th, td {
+  padding: 0.5rem 1rem; /* Ajuste de padding más uniforme */
+  text-align: left;
+  vertical-align: middle; /* Centrado vertical */
+}
+
+/* Alinear el contenido de los selects dentro de la tabla */
+td select {
+  vertical-align: middle;
+  padding: 0.3rem 0.5rem; /* Ajusta altura interna del select */
+  font-size: 14px;
+}
+
+.btn-notificacion {
+  background-color: #4f46e5;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-notificacion:hover {
+  background-color: #3730a3;
+}
+
+/* Input buscador más compacto */
+.input-buscador {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.input-buscador:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
   outline: none;
 }
 
