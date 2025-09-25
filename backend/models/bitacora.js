@@ -1,8 +1,8 @@
 // models/bitacora.js
-import { connection } from "../database/db.js"; // o la ruta donde tengas tu conexión
+import pool from "../database/db.js";
 
 export const getBitacora = async () => {
-  const [rows] = await connection.query(`
+  const [rows] = await pool.query(`
     SELECT 
       b.pk_id_bitacora,
       u.username AS usuario_accion,
