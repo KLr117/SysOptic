@@ -38,7 +38,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/ordenes" element={<Ordenes />} />
-            <Route path="/editar-orden-trabajo" element={<EditarOrdenTrabajo />} />
+            <Route path="/editar-orden-trabajo/:id" element={<EditarOrdenTrabajo />} />
             <Route path="/agregar-orden-trabajo" element={<AgregarOrdenTrabajo />} />
             <Route path="/ver-orden-trabajo/:id" element={<VerOrdenTrabajo />} />
             <Route path="/expedientes" element={<Expedientes />} />

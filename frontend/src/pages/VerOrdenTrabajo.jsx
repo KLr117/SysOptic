@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
-import "../styles/vista-orden-trabajo.css"; // este será el general de estilos
+import "../styles/vista-orden-trabajo.css";
 import logo from "../assets/logo.jpg";
+import { getOrdenById } from "../services/ordenTrabajoService";
 
 
 
@@ -10,43 +10,80 @@ const VerOrdenTrabajo = () => {
   const { id } = useParams(); // 🔹 Capturamos el ID de la orden
   const navigate = useNavigate();
 
-  // 🔹 Datos dummy (luego puedes reemplazar por fetch a backend)
-  const ordenesData = [
-    {
-      id: 1,
-      noOrden: "001",
-      paciente: "Juan Pérez",
-      direccion: "Calle 123",
-      correo: "juan@example.com",
-      domiciliar: "Sí",
-      telefono: "555-1234",
-      fechaRecepcion: "04/09/2025",
-      fechaEntrega: "10/09/2025",
-      total: 150,
-      adelanto: 50,
-      saldo: 100,
-    },
-    {
-      id: 2,
-      noOrden: "002",
-      paciente: "María López",
-      direccion: "Av. Central 456",
-      correo: "maria@example.com",
-      domiciliar: "No",
-      telefono: "555-5678",
-      fechaRecepcion: "03/09/2025",
-      fechaEntrega: "09/09/2025",
-      total: 200,
-      adelanto: 100,
-      saldo: 100,
-    },
-  ];
+  // Estados para manejar la orden
+  const [orden, setOrden] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Buscar la orden por ID
-  const orden = ordenesData.find((o) => o.id === Number(id));
+  // Cargar datos de la orden desde el backend
+  useEffect(() => {
+    const cargarOrden = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await getOrdenById(id);
+        
+        if (response.ok) {
+          setOrden(response.order);
+        } else {
+          setError("Error al cargar la orden");
+        }
+      } catch (err) {
+        console.error("Error cargando orden:", err);
+        setError("Error al cargar la orden");
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    if (id) {
+      cargarOrden();
+    }
+  }, [id]);
+
+  // Mostrar loading
+  if (loading) {
+    return (
+      <div className="orden-container verorden-container">
+        <div className="text-center py-8">
+          <p>Cargando orden...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar error
+  if (error) {
+    return (
+      <div className="orden-container verorden-container">
+        <div className="text-center py-8 text-red-600">
+          <p>Error: {error}</p>
+          <button 
+            onClick={() => navigate("/ordenes")} 
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Volver a Órdenes
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar mensaje si no se encuentra la orden
   if (!orden) {
-    return <p>Orden no encontrada</p>;
+    return (
+      <div className="orden-container verorden-container">
+        <div className="text-center py-8">
+          <p>Orden no encontrada</p>
+          <button 
+            onClick={() => navigate("/ordenes")} 
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Volver a Órdenes
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const cerrarVista = () => {
@@ -62,7 +99,7 @@ const VerOrdenTrabajo = () => {
     </div>
     <div className="orden-no">
       <label>No Orden</label>
-      <p>{orden.noOrden}</p>
+      <p>{orden.correlativo || orden.pk_id_orden}</p>
     </div>
   </div>
 
@@ -88,10 +125,6 @@ const VerOrdenTrabajo = () => {
 
     <div className="orden-row">
       <div className="orden-field">
-        <label>Domiciliar</label>
-        <p>{orden.domiciliar}</p>
-      </div>
-      <div className="orden-field">
         <label>Teléfono</label>
         <p>{orden.telefono}</p>
       </div>
@@ -100,11 +133,11 @@ const VerOrdenTrabajo = () => {
     <div className="orden-row">
       <div className="orden-field">
         <label>Fecha Recepción</label>
-        <p>{orden.fechaRecepcion}</p>
+        <p>{orden.fecha_recepcion ? new Date(orden.fecha_recepcion).toLocaleDateString('es-ES') : 'No especificada'}</p>
       </div>
       <div className="orden-field">
         <label>Fecha Entrega</label>
-        <p>{orden.fechaEntrega}</p>
+        <p>{orden.fecha_entrega ? new Date(orden.fecha_entrega).toLocaleDateString('es-ES') : 'No especificada'}</p>
       </div>
     </div>
   </div>
@@ -113,15 +146,15 @@ const VerOrdenTrabajo = () => {
   <div className="orden-totales">
     <div className="orden-total">
       <label>Total: Q</label>
-      <p>{orden.total}</p>
+      <p>{parseFloat(orden.total || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
     </div>
     <div className="orden-adelanto">
       <label>Adelanto: Q</label>
-      <p>{orden.adelanto}</p>
+      <p>{parseFloat(orden.adelanto || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
     </div>
     <div className="orden-saldo">
       <label>Saldo: Q</label>
-      <p>{orden.saldo}</p>
+      <p>{parseFloat(orden.saldo || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
     </div>
   </div>
 

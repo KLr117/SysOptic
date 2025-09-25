@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/orden-trabajo.css";
 import "../styles/table-responsive.css";
 import Titulo from "../components/Titulo";
 import Button from "../components/Button";
 import { useNavigate } from "react-router-dom";
+import { getOrdenes, deleteOrden } from "../services/ordenTrabajoService";
 
 const OrdenTrabajo = () => {
   const navigate = useNavigate();
@@ -24,36 +25,9 @@ const OrdenTrabajo = () => {
     "Estado",
   ];
 
-  const [ordenesData, setOrdenesData] = useState([
-    {
-      id: 1,
-      paciente: "Juan Pérez",
-      direccion: "Calle 123",
-      correo: "juan@example.com",
-      telefono: "555-1234",
-      fechaRecepcion: "2025-09-04",
-      fechaEntrega: "2025-09-10",
-      total: 150,
-      adelanto: 50,
-      saldo: 100,
-      estado: "Pendiente",
-      notificacion: "Crear",
-    },
-    {
-      id: 2,
-      paciente: "María López",
-      direccion: "Av. Central 456",
-      correo: "maria@example.com",
-      telefono: "555-5678",
-      fechaRecepcion: "2025-09-03",
-      fechaEntrega: "2025-09-09",
-      total: 200,
-      adelanto: 100,
-      saldo: 100,
-      estado: "En proceso",
-      notificacion: "Mostrar",
-    },
-  ]);
+  const [ordenesData, setOrdenesData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("fechaRecepcion");
@@ -62,26 +36,59 @@ const OrdenTrabajo = () => {
   const [registrosPorPagina, setRegistrosPorPagina] = useState(10);
   const filasOpciones = [5, 10, 20, 50];
 
+  // Cargar órdenes desde el backend
+  useEffect(() => {
+    const cargarOrdenes = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await getOrdenes();
+        if (response.ok) {
+          setOrdenesData(response.orders);
+        } else {
+          setError("Error al cargar las órdenes");
+        }
+      } catch (err) {
+        console.error("Error cargando órdenes:", err);
+        setError("Error al cargar las órdenes");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarOrdenes();
+  }, []);
+
   const agregarOrden = () => navigate("/agregar-orden-trabajo");
-  const editarOrden = (id) => navigate("/editar-orden-trabajo");
+  const editarOrden = (id) => navigate(`/editar-orden-trabajo/${id}`);
   const verOrden = (id) => navigate(`/ver-orden-trabajo/${id}`);
-  const eliminarOrden = (id) => {
+  
+  const eliminarOrden = async (id) => {
     if (window.confirm(`¿Eliminar la orden ${id}?`)) {
-      setOrdenesData((prev) => prev.filter((o) => o.id !== id));
+      try {
+        const response = await deleteOrden(id);
+        if (response.ok) {
+          setOrdenesData((prev) => prev.filter((o) => o.pk_id_orden !== id));
+        } else {
+          alert("Error al eliminar la orden");
+        }
+      } catch (err) {
+        console.error("Error eliminando orden:", err);
+        alert("Error al eliminar la orden");
+      }
     }
   };
 
   const handleEstadoChange = (id, value) => {
-    setOrdenesData((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, estado: value } : o))
-    );
+    // TODO: Implementar actualización de estado en el backend
+    console.log("Cambiar estado de orden", id, "a", value);
   };
 
   const handleNotificacionChange = (id, value) => {
-    setOrdenesData((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, notificacion: value } : o))
-    );
+    // TODO: Implementar actualización de notificación en el backend
+    console.log("Cambiar notificación de orden", id, "a", value);
   };
+
 
   // Filtrado por search
   const filtro = search.trim().toLowerCase();
@@ -98,20 +105,21 @@ const OrdenTrabajo = () => {
       // Ordenar según combobox
       const dir = sortDirection === "asc" ? 1 : -1;
 
-      if (sortField === "id") return dir * ((a.id || 0) - (b.id || 0));
+      if (sortField === "id") return dir * ((a.pk_id_orden || 0) - (b.pk_id_orden || 0));
       if (sortField === "paciente") {
         return dir * ((a.paciente || "").localeCompare(b.paciente || ""));
       }
       if (sortField === "fechaRecepcion" || sortField === "fechaEntrega") {
-        const da = a[sortField] ? new Date(a[sortField]) : new Date(0);
-        const db = b[sortField] ? new Date(b[sortField]) : new Date(0);
+        const fieldName = sortField === "fechaRecepcion" ? "fecha_recepcion" : "fecha_entrega";
+        const da = a[fieldName] ? new Date(a[fieldName]) : new Date(0);
+        const db = b[fieldName] ? new Date(b[fieldName]) : new Date(0);
         return dir * (da - db);
       }
       if (sortField === "recientes") {
-        return -1 * dir * (new Date(a.fechaRecepcion) - new Date(b.fechaRecepcion));
+        return -1 * dir * (new Date(a.fecha_recepcion) - new Date(b.fecha_recepcion));
       }
       if (sortField === "viejos") {
-        return dir * (new Date(a.fechaRecepcion) - new Date(b.fechaRecepcion));
+        return dir * (new Date(a.fecha_recepcion) - new Date(b.fecha_recepcion));
       }
       return 0;
     });
@@ -126,6 +134,46 @@ const OrdenTrabajo = () => {
 
   const mostrarInicio = ordenesFiltradas.length === 0 ? 0 : indicePrimero + 1;
   const mostrarFin = Math.min(indiceUltimo, ordenesFiltradas.length);
+
+  // Mostrar loading
+  if (loading) {
+    return (
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <Titulo text="Órdenes de Trabajo" className="titulo" />
+          <Button onClick={agregarOrden} className="agregar">
+            Agregar Orden
+          </Button>
+        </div>
+        <div className="text-center py-8">
+          <p>Cargando órdenes...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar error
+  if (error) {
+    return (
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <Titulo text="Órdenes de Trabajo" className="titulo" />
+          <Button onClick={agregarOrden} className="agregar">
+            Agregar Orden
+          </Button>
+        </div>
+        <div className="text-center py-8 text-red-600">
+          <p>Error: {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">
@@ -198,26 +246,32 @@ const OrdenTrabajo = () => {
           <tbody>
             {ordenesPaginadas.length > 0 ? (
               ordenesPaginadas.map((orden) => (
-                <tr key={orden.id}>
-                  <td>{orden.id}</td>
+                <tr key={orden.pk_id_orden}>
+                  <td>{orden.pk_id_orden}</td>
                   <td>{orden.paciente}</td>
                   <td>{orden.direccion}</td>
                   <td>{orden.correo}</td>
                   <td>{orden.telefono}</td>
-                  <td>{orden.fechaRecepcion}</td>
-                  <td>{orden.fechaEntrega}</td>
-                  <td>{orden.total}</td>
-                  <td>{orden.adelanto}</td>
-                  <td>{orden.saldo}</td>
+                  <td>{orden.fecha_recepcion ? new Date(orden.fecha_recepcion).toLocaleDateString('es-ES') : ''}</td>
+                  <td>{orden.fecha_entrega ? new Date(orden.fecha_entrega).toLocaleDateString('es-ES') : ''}</td>
+                  <td className="text-right">
+                    Q{parseFloat(orden.total || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                  <td className="text-right">
+                    Q{parseFloat(orden.adelanto || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                  <td className="text-right font-semibold bg-gray-100">
+                    Q{parseFloat(orden.saldo || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
 
                   <td>
                     <select
                       defaultValue="Acciones"
                       onChange={(e) => {
                         const accion = e.target.value;
-                        if (accion === "Ver") verOrden(orden.id);
-                        else if (accion === "Editar") editarOrden(orden.id);
-                        else if (accion === "Eliminar") eliminarOrden(orden.id);
+                        if (accion === "Ver") verOrden(orden.pk_id_orden);
+                        else if (accion === "Editar") editarOrden(orden.pk_id_orden);
+                        else if (accion === "Eliminar") eliminarOrden(orden.pk_id_orden);
                         e.target.value = "Acciones";
                       }}
                     >
@@ -230,9 +284,9 @@ const OrdenTrabajo = () => {
 
                   <td>
                     <select
-                      value={orden.notificacion}
+                      defaultValue="Crear"
                       onChange={(e) =>
-                        handleNotificacionChange(orden.id, e.target.value)
+                        handleNotificacionChange(orden.pk_id_orden, e.target.value)
                       }
                     >
                       <option value="Crear">Crear</option>
@@ -243,9 +297,9 @@ const OrdenTrabajo = () => {
 
                   <td>
                     <select
-                      value={orden.estado}
+                      defaultValue="Pendiente"
                       onChange={(e) =>
-                        handleEstadoChange(orden.id, e.target.value)
+                        handleEstadoChange(orden.pk_id_orden, e.target.value)
                       }
                     >
                       <option value="Pendiente">Pendiente</option>

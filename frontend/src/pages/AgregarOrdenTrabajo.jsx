@@ -1,18 +1,89 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Importar useNavigate
 import "../styles/orden-trabajo.css";
 import "../styles/vista-orden-trabajo.css";
 import logo from "../assets/logo.jpg"; // Importamos el logo desde src
-
-
 import Titulo from "../components/Titulo"; // Importamos el nuevo componente Titulo
+import { createOrden } from "../services/ordenTrabajoService";
 
 
 const AgregarOrdenTrabajo = () => {
   const navigate = useNavigate(); // Hook para navegación
- // Función para cerrar el formulario
+  
+  // Estados del formulario
+  const [formData, setFormData] = useState({
+    paciente: '',
+    direccion: '',
+    correo: '',
+    telefono: '',
+    fecha_recepcion: '',
+    fecha_entrega: '',
+    total: '',
+    adelanto: '',
+    saldo: ''
+  });
+
+  // Función para cerrar el formulario
   const cerrarFormulario = () => {
     navigate("/ordenes"); // Redirige a la lista de órdenes
+  };
+
+  // Función para manejar cambios en los inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    // Calcular saldo automáticamente cuando cambian total o adelanto
+    if (name === 'total' || name === 'adelanto') {
+      const total = name === 'total' ? parseFloat(value) || 0 : parseFloat(formData.total) || 0;
+      const adelanto = name === 'adelanto' ? parseFloat(value) || 0 : parseFloat(formData.adelanto) || 0;
+      const saldo = total - adelanto;
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        saldo: saldo.toString()
+      }));
+    }
+  };
+
+  // Función para guardar la orden
+  const handleGuardar = async () => {
+    try {
+      // Validaciones básicas
+      if (!formData.paciente || !formData.telefono) {
+        alert('Paciente y teléfono son requeridos');
+        return;
+      }
+
+      // Preparar datos para enviar
+      const orderData = {
+        paciente: formData.paciente,
+        direccion: formData.direccion,
+        correo: formData.correo,
+        telefono: formData.telefono,
+        fecha_recepcion: formData.fecha_recepcion,
+        fecha_entrega: formData.fecha_entrega,
+        total: parseFloat(formData.total) || 0,
+        adelanto: parseFloat(formData.adelanto) || 0,
+        saldo: parseFloat(formData.saldo) || 0
+      };
+
+      const response = await createOrden(orderData);
+      
+      if (response.ok) {
+        alert('Orden creada correctamente');
+        navigate("/ordenes");
+      } else {
+        alert('Error al crear la orden');
+      }
+    } catch (error) {
+      console.error('Error al crear orden:', error);
+      alert('Error al crear la orden');
+    }
   };
 
   return (
@@ -39,29 +110,70 @@ const AgregarOrdenTrabajo = () => {
         <div className="orden-row">
           <div className="orden-field">
             <label>Paciente</label>
-            <input type="text" placeholder="Nombre del paciente" />
+            <input 
+              type="text" 
+              name="paciente"
+              value={formData.paciente}
+              onChange={handleInputChange}
+              placeholder="Nombre del paciente" 
+            />
           </div>
         </div>
 
         <div className="orden-row">
           <div className="orden-field">
             <label>Dirección de domicilio</label>
-            <input type="text" placeholder="Dirección del paciente" />
+            <input 
+              type="text" 
+              name="direccion"
+              value={formData.direccion}
+              onChange={handleInputChange}
+              placeholder="Dirección del paciente" 
+            />
           </div>
           <div className="orden-field">
             <label>Correo</label>
-            <input type="email" placeholder="ejemplo@correo.com" />
+            <input 
+              type="email" 
+              name="correo"
+              value={formData.correo}
+              onChange={handleInputChange}
+              placeholder="ejemplo@correo.com" 
+            />
+          </div>
+        </div>
+
+        <div className="orden-row">
+          <div className="orden-field">
+            <label>Teléfono</label>
+            <input 
+              type="tel" 
+              name="telefono"
+              value={formData.telefono}
+              onChange={handleInputChange}
+              placeholder="Número de teléfono" 
+            />
           </div>
         </div>
 
         <div className="orden-row">
           <div className="orden-field">
             <label>Fecha Recepción</label>
-            <input type="date" />
+            <input 
+              type="date" 
+              name="fecha_recepcion"
+              value={formData.fecha_recepcion}
+              onChange={handleInputChange}
+            />
           </div>
           <div className="orden-field">
             <label>Fecha Entrega</label>
-            <input type="date" />
+            <input 
+              type="date" 
+              name="fecha_entrega"
+              value={formData.fecha_entrega}
+              onChange={handleInputChange}
+            />
           </div>
         </div>
       </div>
@@ -70,23 +182,46 @@ const AgregarOrdenTrabajo = () => {
       <div className="orden-totales">
         <div className="orden-total">
           <label>Total: Q</label>
-          <input type="number" placeholder="0.00" />
+          <input 
+            type="number" 
+            name="total"
+            value={formData.total}
+            onChange={handleInputChange}
+            step="0.01"
+            min="0"
+            placeholder="0.00" 
+          />
         </div>
         <div className="orden-adelanto">
           <label>Adelanto: Q</label>
-          <input type="number" placeholder="0.00" />
+          <input 
+            type="number" 
+            name="adelanto"
+            value={formData.adelanto}
+            onChange={handleInputChange}
+            step="0.01"
+            min="0"
+            placeholder="0.00" 
+          />
         </div>
         <div className="orden-saldo">
-          <label>Saldo: Q</label>
-          <input type="number" placeholder="0.00" />
+          <label>Saldo: Q <span className="text-xs text-gray-500">(calculado automáticamente)</span></label>
+          <input 
+            type="number" 
+            name="saldo"
+            value={formData.saldo}
+            readOnly
+            className="bg-gray-300 text-gray-600 cursor-not-allowed"
+            style={{ backgroundColor: '#d1d5db', color: '#4b5563' }}
+            placeholder="0.00" 
+          />
         </div>
       </div>
 
       {/* Botones */}
       <div className="agregarorden-actions">
-
-        <button className="btn-save">Guardar</button>
-       <button className="btn-close" onClick={cerrarFormulario}>Cerrar</button>
+        <button className="btn-save" onClick={handleGuardar}>Guardar</button>
+        <button className="btn-close" onClick={cerrarFormulario}>Cerrar</button>
       </div>
     </div>
   );
