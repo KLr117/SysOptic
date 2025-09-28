@@ -220,5 +220,5 @@
 
 .users-table thead th {
   background-color: #e79090 ; /* rojo suave */
-  color: #ffffff; /* texto blanco para contraste */
+  color: #000000; /* texto blanco para contraste */
 }
