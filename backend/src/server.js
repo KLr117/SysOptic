@@ -7,6 +7,8 @@ import systemRoutes from "../routes/SystemRoutes.js";
 import ordenTrabajoRoutes from "../routes/OrdenTrabajoRoutes.js";
 import expedientesRoutes from "../routes/ExpedientesRoutes.js";
 
+import notificacionesRoutes from "../routes/notificacionesRoutes.js";
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -19,6 +21,15 @@ app.use("/api", authRoutes);
 app.use("/api/bitacora", bitacoraRoutes);
 app.use("/api/ordenes", ordenTrabajoRoutes);
 app.use("/api/expedientes", expedientesRoutes);
+
+app.use("/api/notificaciones", notificacionesRoutes);
+
+
+
+
+
+
+
 
 app.listen(PORT, () => {
   console.log(`✅ Backend corriendo en http://localhost:${PORT}`);

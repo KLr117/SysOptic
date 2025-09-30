@@ -32,19 +32,6 @@ INSERT INTO tbl_permisos (nombre_permiso, descripcion) VALUES
 ('administrar_usuarios', 'Permite administrar usuarios y roles');
 
 -- ==============================================
--- Ordenes
--- ==============================================
-
-INSERT INTO tbl_ordenes (correlativo, paciente, direccion, correo, telefono, fecha_recepcion, fecha_entrega, total, adelanto, saldo)
-VALUES 
-('ORD-001', 'Juan Pérez', 'Calle 123', 'juan@example.com', '555-1234', '2025-09-01', '2025-09-07', 150.00, 50.00, 100.00),
-('ORD-002', 'María López', 'Av. Central 456', 'maria@example.com', '555-5678', '2025-09-02', '2025-09-08', 200.00, 100.00, 100.00),
-('ORD-003', 'Carlos Gómez', 'Zona 5, Guatemala', 'carlosg@example.com', '555-9876', '2025-09-03', '2025-09-10', 300.00, 150.00, 150.00),
-('ORD-004', 'Ana Martínez', 'Calle Falsa 789', 'ana@example.com', '555-6543', '2025-09-04', '2025-09-11', 250.00, 100.00, 150.00),
-('ORD-005', 'Luis Hernández', 'Boulevard 12', 'luis@example.com', '555-4321', '2025-09-05', '2025-09-12', 180.00, 80.00, 100.00);
-
-
--- ==============================================
 -- INSERTS DE PRUEBA: ROLES_PERMISOS
 -- ==============================================
 
@@ -62,4 +49,30 @@ INSERT INTO tbl_roles_permisos (fk_id_role, fk_id_permiso)
 SELECT 3, pk_id_permiso FROM tbl_permisos
 WHERE nombre_permiso IN ('ver_ordenes','crear_ordenes','ver_notificaciones','crear_notificaciones');
 
+-- ==============================================
+-- INSERTS: CATEGORIAS DE NOTIFICACION
+-- ==============================================
+
+-- Insertar categorías iniciales
+INSERT INTO tbl_categorias_notificacion (nombre_categoria)
+VALUES ('Recordatorio'), ('Promoción');
+
+-- ==============================================
+-- INSERTS: TIPOS DE NOTIFICACION
+-- ==============================================
+
+-- Insertar tipos de notificacion
+INSERT INTO tbl_tipos_notificacion (nombre_tipo) VALUES ('General'), ('Específica');
+
+-- ==============================================
+-- INSERTS: MODULOS NOTIFICACION
+-- ==============================================
+
+INSERT INTO tbl_modulos_notificacion (nombre_modulo) VALUES ('Expedientes'), ('Ordenes');
+
+-- ==============================================
+-- INSERTS: ESTADOS NOTIFICACION
+-- ==============================================
+
+INSERT INTO tbl_estados_notificacion (nombre_estado) VALUES ('pendiente'), ('atendida'), ('cancelada');
 
