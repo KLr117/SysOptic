@@ -135,3 +135,53 @@ CREATE TABLE tbl_users_permisos (
     FOREIGN KEY (fk_id_permiso) REFERENCES tbl_permisos(pk_id_permiso),
     UNIQUE(fk_id_user, fk_id_permiso)
 );
+
+
+-- ==============================================
+-- ACTUALIZACIONES/MODIFICACIONES AL LDD
+-- ==============================================
+
+
+
+-- ==============================================
+-- NUEVA TABLA CATALOGO DE CATEGORÍAS DE NOTIFICACIÓN
+-- ==============================================
+CREATE TABLE tbl_categorias_notificacion (
+    pk_id_categoria_notificacion INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_categoria VARCHAR(50) NOT NULL -- Ej: recordatorio, promocion
+);
+
+-- ==============================================
+-- ALTERS PARA TABLA tbl_notificaciones
+-- ==============================================
+
+-- Categoría de notificación
+ALTER TABLE tbl_notificaciones
+ADD COLUMN fk_id_categoria_notificacion INT AFTER intervalo_dias,
+ADD CONSTRAINT fk_notificacion_categoria
+  FOREIGN KEY (fk_id_categoria_notificacion)
+  REFERENCES tbl_categorias_notificacion(pk_id_categoria_notificacion);
+
+-- Fecha fin (para promociones)
+ALTER TABLE tbl_notificaciones
+ADD COLUMN fecha_fin DATE NULL AFTER fecha_objetivo;
+
+-- Campos para envío de correo
+ALTER TABLE tbl_notificaciones
+ADD COLUMN enviar_email TINYINT(1) NOT NULL DEFAULT 1 AFTER fecha_fin,
+ADD COLUMN asunto_email VARCHAR(150) NULL AFTER enviar_email,
+ADD COLUMN cuerpo_email TEXT NULL AFTER asunto_email;
+
+-- 1) Nueva columna para modo legible de intervalo
+ALTER TABLE tbl_notificaciones
+ADD COLUMN tipo_intervalo ENUM('despues_registro','antes_entrega','despues_recepcion')
+NOT NULL DEFAULT 'despues_registro'
+AFTER intervalo_dias;
+
+-- 2) Normalizar filas existentes según módulo:
+--   1 = Expedientes, 2 = Ordenes  
+UPDATE tbl_notificaciones
+SET tipo_intervalo = 'despues_recepcion'
+WHERE fk_id_modulo_notificacion = 2
+  AND tipo_intervalo = 'despues_registro';
+
