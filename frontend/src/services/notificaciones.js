@@ -21,8 +21,8 @@ export const getNotificacionById = async (id) => {
 };
 
 // Actualizar
-export const updateNotificacion = async (id, data) => {
-  const res = await axios.put(`${API_URL}/${id}`, data);
+export const updateNotificacion = async (id, notificacion) => {
+  const res = await axios.put(`${API_URL}/${id}`, notificacion);
   return res.data;
 };
 
