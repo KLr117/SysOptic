@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
 import "./styles/index.css";
 
 // Páginas
@@ -15,7 +14,7 @@ import Expedientes from "./pages/Expedientes";
 import AdminPanel from "./pages/AdminPanel";
 import Bitacora from "./pages/bitacora";
 import Notificaciones from "./pages/Notificaciones";
-
+import NotificacionForm from "./pages/NotificacionForm";
 
 
 
@@ -44,7 +43,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/expedientes" element={<Expedientes />} />
             <Route path="/bitacora" element={<Bitacora />} />
             <Route path="/notificaciones" element={<Notificaciones/>} />
-
+            <Route path="/notificaciones/nueva" element={<NotificacionForm mode="create" />} />
+            <Route path="/notificaciones/editar/:id" element={<NotificacionForm mode="edit" />} />
 
 
 
