@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Importar useNavigate
 import "../styles/orden-trabajo.css";
 import "../styles/vista-orden-trabajo.css";
+import "../styles/popup.css";
 import logo from "../assets/logo.jpg"; // Importamos el logo desde src
 import Titulo from "../components/Titulo"; // Importamos el nuevo componente Titulo
+import PopUp from "../components/PopUp";
 import { createOrden } from "../services/ordenTrabajoService";
 
 
@@ -21,6 +23,14 @@ const AgregarOrdenTrabajo = () => {
     total: '',
     adelanto: '',
     saldo: ''
+  });
+
+  // Estados para PopUp
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'success'
   });
 
   // Función para cerrar el formulario
@@ -55,7 +65,12 @@ const AgregarOrdenTrabajo = () => {
     try {
       // Validaciones básicas
       if (!formData.paciente || !formData.telefono) {
-        alert('Paciente y teléfono son requeridos');
+        setPopup({
+          isOpen: true,
+          title: 'Campos Requeridos',
+          message: 'Paciente y teléfono son campos obligatorios.',
+          type: 'warning'
+        });
         return;
       }
 
@@ -75,14 +90,32 @@ const AgregarOrdenTrabajo = () => {
       const response = await createOrden(orderData);
       
       if (response.ok) {
-        alert('Orden creada correctamente');
-        navigate("/ordenes");
+        setPopup({
+          isOpen: true,
+          title: 'Registro Ingresado',
+          message: 'La orden de trabajo ha sido creada exitosamente.',
+          type: 'success'
+        });
+        // Navegar después de mostrar el mensaje
+        setTimeout(() => {
+          navigate("/ordenes");
+        }, 2000);
       } else {
-        alert('Error al crear la orden');
+        setPopup({
+          isOpen: true,
+          title: 'Error',
+          message: 'Error al crear la orden. Intente nuevamente.',
+          type: 'error'
+        });
       }
     } catch (error) {
       console.error('Error al crear orden:', error);
-      alert('Error al crear la orden');
+      setPopup({
+        isOpen: true,
+        title: 'Error',
+        message: 'Error al crear la orden. Intente nuevamente.',
+        type: 'error'
+      });
     }
   };
 
@@ -223,6 +256,17 @@ const AgregarOrdenTrabajo = () => {
         <button className="btn-save" onClick={handleGuardar}>Guardar</button>
         <button className="btn-close" onClick={cerrarFormulario}>Cerrar</button>
       </div>
+
+      {/* PopUp para mensajes */}
+      <PopUp
+        isOpen={popup.isOpen}
+        onClose={() => setPopup(prev => ({ ...prev, isOpen: false }))}
+        title={popup.title}
+        message={popup.message}
+        type={popup.type}
+        autoClose={popup.type === 'success'}
+        autoCloseDelay={2000}
+      />
     </div>
   );
 };

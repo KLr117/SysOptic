@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "../styles/orden-trabajo.css";
 import "../styles/table-responsive.css";
+import "../styles/popup.css";
 import Titulo from "../components/Titulo";
 import Button from "../components/Button";
+import PopUp from "../components/PopUp";
 import { useNavigate } from "react-router-dom";
 import { getOrdenes, deleteOrden } from "../services/ordenTrabajoService";
 
@@ -36,6 +38,17 @@ const OrdenTrabajo = () => {
   const [registrosPorPagina, setRegistrosPorPagina] = useState(10);
   const filasOpciones = [5, 10, 20, 50];
 
+  // Estados para PopUp
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'success'
+  });
+
+  // Estado para orden a eliminar
+  const [ordenAEliminar, setOrdenAEliminar] = useState(null);
+
   // Cargar órdenes desde el backend
   useEffect(() => {
     const cargarOrdenes = async () => {
@@ -63,19 +76,57 @@ const OrdenTrabajo = () => {
   const editarOrden = (id) => navigate(`/editar-orden-trabajo/${id}`);
   const verOrden = (id) => navigate(`/ver-orden-trabajo/${id}`);
   
+  const confirmarEliminacion = (id) => {
+    setOrdenAEliminar(id);
+    setPopup({
+      isOpen: true,
+      title: 'Confirmar Eliminación',
+      message: `¿Está seguro que desea eliminar la orden ${id}?`,
+      type: 'warning',
+      showButtons: true,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      onConfirm: () => eliminarOrden(id),
+      onCancel: () => setOrdenAEliminar(null)
+    });
+  };
+
   const eliminarOrden = async (id) => {
-    if (window.confirm(`¿Eliminar la orden ${id}?`)) {
-      try {
-        const response = await deleteOrden(id);
-        if (response.ok) {
-          setOrdenesData((prev) => prev.filter((o) => o.pk_id_orden !== id));
-        } else {
-          alert("Error al eliminar la orden");
-        }
-      } catch (err) {
-        console.error("Error eliminando orden:", err);
-        alert("Error al eliminar la orden");
+    try {
+      const response = await deleteOrden(id);
+      if (response.ok) {
+        setOrdenesData((prev) => prev.filter((o) => o.pk_id_orden !== id));
+        setPopup({
+          isOpen: true,
+          title: 'Orden Eliminada',
+          message: `La orden ${id} ha sido eliminada exitosamente.`,
+          type: 'success',
+          showButtons: true,
+          confirmText: 'Aceptar',
+          onConfirm: () => setOrdenAEliminar(null)
+        });
+      } else {
+        setPopup({
+          isOpen: true,
+          title: 'Error',
+          message: 'Error al eliminar la orden. Intente nuevamente.',
+          type: 'error',
+          showButtons: true,
+          confirmText: 'Aceptar',
+          onConfirm: () => setOrdenAEliminar(null)
+        });
       }
+    } catch (err) {
+      console.error("Error eliminando orden:", err);
+      setPopup({
+        isOpen: true,
+        title: 'Error',
+        message: 'Error al eliminar la orden. Intente nuevamente.',
+        type: 'error',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setOrdenAEliminar(null)
+      });
     }
   };
 
@@ -255,13 +306,13 @@ const OrdenTrabajo = () => {
                   <td>{orden.fecha_recepcion ? new Date(orden.fecha_recepcion).toLocaleDateString('es-ES') : ''}</td>
                   <td>{orden.fecha_entrega ? new Date(orden.fecha_entrega).toLocaleDateString('es-ES') : ''}</td>
                   <td className="text-right">
-                    Q{parseFloat(orden.total || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    Q{parseFloat(orden.total || 0).toFixed(2)}
                   </td>
                   <td className="text-right">
-                    Q{parseFloat(orden.adelanto || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    Q{parseFloat(orden.adelanto || 0).toFixed(2)}
                   </td>
                   <td className="text-right font-semibold bg-gray-100">
-                    Q{parseFloat(orden.saldo || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    Q{parseFloat(orden.saldo || 0).toFixed(2)}
                   </td>
 
                   <td>
@@ -271,7 +322,9 @@ const OrdenTrabajo = () => {
                         const accion = e.target.value;
                         if (accion === "Ver") verOrden(orden.pk_id_orden);
                         else if (accion === "Editar") editarOrden(orden.pk_id_orden);
-                        else if (accion === "Eliminar") eliminarOrden(orden.pk_id_orden);
+                        else if (accion === "Eliminar") {
+                          confirmarEliminacion(orden.pk_id_orden);
+                        }
                         e.target.value = "Acciones";
                       }}
                     >
@@ -371,6 +424,22 @@ const OrdenTrabajo = () => {
           </Button>
         </div>
       </div>
+
+      {/* PopUp para mensajes */}
+      <PopUp
+        isOpen={popup.isOpen}
+        onClose={() => setPopup(prev => ({ ...prev, isOpen: false }))}
+        title={popup.title}
+        message={popup.message}
+        type={popup.type}
+        showButtons={popup.showButtons}
+        confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        onConfirm={popup.onConfirm}
+        onCancel={popup.onCancel}
+        autoClose={popup.type === 'success' && !popup.showButtons}
+        autoCloseDelay={3000}
+      />
     </div>
   );
 };
