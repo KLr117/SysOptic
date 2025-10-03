@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/orden-trabajo.css";
 import "../styles/table-responsive.css";
+import "../styles/tables.css";
 import Titulo from "../components/Titulo";
 import Button from "../components/Button";
 import { useNavigate } from "react-router-dom";
@@ -235,7 +236,7 @@ const OrdenTrabajo = () => {
 
       {/* TABLA CON SCROLL HORIZONTAL */}
       <div className="table-container">
-        <table className="users-table">
+        <table className="table orden-table">
           <thead>
             <tr>
               {columns.map((col, index) => (

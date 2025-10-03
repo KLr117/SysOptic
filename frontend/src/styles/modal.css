@@ -8,35 +8,47 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
 }
 
 .modal-box {
-  background: #fff;
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
   padding: 20px;
   border-radius: 8px;
   width: 350px;
   max-width: 90%;
   text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
 .modal-actions {
   margin-top: 15px;
   display: flex;
   justify-content: space-around;
+  gap: 10px;
 }
 
 .btn-confirm {
-  background: #28a745;
-  color: white;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
   padding: 8px 16px;
-  border: none;
   border-radius: 5px;
+  cursor: pointer;
+}
+.btn-confirm:hover {
+  filter: brightness(1.1);
 }
 
 .btn-cancel {
-  background: #dc3545;
-  color: white;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
   padding: 8px 16px;
-  border: none;
   border-radius: 5px;
+  cursor: pointer;
+}
+.btn-cancel:hover {
+  filter: brightness(1.1);
 }

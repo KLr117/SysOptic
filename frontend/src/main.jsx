@@ -2,6 +2,11 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/index.css";
+import { ThemeProvider } from "./context/ThemeContext";
+import "./styles/theme.css"; // estilos de light/dark
+
+
+
 
 // Páginas
 import Login from "./pages/Login";
@@ -27,6 +32,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
+      <ThemeProvider>
       <Routes>
         {/* Login público */}
         <Route path="/login" element={<Login />} />
@@ -55,6 +61,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         {/* Cualquier otra URL redirige a login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
+      </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

@@ -1,0 +1,54 @@
+/* Tooltip base */
+.pagination-controls button {
+  position: relative;
+}
+
+/* Estilo por defecto (modo claro) */
+.pagination-controls button[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%; /* arriba del botón */
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333; /* fondo oscuro */
+  color: #fff; /* texto blanco */
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 10;
+}
+
+/* Flechita del tooltip */
+.pagination-controls button[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  bottom: 115%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 10;
+}
+
+/* Mostrar tooltip al hover */
+.pagination-controls button:hover::after,
+.pagination-controls button:hover::before {
+  opacity: 1;
+}
+
+/* 🌙 Modo oscuro */
+.dark-mode .pagination-controls button[data-tooltip]::after {
+  background: #f1f1f1; /* fondo claro */
+  color: #111; /* texto oscuro */
+}
+
+.dark-mode .pagination-controls button[data-tooltip]::before {
+  border-color: #f1f1f1 transparent transparent transparent;
+}

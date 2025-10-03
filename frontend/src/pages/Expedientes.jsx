@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/vista-expedientes.css";
 import Titulo from "../components/Titulo";
 import Button from "../components/Button";
+import "../styles/tables.css";
 
 export default function Expedientes() {
   const columns = [
@@ -224,7 +225,7 @@ export default function Expedientes() {
       {/* Tabla de expedientes */}
       {!mostrarFormulario && (
         <div className="table-container">
-          <table className="tabla-expedientes">
+          <table className="table table-expedientes">
             <thead>
               <tr>
                 {columns.map((col, i) => <th key={i}>{col}</th>)}

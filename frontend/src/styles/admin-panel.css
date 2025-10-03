@@ -10,8 +10,8 @@
 }
 
 .btn-bitacora {
-  background: #3b82f6;
-  color: white;
+  background: var(--color-primary);
+  color: #fff;
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
@@ -19,22 +19,24 @@
   transition: 0.3s;
 }
 .btn-bitacora:hover {
-  background: #2563eb;
+  background: var(--color-accent);
 }
 
 /* --- FORMULARIO --- */
 .admin-actions {
   margin-bottom: 2rem;
-  background: #ffffff;
+  background: var(--color-bg-secondary);
   padding: 1.2rem;
   border-radius: 1rem;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   transition: all 0.3s ease;
+  color: var(--color-text);
 }
 
 .admin-actions h3 {
   font-size: 1.25rem;
-  color: #1f2937;
+  color: var(--color-text);
   margin-bottom: 1rem;
   font-weight: 600;
 }
@@ -44,28 +46,31 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 0.75rem;
-  align-items: flex-end; /* ✅ Asegura que el botón quede alineado con los campos */
+  align-items: flex-end;
 }
 
 .user-form input,
 .user-form select {
   padding: 0.4rem 0.6rem;
   border-radius: 0.5rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border);
   width: 150px;
   font-size: 0.95rem;
   height: 35px;
   box-sizing: border-box;
   transition: all 0.3s ease;
   outline: none;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .user-form input:focus,
 .user-form select:focus {
-  border-color: #2563eb;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
+/* Campo de rol */
 .role-field {
   display: flex;
   flex-direction: column;
@@ -75,18 +80,18 @@
 .role-field label {
   margin-bottom: 0.25rem;
   font-weight: 500;
-  color: #1f2937;
+  color: var(--color-text);
   font-size: 0.95rem;
 }
 
-/* ✅ Contenedor para alinear el botón a la derecha de la última fila */
+/* Contenedor para alinear el botón */
 .btn-container {
   display: flex;
   justify-content: flex-end;
-  flex: 1; /* Ocupar el espacio restante para que el botón se vaya a la derecha */
+  flex: 1;
 }
 
-/* ✅ Botón Guardar (ajustado) */
+/* Botón Guardar */
 .btn-submit {
   background: linear-gradient(90deg, #16a34a, #22c55e);
   color: white;
@@ -96,7 +101,7 @@
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
-  height: 35px; /* ✅ misma altura que los inputs */
+  height: 35px;
   transition: transform 0.2s ease, background 0.3s ease;
 }
 .btn-submit:hover {
@@ -108,36 +113,39 @@
 .users-table {
   width: 100%;
   border-collapse: collapse;
-  background: #ffffff;
+  background: var(--color-bg-secondary);
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
   margin-top: 1.5rem;
+  color: var(--color-text);
 }
 
 .users-table th,
 .users-table td {
   padding: 0.75rem 0.9rem;
   text-align: left;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
   font-size: 0.95rem;
 }
 
-.users-table th {
-  background-color: #e79090;
-  color: rgb(0, 0, 0);
+.users-table thead th {
+  background-color: var(--color-tablas-header-bg);
+  color: var(--color-tablas-header-text);
   font-weight: 600;
 }
 
-.users-table tr:nth-child(even) {
-  background-color: #f0f9ff;
+.users-table tbody tr:nth-child(even) {
+  background-color: var(--color-row-alt, #f9fafb); /* alterno configurable */
 }
 
-.users-table tr:hover {
-  background-color: #e0f2fe;
-  transition: all 0.2s ease;
+.users-table tbody tr:hover {
+  background-color: var(--color-row-hover);
+  transition: background-color 0.2s ease;
 }
 
+/* Botón permisos */
 .btn-permisos {
   background: #f59e0b;
   color: white;
@@ -145,14 +153,16 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  transition: background 0.2s;
 }
 .btn-permisos:hover {
   background: #d97706;
 }
 
+/* --- MODAL --- */
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  inset: 0;
   background: rgba(0,0,0,0.45);
   display: flex;
   justify-content: center;
@@ -161,16 +171,18 @@
 }
 
 .modal-content {
-  background: #fff;
+  background: var(--color-bg-secondary);
   padding: 1.5rem;
   border-radius: 12px;
   width: 380px;
   max-width: 90%;
+  border: 1px solid var(--color-border);
   box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+  color: var(--color-text);
 }
 
 .username-highlight {
-  color: #2563eb;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -190,5 +202,3 @@
   justify-content: flex-end;
   gap: 0.8rem;
 }
-
-/* bitacora*/

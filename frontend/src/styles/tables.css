@@ -1,0 +1,101 @@
+/* ================== TABLAS BASE ================== */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.table th,
+.table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.table thead th {
+  background-color: var(--color-tablas-header-bg);
+  color: var(--color-tablas-header-text);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table tbody tr:hover {
+  background-color: var(--color-row-hover);
+  transition: background-color 0.2s ease;
+}
+
+/* ================== PAGINACIÓN BASE ================== */
+.paginacion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 15px;
+  color: var(--color-text);
+}
+
+.paginacion .controls {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.botones-paginacion {
+  display: flex;
+  justify-content: flex-start;
+  gap: 5px;
+}
+
+.botones-paginacion button {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: background-color 0.2s, transform 0.2s, border-color 0.2s;
+}
+.botones-paginacion button:hover:not(:disabled) {
+  background-color: var(--color-hover);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+.botones-paginacion button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ================== MODAL BASE ================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-contenido {
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  padding: 2rem;
+  border-radius: 0.5rem;
+  width: 400px;
+  max-width: 90%;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+.modal-contenido h2 {
+  margin: 0 0 1rem 0;
+}

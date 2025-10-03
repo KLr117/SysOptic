@@ -1,18 +1,18 @@
 .error {
-  color: red;
+  color: var(--color-danger);
   font-size: 0.85em;
   margin-top: 4px;
   display: block;
 }
 
 .input-error {
-  border: 1px solid red !important;
+  border: 1px solid var(--color-danger) !important;
 }
 
 .success-banner {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background-color: var(--color-success-bg);
+  color: var(--color-success-text);
+  border: 1px solid var(--color-success-border);
   padding: 10px;
   margin-bottom: 15px;
   border-radius: 5px;
@@ -21,14 +21,14 @@
 
 .static-label {
   font-style: italic;
-  color: #333;
+  color: var(--color-text-muted);
   margin: 5px 0;
 }
 
 .error-banner {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border: 1px solid var(--color-danger-border);
   padding: 10px;
   margin-bottom: 15px;
   border-radius: 5px;

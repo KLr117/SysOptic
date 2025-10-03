@@ -1,20 +1,28 @@
 /* ===============   WENDYs    ================
-/* =============== ESTILOS GENERALES ================ */
+/* ================== EXPEDIENTES (Tema-ready) ================== */
+
+/* ================== EXPEDIENTES ================== */
+
+/* CONTENEDORES GENERALES */
 .expedientes-container {
-  background-color: #ffffff;
+  background-color: var(--color-bg);
   min-height: 100vh;
   padding: 1.5rem;
+  color: var(--color-text);
 }
 
 .formulario-expediente {
-  background-color: #ffffff;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
 }
 
 .tabla-expedientes {
   margin-top: 1.5rem;
 }
 
-/* =============== ESTILOS PARA FORMULARIO ================ */
+/* FORMULARIO */
 .formulario-paciente {
   display: flex;
   flex-direction: column;
@@ -32,7 +40,6 @@
   display: flex;
   flex-direction: column;
 }
-
 .campo-formulario.ancho-completo {
   grid-column: 1 / -1;
 }
@@ -40,16 +47,17 @@
 .input-formulario {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border);
   border-radius: 0.375rem;
   font-size: 1rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   margin-top: 0.25rem;
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
 }
-
 .input-formulario:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
@@ -60,272 +68,140 @@
   margin-top: 1.5rem;
 }
 
-/* =============== ESTILOS PARA BOTONES ================ */
-
-/* Botón principal - Nuevo Expediente */
-.btn-primary {
-  background-color: #17224d;
-  color: white;
+/* BOTONES (solo los de esta vista) */
+.expedientes-container .btn-primary {
+  background-color: var(--color-primary);
+  color: #fff;
   font-size: 16px;
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   cursor: pointer;
-  transition: background-color 0.2s;
   border: none;
+  transition: background-color 0.2s, transform 0.2s;
+}
+.expedientes-container .btn-primary:hover {
+  background-color: var(--color-accent);
+  transform: translateY(-1px);
 }
 
-.btn-primary:hover {
-  background-color: #2563eb;
-}
-
-/* Botón secundario - Cancelar */
-.btn-secondary {
+.expedientes-container .btn-secondary {
   padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  background-color: #cf0711;
-  font-size: 14px;
-}
-
-.btn-secondary:hover {
-  background-color: #f9fafb;
-}
-
-/* Botón de éxito - Guardar/Actualizar */
-.btn-success {
-  background-color: #08803e;
-  color: white;
-  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
   border-radius: 0.25rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-  border: none;
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text);
   font-size: 14px;
+  transition: background-color 0.2s, transform 0.2s, border-color 0.2s;
+}
+.expedientes-container .btn-secondary:hover {
+  background-color: var(--color-hover);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
-.btn-success:hover {
-  background-color: #1d4ed8;
-}
-
-/* Botón de salir */
-.btn-salir {
-  background-color: #dd0505;
-  color: white;
+.expedientes-container .btn-success {
+  background-color: var(--color-success-solid);
+  color: #fff;
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
   border: none;
   font-size: 14px;
+  transition: background-color 0.2s, transform 0.2s;
+}
+.expedientes-container .btn-success:hover {
+  background-color: #059669; /* emerald más oscuro */
+  transform: translateY(-1px);
 }
 
-.btn-salir:hover {
-  background-color: #e90909;
-}
-
-/* Botones de acción en tabla */
-.btn-edit {
-  color: #a52525;
+.expedientes-container .btn-salir {
+  background-color: var(--color-danger-solid);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
   cursor: pointer;
-  transition: color 0.2s ease;
+  border: none;
+  font-size: 14px;
+  transition: background-color 0.2s, transform 0.2s;
+}
+.expedientes-container .btn-salir:hover {
+  background-color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* ACCIONES EN TABLA (texto/enlaces) */
+.expedientes-container .btn-edit {
+  color: var(--color-accent);
+  cursor: pointer;
   background: none;
   border: none;
   font-size: 14px;
   text-decoration: underline;
   padding: 0;
   margin-right: 12px;
+  transition: color 0.2s;
+}
+.expedientes-container .btn-edit:hover {
+  color: #fd9c1c; /* acento cálido para hover */
 }
 
-.btn-edit:hover {
-  color: #fd9c1c;
-}
-
-.btn-delete {
-  color: #dc2626;
+.expedientes-container .btn-delete {
+  color: var(--color-danger-solid);
   cursor: pointer;
-  transition: color 0.2s ease;
   background: none;
   border: none;
   font-size: 14px;
   text-decoration: underline;
   padding: 0;
+  transition: color 0.2s;
 }
-
-.btn-delete:hover {
+.expedientes-container .btn-delete:hover {
   color: #b91c1c;
 }
 
-/* =============== ESTILOS PARA LA TABLA ================ */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+/* OVERRIDES PARA TABLA DE EXPEDIENTES */
+.tabla-expedientes table {
+  /* hereda de .table en tables.css */
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 
+              0 2px 4px -1px rgba(0,0,0,0.06);
 }
 
-th,
-td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #000000;
-}
-
-th {
-  background-color: #e79090;
-  font-weight: 600;
-  color: #070707;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-tr:hover {
-  background-color: #162c58;
-}
-
-/* ====== Dropdowns de acciones, notificaciones y estado */
+/* DROPDOWNS */
 .dropdown-acciones {
   padding: 0.4rem 0.6rem;
   border-radius: 0.25rem;
-  border: 1px solid #0d4497;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
   font-size: 0.9rem;
   cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.dropdown-acciones:hover {
+  border-color: var(--color-primary);
 }
 
-.dropdown-acciones:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
-}
-
-/* ====== Tabla fija */
+/* TABLA FIJA */
 .tabla-fija {
   max-height: 400px;
   overflow-y: auto;
-  border: 1px solid #ffffff; /* Borde blanco */
-  border-radius: 0.375rem; /* Bordes redondeados */
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
   margin-top: 1rem;
 }
 
-/* =============== PAGINACIÓN ================ */
-/* Contenedor principal de la paginación */
-.paginacion {
-  display: flex;
-  flex-direction: column; /* uno arriba (controles) y otro abajo (botones) */
-  align-items: flex-start; /* 🔹 alinear todo a la izquierda */
-  gap: 10px;
-  margin-top: 15px;
-}
-
-/* Selector de registros por página y texto */
-.paginacion .controls {
-  display: flex;
-  justify-content: flex-start; /* asegura que los controles estén a la izquierda */
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-/* Botones de navegación */
-.botones-paginacion {
-  display: flex;
-  justify-content: flex-start; /* 🔹 botones también alineados a la izquierda */
-  gap: 5px;
-}
-
-.botones-paginacion button {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.botones-paginacion button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.botones-paginacion button:hover:not(:disabled) {
-  background-color: #5a6268;
-}
-
-/* Número de página actual */
-.botones-paginacion span {
-  padding: 6px 10px;
-  font-weight: bold;
-}
-
-
-/* =============== DROPDOWN (Nuevo) =============== */
-.dropdown-acciones {
-  padding: 0.4rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #ffffff;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.dropdown-acciones:hover {
-  border-color: #3b82f6;
-}
-
-.dropdown-ordenar {
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  border: 1px solid #d1d5db;
-}
-
-.dropdown-ordenar {
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  border: 1px solid #d1d5db;
-}
-
-/*  modal emergente */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(194, 59, 59, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-contenido {
-  background: white;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  width: 400px;
-  max-width: 90%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.modal-contenido h2 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-}
-
-/* barra superior con orden y botón */
+/* BARRA SUPERIOR (orden/acciones) */
 .barra-superior {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  color: var(--color-text);
 }
 .barra-superior .izquierda {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
+
