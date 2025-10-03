@@ -146,15 +146,15 @@ const VerOrdenTrabajo = () => {
   <div className="orden-totales">
     <div className="orden-total">
       <label>Total: Q</label>
-      <p>{parseFloat(orden.total || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+      <p>{parseFloat(orden.total || 0).toFixed(2)}</p>
     </div>
     <div className="orden-adelanto">
       <label>Adelanto: Q</label>
-      <p>{parseFloat(orden.adelanto || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+      <p>{parseFloat(orden.adelanto || 0).toFixed(2)}</p>
     </div>
     <div className="orden-saldo">
       <label>Saldo: Q</label>
-      <p>{parseFloat(orden.saldo || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+      <p>{parseFloat(orden.saldo || 0).toFixed(2)}</p>
     </div>
   </div>
 

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../styles/vista-orden-trabajo.css";
+import "../styles/popup.css";
 import logo from "../assets/logo.jpg";
 import Titulo from "../components/Titulo";
+import PopUp from "../components/PopUp";
 import { getOrdenById, updateOrden } from "../services/ordenTrabajoService";
 
 const EditarOrdenTrabajo = () => {
@@ -25,6 +27,14 @@ const EditarOrdenTrabajo = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  // Estados para PopUp
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'success'
+  });
 
   // Cargar datos de la orden desde el backend
   useEffect(() => {
@@ -106,7 +116,12 @@ const EditarOrdenTrabajo = () => {
       
       // Validaciones básicas
       if (!formData.paciente || !formData.telefono) {
-        alert('Paciente y teléfono son requeridos');
+        setPopup({
+          isOpen: true,
+          title: 'Campos Requeridos',
+          message: 'Paciente y teléfono son campos obligatorios.',
+          type: 'warning'
+        });
         return;
       }
 
@@ -126,14 +141,32 @@ const EditarOrdenTrabajo = () => {
       const response = await updateOrden(id, orderData);
       
       if (response.ok) {
-        alert('Orden actualizada correctamente');
-        navigate("/ordenes");
+        setPopup({
+          isOpen: true,
+          title: 'Registro Actualizado',
+          message: 'La orden de trabajo ha sido actualizada exitosamente.',
+          type: 'success'
+        });
+        // Navegar después de mostrar el mensaje
+        setTimeout(() => {
+          navigate("/ordenes");
+        }, 2000);
       } else {
-        alert('Error al actualizar la orden');
+        setPopup({
+          isOpen: true,
+          title: 'Error',
+          message: 'Error al actualizar la orden. Intente nuevamente.',
+          type: 'error'
+        });
       }
     } catch (error) {
       console.error('Error al actualizar orden:', error);
-      alert('Error al actualizar la orden');
+      setPopup({
+        isOpen: true,
+        title: 'Error',
+        message: 'Error al actualizar la orden. Intente nuevamente.',
+        type: 'error'
+      });
     } finally {
       setSaving(false);
     }
@@ -310,6 +343,17 @@ const EditarOrdenTrabajo = () => {
           Cerrar
         </button>
       </div>
+
+      {/* PopUp para mensajes */}
+      <PopUp
+        isOpen={popup.isOpen}
+        onClose={() => setPopup(prev => ({ ...prev, isOpen: false }))}
+        title={popup.title}
+        message={popup.message}
+        type={popup.type}
+        autoClose={popup.type === 'success'}
+        autoCloseDelay={2000}
+      />
     </div>
   );
 };
