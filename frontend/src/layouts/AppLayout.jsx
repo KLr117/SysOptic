@@ -1,20 +1,19 @@
 import React from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { logout, getUser } from "../utils/Auth";
+import { useTheme } from "../context/ThemeContext"; 
 import "../styles/applayout.css";
+import "../styles/theme.css"; // estilos de dark/light
+import "../styles/theme-switch.css"; // estilos del botón flotante
 
 export default function AppLayout() {
   const user = getUser();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const handleLogout = () => {
     logout();
-    window.location.href = "/login"; // redirige al login
-  }
-
-  <span className="text-sm text-gray-600">
-    {user ? `Panel: ${user.username}` : "Panel"}
-  </span>
-
+    window.location.href = "/login";
+  };
 
   return (
     <div className="app-layout">
@@ -41,18 +40,26 @@ export default function AppLayout() {
               {user ? `Hola, ${user.username}` : "Panel"}
             </span>
           </div>
-          <button
-            onClick={handleLogout}
-            className="logout-btn"
-          >
+          <button onClick={handleLogout} className="logout-btn">
             Cerrar sesión
           </button>
         </header>
+
         <div className="app-content">
           <Outlet />
         </div>
       </main>
-    </div>
+
+      {/* Botón flotante de tema con etiqueta */}
+      <div className="theme-switch-wrapper">
+        <button onClick={toggleTheme} className="theme-switch">
+          {isDarkMode ? "☀️" : "🌙"}
+          <span className="theme-label">
+            {isDarkMode ? "Modo claro" : "Modo oscuro"}
+          </span>
+        </button>
+      </div>
+    </div>  
   );
 }
 

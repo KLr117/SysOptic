@@ -1,0 +1,50 @@
+.theme-switch-wrapper {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+}
+
+.theme-switch {
+  position: relative;
+  background: var(--color-primary, #007bff);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.theme-switch:hover {
+  transform: scale(1.1);
+  background: var(--color-primary-dark, #0056b3);
+}
+
+/* Texto desplegable */
+.theme-label {
+  position: absolute;
+  right: 55px;
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  opacity: 0;
+  transform: translateX(10px);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Mostrar texto al pasar el mouse */
+.theme-switch:hover .theme-label {
+  opacity: 1;
+  transform: translateX(0);
+}

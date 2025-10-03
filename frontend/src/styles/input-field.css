@@ -5,9 +5,22 @@
 }
 
 .input-label {
-  @apply text-sm font-medium text-gray-700;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text);
 }
 
 .input-element {
-  @apply border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  color: var(--color-text);
+  background: var(--color-bg-secondary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-element:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
 }

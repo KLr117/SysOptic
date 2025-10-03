@@ -1,224 +1,190 @@
-/* Contenedor principal del formulario de orden de trabajo */
+/* =========================
+   Orden de Trabajo (Formularios y Vistas)
+========================= */
+
+/* Contenedor principal del formulario */
 .orden-container {
   padding: 2rem;
   position: relative;
   min-height: 600px;
-  background: #ffe5e5;
-  border: 1px solid #e0e7ff; /* borde más moderno, azul claro */
-  border-radius: 0.75rem; /* bordes un poco más redondeados */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); /* sombra más suave y moderna */
-  transition: all 0.3s ease; 
-
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  color: var(--color-text);
 }
 
-/* Marca de agua de la empresa en el fondo */
+/* Marca de agua */
 .orden-container::before {
-  content: ""; 
-  background: url("../assets/logo.jpg") no-repeat center; /* Imagen centrada */
-  background-size: 50%; /* Ocupa la mitad del contenedor */
-  opacity: 0.10; /* Transparencia para efecto de marca de agua */
+  content: "";
+  background: url("../assets/logo.jpg") no-repeat center;
+  background-size: 50%;
+  opacity: 0.08;
   position: absolute;
   top: 50%;
   left: 50%;
   width: 100%;
   height: 100%;
-  transform: translate(-50%, -50%); /* Centrar la imagen */
-  z-index: 0; /* Detrás de todo el contenido */
+  transform: translate(-50%, -50%);
+  z-index: 0;
 }
 
-/* Cabecera del formulario: logo + número de orden */
+/* Cabecera */
 .orden-header {
   display: flex;
-  justify-content: space-between; /* Logo a la izquierda, número de orden a la derecha */
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem; /* Separación inferior */
+  margin-bottom: 2rem;
   z-index: 1;
-  position: relative; /* Para superponer sobre la marca de agua */
+  position: relative;
 }
 
-/* Logo de la empresa */
+/* Logo */
 .orden-logo img {
-  height: 100px; /* Ajusta tamaño según necesidad */
+  height: 100px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Sección del número de orden */
+/* Número de orden */
 .orden-no label {
   font-weight: bold;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.5rem;
   display: block;
-  color: #1e293b;
-   margin-bottom: 0.5rem;
+  color: var(--color-text);
 }
-
 .orden-no input {
   padding: 0.5rem;
-  border: 1px solid #cbd5e1; /* Borde del input */
-  background: #f9fafb;
-  border-radius: 0.25rem; /* Bordes redondeados */
-  transition: border-color 0.2s; /* Animación al enfocar */
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  border-radius: 0.25rem;
+  transition: border-color 0.2s;
+  color: var(--color-text);
 }
-
 .orden-no input:focus {
-  border-color:  #2563eb; /* Cambia color de borde al enfocar */
-  outline: none; /* Quitar contorno por defecto */
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+  outline: none;
 }
 
-/* Contenedor de la información del paciente */
+/* Información del paciente */
 .orden-info {
   display: flex;
-  flex-direction: column; /* Columnas verticales */
-  gap: 1rem; /* Separación entre filas */
+  flex-direction: column;
+  gap: 1rem;
   z-index: 1;
   position: relative;
 }
-
-/* Filas dentro de la información del paciente */
 .orden-row {
   display: flex;
-  gap: 2rem; /* Separación entre campos */
+  gap: 2rem;
 }
-
-/* Cada campo dentro de una fila */
 .orden-field {
-  flex: 1; /* Ocupa espacio proporcional */
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
-
 .orden-field label {
   font-weight: 500;
   margin-bottom: 0.3rem;
-  color: #1f2937;
+  color: var(--color-text);
 }
-
 .orden-field input {
   padding: 0.5rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border);
   border-radius: 0.25rem;
+  background: var(--color-bg-secondary);
   transition: border-color 0.2s;
-  background: #fff; /* color de los texbox*/ 
+  color: var(--color-text);
 }
-
 .orden-field input:focus {
-  border-color: #1d4ed8;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
   outline: none;
 }
 
-/* Sección de totales: total, adelanto, saldo */
+/* Totales */
 .orden-totales {
   display: flex;
-  justify-content: flex-end; /* Alineado a la derecha */
-  gap: 2rem; /* Separación entre cada total */
+  justify-content: flex-end;
+  gap: 2rem;
   margin-top: 2rem;
   z-index: 1;
   position: relative;
 }
-
 .orden-totales label {
   font-weight: bold;
-  margin-right: 0.5rem; /* Separación del input */
-  color: #1e293b;
+  margin-right: 0.5rem;
+  color: var(--color-text);
 }
-
 .orden-totales input {
   width: 100px;
   padding: 0.5rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border);
   border-radius: 0.25rem;
-  transition: border-color 0.2s;
-   background: #f9fafb; /* fondo blanco en los texboxt*/
+  background: var(--color-bg);
+  color: var(--color-text);
 }
-
 .orden-totales input:focus {
-  border-color: #1d4ed8;
+  border-color: var(--color-primary);
   outline: none;
 }
 
-/* Botones de acción: Guardar y Cerrar */
+/* Botones del formulario */
 .agregarorden-actions {
   margin-top: 2rem;
   display: flex;
-  gap: 1rem; /* Separación entre botones */
+  gap: 1rem;
   z-index: 1;
   position: relative;
 }
-
-
-
-/* Botón Guardar */
-.btn-save {
-  background-color: #17224d; /* Azul oscuro personalizado */
-  color: white;
-  font-size: 24px; /* Tamaño del texto del botón */
-  padding: 0.5rem 1rem; /* Espaciado interno */
-  border-radius: 0.25rem; /* Bordes redondeados */
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-
-.btn-save:hover {
-  background-color: #2563eb; /* Color más fuerte al pasar el mouse */
-}
-
-/* Botón Cerrar */
+.btn-save,
 .btn-close {
-  background-color: #17224d; /* Mismo color para consistencia */
-  color: white;
-  font-size: 24px; /* Tamaño del texto del botón */
+  background-color: var(--color-primary);
+  color: #fff;
+  font-size: 18px;
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
 }
-
+.btn-save:hover,
 .btn-close:hover {
-  background-color: #4b5563;
+  background-color: var(--color-accent);
+  transform: translateY(-1px);
 }
 
+/* Título */
 .titulo {
   font-size: 32px;
   font-weight: bold;
-  color: #17224d;
+  color: var(--color-text);
   margin-bottom: 1rem;
-  text-align: center;    /* centrado horizontal */
+  text-align: center;
 }
 
 /* =========================
-   Estilos para VerOrdenTrabajo
+   Ver Orden de Trabajo
 ========================= */
-/* Bordes para ver los campos en VerOrdenTrabajo */
-/* Contenedor específico para VerOrdenTrabajo */
 .verorden-container {
-  max-width: 600px;       /* Más estrecho */
-  margin: 2rem auto;      /* Centrado con margen superior e inferior */
-  padding: 15px;          /* Menor padding */
-   background: #ffe5e5;    /* Fondo rojo suave */
-  border: 0.5px solid #cbd5e1;
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 15px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
-
-/* Ajuste de filas y campos */
 .verorden-container .orden-row {
-  gap: 1rem;              /* Mantener separación horizontal */
-  margin-bottom: 0.5rem;  /* Menor espacio entre filas */
+  gap: 1rem;
+  margin-bottom: 0.5rem;
 }
-
 .verorden-container .orden-field {
   flex: 1;
-  padding: 6px;           /* Reducir padding dentro de los campos */
-  border: 0.5px solid #cbd5e1;
+  padding: 6px;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background-color: #fff;
-}
-
-.users-table thead th {
-  background-color: #e79090 ; /* rojo suave */
-  color: #000000; /* texto blanco para contraste */
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }

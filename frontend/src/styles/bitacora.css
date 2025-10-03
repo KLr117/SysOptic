@@ -2,11 +2,12 @@
 
 .bitacora-page {
   padding: 30px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f6fa;
   min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
+/* --- HEADER --- */
 .bitacora-header {
   display: flex;
   justify-content: space-between;
@@ -19,9 +20,10 @@
   flex: 1;
 }
 
+/* Botón cerrar */
 .btn-close {
-  background-color: #ff4757;
-  color: white;
+  background-color: var(--color-danger);
+  color: #fff;
   border: none;
   padding: 10px 18px;
   border-radius: 8px;
@@ -29,65 +31,66 @@
   font-weight: 600;
   transition: background-color 0.3s;
 }
-
 .btn-close:hover {
-  background-color: #e84118;
+  background-color: #c53030; /* tono más oscuro del rojo */
 }
 
+/* --- TABLA --- */
 .bitacora-table-wrapper {
   overflow-x: auto;
-  background-color: #fff;
+  background-color: var(--color-bg-secondary);
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0px 6px 15px rgba(0,0,0,0.1);
+  border: 1px solid var(--color-border);
+  box-shadow: 0px 6px 15px rgba(0,0,0,0.08);
 }
 
 .bitacora-table {
   width: 100%;
   border-collapse: collapse;
   min-width: 800px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
 }
 
 .bitacora-table th,
 .bitacora-table td {
   padding: 12px 15px;
   text-align: left;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--color-border);
 }
 
+/* Encabezado con variables */
 .bitacora-table th {
-  background-color: #4b7bec;
-  color: white;
+  background-color: var(--color-tablas-header-bg);
+  color: var(--color-tablas-header-text);
   font-weight: 600;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
+/* Filas */
 .bitacora-table tbody tr {
   transition: background-color 0.3s, transform 0.2s;
 }
-
 .bitacora-table tbody tr:hover {
-  background-color: #dcdde1;
+  background-color: var(--color-row-hover);
   transform: translateX(3px);
-}
-
-.bitacora-table td {
-  color: #2f3640;
 }
 
 .bitacora-table td:first-child {
   font-weight: 500;
 }
-
 .bitacora-table td:nth-child(3) {
   font-style: italic;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   .bitacora-table th,
   .bitacora-table td {
     padding: 10px 8px;
   }
 }
+
