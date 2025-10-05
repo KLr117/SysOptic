@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   createNotificacion,
   getNotificacionById,
@@ -9,9 +9,21 @@ import "../styles/vista-notificaciones.css";
 import "../styles/form-errors.css";
 import ConfirmModal from "../components/confirmModal";
 
+// ID real de la categoría Promoción en tu catálogo (tu select ya usa "2")
+const PROMO_CATEGORY_ID = "2";
+
+// Normaliza string/Date a "YYYY-MM-DD" para <input type="date">
+const toInputDate = (d) => {
+  if (!d) return "";
+  const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return "";
+  return dt.toISOString().slice(0, 10);
+};
+
 const NotificacionForm = ({ mode = "create" }) => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation(); // para saber si venimos a reactivar
 
   const [formData, setFormData] = useState({
     titulo: "",
@@ -20,7 +32,8 @@ const NotificacionForm = ({ mode = "create" }) => {
     intervaloUnidad: "dias",
     tipoIntervalo: "",
     categoria: "",
-    fechaFin: "",
+    fechaFin: "",           // YYYY-MM-DD
+    fechaInicioProm: "",    // YYYY-MM-DD (irá a fecha_objetivo en BD)
     enviarEmail: true,
     asuntoEmail: "",
     cuerpoEmail: "",
@@ -38,7 +51,6 @@ const NotificacionForm = ({ mode = "create" }) => {
         try {
           setLoading(true);
           const data = await getNotificacionById(id);
-          console.log("🔎 Datos recibidos del backend:", data);
           setFormData({
             titulo: data.titulo || "",
             descripcion: data.descripcion || "",
@@ -46,7 +58,8 @@ const NotificacionForm = ({ mode = "create" }) => {
             intervaloUnidad: "dias", // siempre convertimos a días en BD
             tipoIntervalo: data.tipo_intervalo || "",
             categoria: data.fk_id_categoria_notificacion?.toString() || "",
-            fechaFin: data.fecha_fin || "",
+            fechaFin: toInputDate(data.fecha_fin),          // ✅ normalizado para <input type="date">
+            fechaInicioProm: toInputDate(data.fecha_objetivo), 
             enviarEmail: data.enviar_email === 1,
             asuntoEmail: data.asunto_email || "",
             cuerpoEmail: data.cuerpo_email || "",
@@ -77,8 +90,11 @@ const NotificacionForm = ({ mode = "create" }) => {
       newErrors.descripcion = "Debe ingresar una descripción";
     if (!formData.categoria) newErrors.categoria = "Debe seleccionar una categoría";
     if (!formData.modulo) newErrors.modulo = "Debe seleccionar un módulo";
-    if (formData.modulo === "2" && !formData.tipoIntervalo) {
-      newErrors.tipoIntervalo = "Debe elegir cuándo se enviará";
+    if (formData.categoria !== PROMO_CATEGORY_ID && formData.modulo === "2" && !formData.tipoIntervalo) {
+     newErrors.tipoIntervalo = "Debe elegir cuándo se enviará";
+    }
+    if (formData.categoria === PROMO_CATEGORY_ID && !formData.fechaInicioProm) {
+      newErrors.fechaInicioProm = "Debe seleccionar una fecha de inicio";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -92,35 +108,47 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   if (!validateForm()) return;
 
-  let dias = parseInt(formData.intervaloCantidad);
+// 1) Calcular días
+  let dias = parseInt(formData.intervaloCantidad, 10);
   if (formData.intervaloUnidad === "semanas") dias *= 7;
   if (formData.intervaloUnidad === "meses") dias *= 30;
   if (formData.intervaloUnidad === "anios") dias *= 365;
 
+// 2) tipo_intervalo válido
   let tipoIntervalo = formData.tipoIntervalo;
-  if (formData.modulo === "Expedientes") {
-    tipoIntervalo = "despues_registro";
+  if (formData.categoria !== PROMO_CATEGORY_ID) {
+    if (formData.modulo === "1") tipoIntervalo = "despues_registro";
+    // en módulo "2" se respeta lo que eligió el usuario (y ya lo validaste)
+  } else {
+    tipoIntervalo = null; // PROMO no usa intervalos
   }
+
+  // 3) ¿venimos con intención de reactivar?
+  const reactivateIntent = !!location.state?.reactivateIntent;
 
   const payload = {
     titulo: formData.titulo,
     descripcion: formData.descripcion,
-    fechaFin: formData.categoria === "Promoción" ? formData.fechaFin : null,
-    intervaloDias: dias,
+    // PROMO: fechaFin solo si la proporcionó; si no es promo, va null
+    fechaFin: formData.categoria === PROMO_CATEGORY_ID ? (formData.fechaFin || null) : null,
+    // PROMO no usa intervalos
+    intervaloDias: formData.categoria === PROMO_CATEGORY_ID ? null : dias,
     tipo_intervalo: tipoIntervalo,
-    fk_id_categoria_notificacion: formData.categoria === "Recordatorio" ? 1 : 2,
+    fk_id_categoria_notificacion: Number(formData.categoria || 0),   
     enviarEmail: formData.enviarEmail,
     asuntoEmail: formData.asuntoEmail,
     cuerpoEmail: formData.cuerpoEmail,
     fk_id_tipo_notificacion: 1,
-    fk_id_modulo_notificacion: formData.modulo === "Expedientes" ? 1 : 2,
-    fk_id_estado_notificacion: 1,
+    fk_id_modulo_notificacion: Number(formData.modulo || 0),
+    fk_id_estado_notificacion: reactivateIntent ? 1 : 1, // si reactivas al guardar → 1 
     fk_id_expediente: null,
-    fk_id_orden: null
+    fk_id_orden: null,
+    // PROMO → fecha_objetivo = fechaInicioProm, si no es promo queda null
+    fecha_objetivo: formData.categoria === PROMO_CATEGORY_ID ? (formData.fechaInicioProm || null) : null,
   };
 
-  setPendingPayload(payload); // guardar datos temporales
-  setIsConfirmModalOpen(true); // abrir modal
+    setPendingPayload(payload); // guardar datos temporales
+    setIsConfirmModalOpen(true); // abrir modal
   };
 
   // Ejecutar realmente guardar
@@ -146,13 +174,52 @@ const handleSubmit = async (e) => {
     }
   };
 
-  if (loading) {
-    return <p>Cargando datos...</p>;
-  }
+  // Es promoción si la categoría seleccionada es "2"
+  const isPromocion = formData.categoria === PROMO_CATEGORY_ID;
+
+  // Si es PROMO → limpiar intervalos (no se usan)
+  useEffect(() => {
+    if (isPromocion) {
+      setFormData((p) => ({
+        ...p,
+        intervaloCantidad: 1,
+        intervaloUnidad: "dias",
+        tipoIntervalo: "", // no enviar nada
+      }));
+    }
+  }, [isPromocion]);
+
+  // Si cambia el módulo y NO es promoción, encarrilar tipoIntervalo
+  useEffect(() => {
+    if (isPromocion) return;
+
+    if (formData.modulo === "1") {
+      // Expedientes → siempre 'despues_registro'
+      setFormData((p) => ({ ...p, tipoIntervalo: "despues_registro" }));
+    } else if (formData.modulo === "2") {
+      // Órdenes → si está vacío, proponemos 'antes_entrega'
+      setFormData((p) => ({
+        ...p,
+        tipoIntervalo: p.tipoIntervalo || "antes_entrega",
+      }));
+    }
+  }, [formData.modulo]);
 
   return (
     <div className="notificaciones-container">
       <h2>{mode === "edit" ? "Editar Notificación" : "Crear Nueva Notificación"}</h2>
+
+      {location.state?.reactivateIntent && (
+        <div className="success-banner" style={{ marginBottom: 12 }}>
+          Revise la configuración y presione <b>Guardar</b> para <b>reactivar</b> esta notificación.
+          Si presiona <b>Cancelar</b>, el estado de la notificacion no cambiará.
+        </div>
+      )}
+
+      {loading ? (
+        <p>Cargando datos...</p>
+      ) : (
+        <>
 
       <form className="notificaciones-form" onSubmit={handleSubmit}>
         {/* ID (solo en edición) */}
@@ -201,18 +268,31 @@ const handleSubmit = async (e) => {
           {errors.categoria && <span className="error">{errors.categoria}</span>}
         </div>
 
-        {/* Fecha fin - solo si es promoción */}
         {formData.categoria === "2" && (
-          <div className="form-row">
-            <label>Fecha Fin:</label>
-            <input
-              type="date"
-              name="fechaFin"
-              value={formData.fechaFin || ""}
-              onChange={handleChange}
-            />
-          </div>
-        )}
+           <>
+             <div className="form-row">
+               <label>Fecha inicio (Promoción):</label>
+               <input
+                 type="date"
+                 name="fechaInicioProm"
+                 value={formData.fechaInicioProm || ""}
+                 onChange={handleChange}
+               />
+               {errors.fechaInicioProm && <span className="error">{errors.fechaInicioProm}</span>}
+             </div>
+             {formData.fechaInicioProm && (
+               <div className="form-row">
+                 <label>Fecha fin:</label>
+                 <input
+                   type="date"
+                   name="fechaFin"
+                   value={formData.fechaFin || ""}
+                   onChange={handleChange}
+                 />
+               </div>
+             )}
+           </>
+         )}
 
         {/* Módulo (IDs como values) */}
         <div className="form-row">
@@ -237,48 +317,52 @@ const handleSubmit = async (e) => {
         </div>
 
         {/* Tipo de intervalo */}
-        <div className="form-row">
-          <label>¿Cuándo se enviará?</label>
-          {formData.modulo === "1" && (
-            <p className="static-label">X días después de la fecha de registro</p>
-          )}
-          {formData.modulo === "2" && (
-            <select
-              name="tipoIntervalo"
-              value={formData.tipoIntervalo}
-              onChange={handleChange}
-            >
-              <option value="">Seleccione opción...</option>
-              <option value="antes_entrega">X días antes de la fecha de entrega</option>
-              <option value="despues_recepcion">X días después de la fecha de recepción</option>
-            </select>
-          )}
-          {errors.tipoIntervalo && <span className="error">{errors.tipoIntervalo}</span>}
-        </div>
+        {formData.categoria !== "2" && (
+          <div className="form-row">
+            <label>¿Cuándo se enviará?</label>
+            {formData.modulo === "1" && (
+              <p className="static-label">X días después de la fecha de registro</p>
+            )}
+            {formData.modulo === "2" && (
+              <select
+                name="tipoIntervalo"
+                value={formData.tipoIntervalo}
+                onChange={handleChange}
+              >
+                <option value="">Seleccione opción...</option>
+                <option value="antes_entrega">X días antes de la fecha de entrega</option>
+                <option value="despues_recepcion">X días después de la fecha de recepción</option>
+              </select>
+            )}
+            {errors.tipoIntervalo && <span className="error">{errors.tipoIntervalo}</span>}
+          </div>
+        )}
 
         {/* Intervalo */}
-        <div className="form-row">
-          <label>Intervalo:</label>
-          <div className="intervalo-container">
-            <input
-              type="number"
-              name="intervaloCantidad"
-              value={formData.intervaloCantidad}
-              onChange={handleChange}
-              min="1"
-            />
-            <select
-              name="intervaloUnidad"
-              value={formData.intervaloUnidad}
-              onChange={handleChange}
-            >
-              <option value="dias">Días</option>
-              <option value="semanas">Semanas</option>
-              <option value="meses">Meses</option>
-              <option value="anios">Años</option>
-            </select>
+        {formData.categoria !== "2" && (
+          <div className="form-row">
+            <label>Intervalo:</label>
+            <div className="intervalo-container">
+              <input
+                type="number"
+                name="intervaloCantidad"
+                value={formData.intervaloCantidad}
+                onChange={handleChange}
+                min="1"
+              />
+              <select
+                name="intervaloUnidad"
+                value={formData.intervaloUnidad}
+                onChange={handleChange}
+              >
+                <option value="dias">Días</option>
+                <option value="semanas">Semanas</option>
+                <option value="meses">Meses</option>
+                <option value="anios">Años</option>
+              </select>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Enviar correo */}
         <div className="form-row">
@@ -338,6 +422,8 @@ const handleSubmit = async (e) => {
         onConfirm={confirmSave}
         onCancel={() => setIsConfirmModalOpen(false)}
       />
+      </>
+      )}
     </div>
   );
 };
