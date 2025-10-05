@@ -1,10 +1,15 @@
 // ===============   WENDYs    ===============
+//en la base de datos iniciar en la linea 297 en el ldd modificacion con alter table 
 import React, { useState, useEffect } from "react";
 import "../styles/vista-expedientes.css";
+import "../styles/pagination-tooltips.css";
+import "../styles/tables.css";
+import "../styles/theme.css";
 import Titulo from "../components/Titulo";
 import Button from "../components/Button";
-import "../styles/tables.css";
-import "../styles/pagination-tooltips.css"
+import PopUp from "../components/PopUp";
+import ImageModal from "../components/ImageModal";
+import { FaAngleLeft, FaAngleRight, FaAngleDoubleLeft, FaAngleDoubleRight } from "react-icons/fa";
 
 import {
   getExpedientes,
@@ -33,8 +38,18 @@ export default function Expedientes() {
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("fecha_registro");
   const [sortDirection, setSortDirection] = useState("desc");
-  const [paginaActual, setPaginaActual] = useState(1);
-  const [registrosPorPagina, setRegistrosPorPagina] = useState(10);
+
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageInput, setPageInput] = useState("1");
+  const [inputError, setInputError] = useState(false);
+
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'success',
+  });
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [formData, setFormData] = useState({
@@ -44,12 +59,12 @@ export default function Expedientes() {
     direccion: "",
     email: "",
     fecha_registro: new Date().toISOString().split("T")[0],
-    foto: "",
+    fotos: [],
   });
   const [editando, setEditando] = useState(null);
-  const [expedienteVisualizar, setExpedienteVisualizar] = useState(null);
 
-  const filasOpciones = [5, 10, 20, 50];
+  const [fotoModal, setFotoModal] = useState(null); // para el modal
+  const [fotoIndex, setFotoIndex] = useState(0); // para carrusel
 
   // 🔹 Cargar expedientes
   useEffect(() => {
@@ -69,14 +84,34 @@ export default function Expedientes() {
   }, []);
 
   // 🔹 Manejo de formulario
-  const handleInputChange = (e) => {
+  const handleInputChange = async (e) => {
     const { name, value, files } = e.target;
-    if (name === "foto" && files && files[0]) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, foto: reader.result }); // Guarda la imagen en Base64
-      };
-      reader.readAsDataURL(files[0]);
+    if (files) {
+      // Si sube archivo
+      const newFotos = Array.from(files).map((f) => URL.createObjectURL(f));
+      if (formData.fotos.length === 0) {
+        // Primera foto
+        setFormData((prev) => ({
+          ...prev,
+          fotos: [...prev.fotos, newFotos[0]],
+        }));
+        // Preguntar por segunda foto
+        setTimeout(() => {
+          const subirSegunda = window.confirm("¿Desea subir otra foto?");
+          if (subirSegunda) {
+            // Espera al usuario que suba la segunda foto
+            return;
+          } else {
+            // Cierra formulario automáticamente
+            setMostrarFormulario(false);
+          }
+        }, 100);
+      } else if (formData.fotos.length === 1 && newFotos[0]) {
+        setFormData((prev) => ({
+          ...prev,
+          fotos: [...prev.fotos, newFotos[0]],
+        }));
+      }
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -111,7 +146,7 @@ export default function Expedientes() {
         direccion: "",
         email: "",
         fecha_registro: new Date().toISOString().split("T")[0],
-        foto: "",
+        fotos: [],
       });
       setMostrarFormulario(false);
     } catch (err) {
@@ -128,7 +163,7 @@ export default function Expedientes() {
       direccion: exp.direccion,
       email: exp.email,
       fecha_registro: exp.fecha_registro,
-      foto: exp.foto || "",
+      fotos: exp.fotos || [],
     });
     setEditando(exp.pk_id_expediente);
     setMostrarFormulario(true);
@@ -152,7 +187,7 @@ export default function Expedientes() {
       direccion: "",
       email: "",
       fecha_registro: new Date().toISOString().split("T")[0],
-      foto: "",
+      fotos: [],
     });
     setEditando(null);
     setMostrarFormulario(false);
@@ -168,7 +203,7 @@ export default function Expedientes() {
 
   // 🔹 Filtrado y ordenamiento
   const filtro = search.trim().toLowerCase();
-  const expedientesFiltrados = [...expedientes]
+  const filtered = [...expedientes]
     .filter(
       (exp) =>
         !filtro ||
@@ -188,16 +223,41 @@ export default function Expedientes() {
     });
 
   // 🔹 Paginación
-  const totalPaginas = Math.ceil(
-    expedientesFiltrados.length / registrosPorPagina
-  );
-  const pagina = Math.min(Math.max(1, paginaActual), totalPaginas || 1);
-  const indiceUltimo = pagina * registrosPorPagina;
-  const indicePrimero = indiceUltimo - registrosPorPagina;
-  const expedientesPaginados = expedientesFiltrados.slice(
-    indicePrimero,
-    indiceUltimo
-  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filtered.length);
+  const currentData = filtered.slice(startIndex, endIndex);
+
+  useEffect(() => setPageInput(String(currentPage)), [currentPage]);
+
+  const handlePageInput = (e) => setPageInput(e.target.value);
+
+  const commitPageInput = () => {
+    const page = parseInt(pageInput);
+    if (!isNaN(page) && page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      setInputError(false);
+    } else {
+      setPageInput(String(currentPage));
+      setInputError(true);
+    }
+  };
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [filtered, pageSize, totalPages, currentPage]);
+
+  // 🔹 Modal foto con carrusel
+  const openFotoModal = (fotos, index = 0) => {
+    setFotoModal(fotos);
+    setFotoIndex(index);
+  };
+  const closeFotoModal = () => {
+    setFotoModal(null);
+    setFotoIndex(0);
+  };
+  const nextFoto = () => setFotoIndex((i) => (i + 1) % fotoModal.length);
+  const prevFoto = () => setFotoIndex((i) => (i - 1 + fotoModal.length) % fotoModal.length);
 
   if (loading) return <div className="text-center p-4">Cargando expedientes...</div>;
   if (error) return <div className="text-center p-4 text-red-600">{error}</div>;
@@ -213,219 +273,176 @@ export default function Expedientes() {
         )}
       </div>
 
-      {/* 🔹 Tabla de expedientes */}
-      {!mostrarFormulario && (
-        <div className="table-container">
-          <table className="table table-expedientes">
-            <thead>
-              <tr>
-                {columns.map((col, i) => (
-                  <th key={i}>{col}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {expedientesPaginados.length > 0 ? (
-                expedientesPaginados.map((exp) => (
-                  <tr key={exp.pk_id_expediente}>
-                    <td>{exp.correlativo}</td>
-                    <td>{exp.nombre}</td>
-                    <td>{exp.telefono}</td>
-                    <td>{exp.direccion}</td>
-                    <td>{exp.email}</td>
-                    <td>{exp.fecha_registro}</td>
-                    <td>
-                      {exp.foto ? (
-                        <img
-                          src={exp.foto}
-                          alt="Foto"
-                          style={{ width: "50px", height: "50px", borderRadius: "6px" }}
-                        />
-                      ) : (
-                        <span>Sin foto</span>
-                      )}
-                    </td>
-                    <td>
-                      <select
-                        onChange={(e) => {
-                          if (e.target.value === "editar") handleEditar(exp);
-                          if (e.target.value === "eliminar")
-                            handleEliminar(exp.pk_id_expediente);
-                          if (e.target.value === "visualizar")
-                            setExpedienteVisualizar(exp);
-                          e.target.selectedIndex = 0;
-                        }}
-                      >
-                        <option value="">Acciones</option>
-                        <option value="editar">Editar</option>
-                        <option value="eliminar">Eliminar</option>
-                        <option value="visualizar">Visualizar</option>
-                      </select>
-                    </td>
-                    <td>
-                      <select
-                        onChange={(e) =>
-                          handleNotificacionChange(
-                            exp.pk_id_expediente,
-                            e.target.value
-                          )
-                        }
-                      >
-                        <option value="crear">Crear</option>
-                        <option value="editar">Editar</option>
-                        <option value="eliminar">Eliminar</option>
-                      </select>
-                    </td>
-                    <td>
-                      <select
-                        onChange={(e) =>
-                          handleEstadoChange(
-                            exp.pk_id_expediente,
-                            e.target.value
-                          )
-                        }
-                      >
-                        <option value="pendiente">Pendiente</option>
-                        <option value="proceso">En proceso</option>
-                        <option value="realizada">Realizada</option>
-                      </select>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={columns.length} style={{ textAlign: "center" }}>
-                    No se encontraron expedientes
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* 🔹 Formulario */}
+      {/* Formulario */}
       {mostrarFormulario && (
-        <form className="formulario-expediente" onSubmit={handleSubmit}>
-          <div className="fila-formulario">
-            <div className="campo-formulario fecha-ancha">
-              <label>Fecha *</label>
-              <input
-                type="date"
-                name="fecha_registro"
-                value={formData.fecha_registro}
-                onChange={handleInputChange}
-                required
-              />
+        <form onSubmit={handleSubmit} className="form-expediente mb-4">
+          <input type="text" name="correlativo" placeholder="Correlativo" value={formData.correlativo} onChange={handleInputChange} required />
+          <input type="text" name="nombre" placeholder="Nombre" value={formData.nombre} onChange={handleInputChange} required />
+          <input type="text" name="telefono" placeholder="Teléfono" value={formData.telefono} onChange={handleInputChange} />
+          <input type="text" name="direccion" placeholder="Dirección" value={formData.direccion} onChange={handleInputChange} />
+          <input type="email" name="email" placeholder="Email" value={formData.email} onChange={handleInputChange} />
+          <input type="date" name="fecha_registro" value={formData.fecha_registro} onChange={handleInputChange} required />
+          <input type="file" accept="image/*" onChange={handleInputChange} />
+          {formData.fotos.length > 0 && (
+            <div className="preview-fotos">
+              {formData.fotos.map((foto, i) => (
+                <img key={i} src={foto} alt={`Foto ${i + 1}`} className="foto-mini" />
+              ))}
             </div>
-            <div className="campo-formulario campo-correlativo">
-              <label>No. Correlativo *</label>
-              <input
-                type="text"
-                name="correlativo"
-                value={formData.correlativo}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="fila-formulario">
-            <div className="campo-formulario">
-              <label>Nombre *</label>
-              <input
-                type="text"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="campo-formulario">
-              <label>Teléfono *</label>
-              <input
-                type="tel"
-                name="telefono"
-                value={formData.telefono}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="campo-formulario">
-            <label>Correo *</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="campo-formulario">
-            <label>Dirección *</label>
-            <input
-              type="text"
-              name="direccion"
-              value={formData.direccion}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          {/* 🔹 Campo para subir foto */}
-          <div className="campo-formulario">
-            <label>Foto</label>
-            <input type="file" name="foto" accept="image/*" onChange={handleInputChange} />
-            {formData.foto && (
-              <img
-                src={formData.foto}
-                alt="Vista previa"
-                style={{ width: "80px", height: "80px", marginTop: "8px", borderRadius: "8px" }}
-              />
-            )}
-          </div>
-
-          <div className="botones-formulario">
-            <button type="button" onClick={handleCancelar} className="btn-cancel">
-              Cancelar
-            </button>
-            <button type="submit" className="btn-success">
-              {editando ? "Actualizar" : "Guardar"}
-            </button>
+          )}
+          <div className="flex gap-2 mt-2">
+            <Button type="submit">{editando ? "Actualizar" : "Guardar"}</Button>
+            <Button type="button" onClick={handleCancelar}>Cancelar</Button>
           </div>
         </form>
       )}
 
-      {/* 🔹 Modal visualizar */}
-      {expedienteVisualizar && (
-        <div className="modal-overlay">
-          <div className="modal-contenido">
-            <h2>Detalles del Expediente</h2>
-            <p><b>No. Correlativo:</b> {expedienteVisualizar.correlativo}</p>
-            <p><b>Nombre:</b> {expedienteVisualizar.nombre}</p>
-            <p><b>Teléfono:</b> {expedienteVisualizar.telefono}</p>
-            <p><b>Correo:</b> {expedienteVisualizar.email}</p>
-            <p><b>Dirección:</b> {expedienteVisualizar.direccion}</p>
-            <p><b>Fecha:</b> {expedienteVisualizar.fecha_registro}</p>
-            {expedienteVisualizar.foto && (
-              <div style={{ marginTop: "10px" }}>
-                <b>Foto:</b><br />
-                <img
-                  src={expedienteVisualizar.foto}
-                  alt="Foto del expediente"
-                  style={{ width: "120px", height: "120px", borderRadius: "10px" }}
-                />
-              </div>
-            )}
-            <button className="btn-salir" onClick={() => setExpedienteVisualizar(null)}>
-              Cerrar
+      {/* Buscador y orden */}
+      {!mostrarFormulario && (
+        <div className="flex justify-between items-center mb-4 gap-4 flex-wrap">
+          <input
+            type="text"
+            placeholder="Buscar por nombre, teléfono o correo..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="input-buscador"
+          />
+          <div className="flex gap-2 items-center">
+            <label>
+              Ordenar por:{" "}
+              <select value={sortField} onChange={(e) => setSortField(e.target.value)}>
+                <option value="nombre">Nombre</option>
+                <option value="fecha_registro">Fecha</option>
+                <option value="id">ID</option>
+              </select>
+            </label>
+            <button onClick={() => setSortDirection((dir) => (dir === "asc" ? "desc" : "asc"))}>
+              {sortDirection === "asc" ? "A ↑" : "A ↓"}
             </button>
           </div>
         </div>
+      )}
+
+      {/* Tabla */}
+      <div className="table-container">
+        <table className="table expedientes-table">
+          <thead>
+            <tr>{columns.map((c, i) => <th key={i}>{c}</th>)}</tr>
+          </thead>
+          <tbody>
+            {currentData.length > 0 ? currentData.map((exp) => (
+              <tr key={exp.pk_id_expediente}>
+                <td>{exp.correlativo}</td>
+                <td>{exp.nombre}</td>
+                <td>{exp.telefono}</td>
+                <td>{exp.direccion}</td>
+                <td>{exp.email}</td>
+                <td>{exp.fecha_registro}</td>
+                <td>
+                  {exp.fotos && exp.fotos.length > 0 ? (
+                    <div className="imagenes-preview">
+                      {exp.fotos.map((foto, i) => (
+                        <img
+                          key={i}
+                          src={foto}
+                          alt={`Foto ${i + 1}`}
+                          className="imagen-miniatura"
+                          onClick={() => openFotoModal(exp.fotos, i)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="sin-imagenes">Sin fotos</span>
+                  )}
+                </td>
+                <td>
+                  <select
+                    defaultValue="Acciones"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "Editar") handleEditar(exp);
+                      if (val === "Eliminar") handleEliminar(exp.pk_id_expediente);
+                      e.target.value = "Acciones";
+                    }}
+                  >
+                    <option disabled>Acciones</option>
+                    <option value="Editar">Editar</option>
+                    <option value="Eliminar">Eliminar</option>
+                  </select>
+                </td>
+                <td>
+                  <select
+                    defaultValue="Crear"
+                    onChange={(e) => handleNotificacionChange(exp.pk_id_expediente, e.target.value)}
+                  >
+                    <option value="Crear">Crear</option>
+                    <option value="Mostrar">Mostrar</option>
+                    <option value="Editar">Editar</option>
+                  </select>
+                </td>
+                <td>
+                  <select
+                    defaultValue="Pendiente"
+                    onChange={(e) => handleEstadoChange(exp.pk_id_expediente, e.target.value)}
+                  >
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="En proceso">En proceso</option>
+                    <option value="Realizada">Realizada</option>
+                  </select>
+                </td>
+              </tr>
+            )) : (
+              <tr>
+                <td colSpan={columns.length} className="text-center">No hay registros</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Paginación */}
+      <div className="pagination-container">
+        <div className="page-size-selector">
+          <label>Mostrar</label>
+          <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+            {[5, 10, 25, 50].map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+          <span>registros por página</span>
+        </div>
+        <span className="pagination-info">
+          Mostrando {startIndex + 1} – {endIndex} de {filtered.length}
+        </span>
+        <div className="pagination-controls">
+          <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}><FaAngleDoubleLeft /></button>
+          <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}><FaAngleLeft /></button>
+          <input type="number" min="1" max={totalPages} value={pageInput} onChange={handlePageInput} onBlur={commitPageInput} />
+          <span>/ {totalPages}</span>
+          <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><FaAngleRight /></button>
+          <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}><FaAngleDoubleRight /></button>
+        </div>
+      </div>
+
+      {/* PopUp */}
+      <PopUp
+        isOpen={popup.isOpen}
+        onClose={() => setPopup((prev) => ({ ...prev, isOpen: false }))}
+        title={popup.title}
+        message={popup.message}
+        type={popup.type}
+      />
+
+      {/* Modal de fotos */}
+      {fotoModal && (
+        <ImageModal
+          isOpen={!!fotoModal}
+          onClose={closeFotoModal}
+          image={fotoModal[fotoIndex]}
+          nextImage={fotoModal.length > 1 ? nextFoto : null}
+          prevImage={fotoModal.length > 1 ? prevFoto : null}
+        />
       )}
     </div>
   );
