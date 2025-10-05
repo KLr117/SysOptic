@@ -31,3 +31,11 @@ export const deleteNotificacion = async (id) => {
   const res = await axios.delete(`${API_URL}/${id}`);
   return res.data;
 };
+
+// ✅ Actualizar solo el estado de una notificación
+export const updateEstadoNotificacion = async (id, nuevoEstado) => {
+  const res = await axios.put(`${API_URL}/estado/${id}`, {
+    nuevoEstadoId: nuevoEstado,
+  });
+  return res.data;
+};

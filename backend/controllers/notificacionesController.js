@@ -1,7 +1,14 @@
 import * as notificacionesModel from "../models/notificacionesModel.js";
+import { updateEstadoNotificacion } from "../models/notificacionesModel.js";
 
-const validarTipoIntervaloPorModulo = (moduloId, tipoIntervalo) => {
-  // Catálogo asumido: 1=Expedientes, 2=Ordenes
+// 🔍 Validación con soporte a Promoción
+const validarTipoIntervaloPorModulo = (moduloId, tipoIntervalo, categoriaId) => {
+  // Si es categoría Promoción → no requiere tipo_intervalo
+  if (categoriaId === 2) {
+    return true;
+  }
+
+  // Si no es promoción → validar como antes
   if (moduloId === 1) {
     return tipoIntervalo === "despues_registro";
   }
@@ -19,7 +26,7 @@ export const createNotificacion = async (req, res) => {
       tipo_intervalo
     } = req.body;
 
-    if (!validarTipoIntervaloPorModulo(fk_id_modulo_notificacion, tipo_intervalo)) {
+    if (!validarTipoIntervaloPorModulo(fk_id_modulo_notificacion, tipo_intervalo,  req.body.fk_id_categoria_notificacion)) {
       return res.status(400).json({
         error: "tipo_intervalo inválido para el módulo seleccionado"
       });
@@ -64,7 +71,7 @@ export const updateNotificacion = async (req, res) => {
       tipo_intervalo
     } = req.body;
 
-    if (!validarTipoIntervaloPorModulo(fk_id_modulo_notificacion, tipo_intervalo)) {
+    if (!validarTipoIntervaloPorModulo(fk_id_modulo_notificacion, tipo_intervalo,  req.body.fk_id_categoria_notificacion)) {
       return res.status(400).json({
         error: "tipo_intervalo inválido para el módulo seleccionado"
       });
@@ -90,4 +97,30 @@ export const deleteNotificacion = async (req, res) => {
     res.status(500).json({ error: "Error al eliminar notificación" });
   }
 };
+
+// 🟢 Controlador para actualizar el estado
+export const cambiarEstadoNotificacion = async (req, res) => {
+  const { id } = req.params;
+  const { nuevoEstadoId } = req.body;
+
+  try {
+    if (!id || !nuevoEstadoId) {
+      return res.status(400).json({
+        success: false,
+        message: "Faltan parámetros: id o nuevoEstadoId."
+      });
+    }
+
+    const result = await updateEstadoNotificacion(id, nuevoEstadoId);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error al cambiar estado:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error al actualizar el estado de la notificación.",
+      error: error.message
+    });
+  }
+};
+
 // Controlador de Notificaciones
