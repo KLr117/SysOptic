@@ -4,6 +4,7 @@ import "../styles/vista-expedientes.css";
 import Titulo from "../components/Titulo";
 import Button from "../components/Button";
 import "../styles/tables.css";
+import "../styles/pagination-tooltips.css"
 
 import {
   getExpedientes,
@@ -17,9 +18,10 @@ export default function Expedientes() {
     "No. Correlativo",
     "Nombre",
     "Teléfono",
-    "Direccion",
+    "Dirección",
     "Email",
     "Fecha Registro",
+    "Foto",
     "Acciones",
     "Notificaciones",
     "Estado",
@@ -42,6 +44,7 @@ export default function Expedientes() {
     direccion: "",
     email: "",
     fecha_registro: new Date().toISOString().split("T")[0],
+    foto: "",
   });
   const [editando, setEditando] = useState(null);
   const [expedienteVisualizar, setExpedienteVisualizar] = useState(null);
@@ -67,8 +70,16 @@ export default function Expedientes() {
 
   // 🔹 Manejo de formulario
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, files } = e.target;
+    if (name === "foto" && files && files[0]) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, foto: reader.result }); // Guarda la imagen en Base64
+      };
+      reader.readAsDataURL(files[0]);
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -100,6 +111,7 @@ export default function Expedientes() {
         direccion: "",
         email: "",
         fecha_registro: new Date().toISOString().split("T")[0],
+        foto: "",
       });
       setMostrarFormulario(false);
     } catch (err) {
@@ -116,6 +128,7 @@ export default function Expedientes() {
       direccion: exp.direccion,
       email: exp.email,
       fecha_registro: exp.fecha_registro,
+      foto: exp.foto || "",
     });
     setEditando(exp.pk_id_expediente);
     setMostrarFormulario(true);
@@ -139,6 +152,7 @@ export default function Expedientes() {
       direccion: "",
       email: "",
       fecha_registro: new Date().toISOString().split("T")[0],
+      foto: "",
     });
     setEditando(null);
     setMostrarFormulario(false);
@@ -170,37 +184,21 @@ export default function Expedientes() {
         return dir * (a.nombre || "").localeCompare(b.nombre || "");
       if (sortField === "fecha_registro")
         return dir * (new Date(a.fecha_registro) - new Date(b.fecha_registro));
-      if (sortField === "mas_antiguo")
-        return new Date(a.fecha_registro) - new Date(b.fecha_registro);
-      if (sortField === "mas_reciente")
-        return new Date(b.fecha_registro) - new Date(a.fecha_registro);
       return 0;
     });
 
   // 🔹 Paginación
-  const totalPaginasRaw = Math.ceil(
+  const totalPaginas = Math.ceil(
     expedientesFiltrados.length / registrosPorPagina
   );
-  const totalPaginas = totalPaginasRaw === 0 ? 1 : totalPaginasRaw;
-  const pagina = Math.min(Math.max(1, paginaActual), totalPaginas);
+  const pagina = Math.min(Math.max(1, paginaActual), totalPaginas || 1);
   const indiceUltimo = pagina * registrosPorPagina;
   const indicePrimero = indiceUltimo - registrosPorPagina;
   const expedientesPaginados = expedientesFiltrados.slice(
     indicePrimero,
     indiceUltimo
   );
-  const mostrarInicio =
-    expedientesFiltrados.length === 0 ? 0 : indicePrimero + 1;
-  const mostrarFin = Math.min(indiceUltimo, expedientesFiltrados.length);
 
-  // Controles paginación
-  const irAPrimera = () => setPaginaActual(1);
-  const irAPrev = () => setPaginaActual((prev) => Math.max(prev - 1, 1));
-  const irASiguiente = () =>
-    setPaginaActual((prev) => Math.min(prev + 1, totalPaginas));
-  const irAUltima = () => setPaginaActual(totalPaginas);
-
-  // 🔹 Loading / Error
   if (loading) return <div className="text-center p-4">Cargando expedientes...</div>;
   if (error) return <div className="text-center p-4 text-red-600">{error}</div>;
 
@@ -214,44 +212,6 @@ export default function Expedientes() {
           </Button>
         )}
       </div>
-
-      {/* 🔹 Controles de búsqueda y orden */}
-      {!mostrarFormulario && (
-        <div className="flex justify-between items-center mb-4 gap-4 flex-wrap">
-          <input
-            type="text"
-            placeholder="Buscar por nombre, teléfono o correo..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPaginaActual(1);
-            }}
-            className="input-buscador"
-          />
-          <div className="flex gap-2 items-center">
-            <label>
-              Ordenar por:{" "}
-              <select
-                value={sortField}
-                onChange={(e) => setSortField(e.target.value)}
-              >
-                <option value="nombre">Nombre</option>
-                <option value="fecha_registro">Fecha</option>
-                <option value="id">ID</option>
-                <option value="mas_antiguo">Mas Antiguo</option>
-                <option value="mas_reciente">Mas Reciente</option>
-              </select>
-            </label>
-            <button
-              onClick={() =>
-                setSortDirection((dir) => (dir === "asc" ? "desc" : "asc"))
-              }
-            >
-              {sortDirection === "asc" ? "A ↑" : "A ↓"}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 🔹 Tabla de expedientes */}
       {!mostrarFormulario && (
@@ -275,6 +235,17 @@ export default function Expedientes() {
                     <td>{exp.email}</td>
                     <td>{exp.fecha_registro}</td>
                     <td>
+                      {exp.foto ? (
+                        <img
+                          src={exp.foto}
+                          alt="Foto"
+                          style={{ width: "50px", height: "50px", borderRadius: "6px" }}
+                        />
+                      ) : (
+                        <span>Sin foto</span>
+                      )}
+                    </td>
+                    <td>
                       <select
                         onChange={(e) => {
                           if (e.target.value === "editar") handleEditar(exp);
@@ -282,7 +253,7 @@ export default function Expedientes() {
                             handleEliminar(exp.pk_id_expediente);
                           if (e.target.value === "visualizar")
                             setExpedienteVisualizar(exp);
-                          e.target.selectedIndex = 0; // 🔹 Resetear
+                          e.target.selectedIndex = 0;
                         }}
                       >
                         <option value="">Acciones</option>
@@ -355,7 +326,6 @@ export default function Expedientes() {
                 value={formData.correlativo}
                 onChange={handleInputChange}
                 required
-                className="input-correlativo"
               />
             </div>
           </div>
@@ -406,23 +376,25 @@ export default function Expedientes() {
             />
           </div>
 
+          {/* 🔹 Campo para subir foto */}
+          <div className="campo-formulario">
+            <label>Foto</label>
+            <input type="file" name="foto" accept="image/*" onChange={handleInputChange} />
+            {formData.foto && (
+              <img
+                src={formData.foto}
+                alt="Vista previa"
+                style={{ width: "80px", height: "80px", marginTop: "8px", borderRadius: "8px" }}
+              />
+            )}
+          </div>
+
           <div className="botones-formulario">
-            <button
-              type="button"
-              onClick={handleCancelar}
-              className="btn-cancel"
-            >
+            <button type="button" onClick={handleCancelar} className="btn-cancel">
               Cancelar
             </button>
             <button type="submit" className="btn-success">
               {editando ? "Actualizar" : "Guardar"}
-            </button>
-            <button
-              type="button"
-              onClick={handleCancelar}
-              className="btn-salir"
-            >
-              Salir
             </button>
           </div>
         </form>
@@ -433,72 +405,25 @@ export default function Expedientes() {
         <div className="modal-overlay">
           <div className="modal-contenido">
             <h2>Detalles del Expediente</h2>
-            <p>
-              <b>No. Correlativo:</b> {expedienteVisualizar.correlativo}
-            </p>
-            <p>
-              <b>Nombre:</b> {expedienteVisualizar.nombre}
-            </p>
-            <p>
-              <b>Teléfono:</b> {expedienteVisualizar.telefono}
-            </p>
-            <p>
-              <b>Fecha:</b> {expedienteVisualizar.fecha_registro}
-            </p>
-            <p>
-              <b>Correo:</b> {expedienteVisualizar.email}
-            </p>
-            <p>
-              <b>Dirección:</b> {expedienteVisualizar.direccion}
-            </p>
-            <button
-              className="btn-salir"
-              onClick={() => setExpedienteVisualizar(null)}
-            >
+            <p><b>No. Correlativo:</b> {expedienteVisualizar.correlativo}</p>
+            <p><b>Nombre:</b> {expedienteVisualizar.nombre}</p>
+            <p><b>Teléfono:</b> {expedienteVisualizar.telefono}</p>
+            <p><b>Correo:</b> {expedienteVisualizar.email}</p>
+            <p><b>Dirección:</b> {expedienteVisualizar.direccion}</p>
+            <p><b>Fecha:</b> {expedienteVisualizar.fecha_registro}</p>
+            {expedienteVisualizar.foto && (
+              <div style={{ marginTop: "10px" }}>
+                <b>Foto:</b><br />
+                <img
+                  src={expedienteVisualizar.foto}
+                  alt="Foto del expediente"
+                  style={{ width: "120px", height: "120px", borderRadius: "10px" }}
+                />
+              </div>
+            )}
+            <button className="btn-salir" onClick={() => setExpedienteVisualizar(null)}>
               Cerrar
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* 🔹 Paginación */}
-      {!mostrarFormulario && (
-        <div className="paginacion flex items-center gap-2 mt-4">
-          <span>
-            Mostrar{" "}
-            <select
-              value={registrosPorPagina}
-              onChange={(e) => {
-                setRegistrosPorPagina(Number(e.target.value));
-                setPaginaActual(1);
-              }}
-            >
-              {filasOpciones.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>{" "}
-            registros por página
-          </span>
-          <span>
-            Mostrando {mostrarInicio} a {mostrarFin} de{" "}
-            {expedientesFiltrados.length}
-          </span>
-          <div className="flex gap-1 ml-auto">
-            <Button onClick={irAPrimera} disabled={pagina === 1}>
-              &lt;&lt;
-            </Button>
-            <Button onClick={irAPrev} disabled={pagina === 1}>
-              &lt;
-            </Button>
-            <span>{pagina}</span>
-            <Button onClick={irASiguiente} disabled={pagina === totalPaginas}>
-              &gt;
-            </Button>
-            <Button onClick={irAUltima} disabled={pagina === totalPaginas}>
-              &gt;&gt;
-            </Button>
           </div>
         </div>
       )}
