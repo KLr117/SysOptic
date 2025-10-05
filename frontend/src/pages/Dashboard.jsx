@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { getStats } from "../services/api";
 import "../styles/dashboard.css";
+import Titulo from "../components/Titulo";
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -12,8 +13,10 @@ export default function Dashboard() {
   }, []);
 
   return (
+    
     <div className="dashboard-container">
-      <h1 className="dashboard-title">Panel de Control</h1>
+      <Titulo text="Panel de Control" className="titulo" />
+      
       <p className="dashboard-subtitle">Sistema de Gestión Óptica - Resumen General</p>
 
       {err && <p className="error-state">Error: {err}</p>}

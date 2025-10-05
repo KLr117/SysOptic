@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "../styles/orden-trabajo.css";
 import "../styles/table-responsive.css";
-import "../styles/tables.css";
 import "../styles/popup.css";
+import "../styles/pagination-tooltips.css";
+import "../styles/vista-notificaciones.css";
 import Titulo from "../components/Titulo";
 import Button from "../components/Button";
 import PopUp from "../components/PopUp";
 import { useNavigate } from "react-router-dom";
 import { getOrdenes, deleteOrden } from "../services/ordenTrabajoService";
+import { FaAngleDoubleLeft, FaAngleLeft, FaAngleRight, FaAngleDoubleRight } from "react-icons/fa";
 
 const OrdenTrabajo = () => {
   const navigate = useNavigate();
@@ -23,6 +25,7 @@ const OrdenTrabajo = () => {
     "Total",
     "Adelanto",
     "Saldo",
+    "Imágenes",
     "Acciones",
     "Notificaciones",
     "Estado",
@@ -35,9 +38,8 @@ const OrdenTrabajo = () => {
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("fechaRecepcion");
   const [sortDirection, setSortDirection] = useState("desc");
-  const [paginaActual, setPaginaActual] = useState(1);
-  const [registrosPorPagina, setRegistrosPorPagina] = useState(10);
-  const filasOpciones = [5, 10, 20, 50];
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Estados para PopUp
   const [popup, setPopup] = useState({
@@ -142,18 +144,19 @@ const OrdenTrabajo = () => {
   };
 
 
-  // Filtrado por search
-  const filtro = search.trim().toLowerCase();
-  const ordenesFiltradas = ordenesData
-    .filter((orden) => {
-      if (!filtro) return true;
+  // 🔍 Búsqueda y filtrado
+  const [filtered, setFiltered] = useState([]);
+  
+  useEffect(() => {
+    const result = ordenesData.filter((orden) => {
+      if (!search.trim()) return true;
+      const filtro = search.toLowerCase();
       return (
         (orden.paciente || "").toLowerCase().includes(filtro) ||
         (orden.telefono || "").toLowerCase().includes(filtro) ||
         (orden.correo || "").toLowerCase().includes(filtro)
       );
-    })
-    .sort((a, b) => {
+    }).sort((a, b) => {
       // Ordenar según combobox
       const dir = sortDirection === "asc" ? 1 : -1;
 
@@ -175,17 +178,15 @@ const OrdenTrabajo = () => {
       }
       return 0;
     });
+    setFiltered(result);
+    setCurrentPage(1); // reset a primera página
+  }, [search, ordenesData, sortField, sortDirection]);
 
-  // Paginación
-  const totalPaginasRaw = Math.ceil(ordenesFiltradas.length / registrosPorPagina);
-  const totalPaginas = totalPaginasRaw === 0 ? 1 : totalPaginasRaw;
-  const pagina = Math.min(Math.max(1, paginaActual), totalPaginas);
-  const indiceUltimo = pagina * registrosPorPagina;
-  const indicePrimero = indiceUltimo - registrosPorPagina;
-  const ordenesPaginadas = ordenesFiltradas.slice(indicePrimero, indiceUltimo);
-
-  const mostrarInicio = ordenesFiltradas.length === 0 ? 0 : indicePrimero + 1;
-  const mostrarFin = Math.min(indiceUltimo, ordenesFiltradas.length);
+  // 📑 Paginación
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filtered.length);
+  const ordenesPaginadas = filtered.slice(startIndex, endIndex);
 
   // Mostrar loading
   if (loading) {
@@ -243,10 +244,7 @@ const OrdenTrabajo = () => {
             type="text"
             placeholder="Buscar por paciente, teléfono o correo..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPaginaActual(1);
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             className="input-buscador"
             style={{ width: "100%" }}
           />
@@ -256,16 +254,13 @@ const OrdenTrabajo = () => {
               Ordenar por:{" "}
               <select
                 value={sortField}
-                onChange={(e) => {
-                  setSortField(e.target.value);
-                  setPaginaActual(1);
-                }}
+                onChange={(e) => setSortField(e.target.value)}
                 style={{ marginLeft: 6 }}
               >
                 <option value="paciente">Nombre del paciente</option>
                 <option value="fechaRecepcion">Fecha Recepción</option>
                 <option value="fechaEntrega">Fecha Entrega</option>
-                <option value="id">ID</option>
+                <option value="id">No de Orden</option>
                 <option value="recientes">Más recientes</option>
                 <option value="viejos">Más antiguos</option>
               </select>
@@ -312,8 +307,20 @@ const OrdenTrabajo = () => {
                   <td className="text-right">
                     Q{parseFloat(orden.adelanto || 0).toFixed(2)}
                   </td>
-                  <td className="text-right font-semibold bg-gray-100">
+                  <td className="text-right font-semibold saldo-cell">
                     Q{parseFloat(orden.saldo || 0).toFixed(2)}
+                  </td>
+
+                  <td>
+                    <button 
+                      className="btn-imagen"
+                      onClick={() => {
+                        // TODO: Implementar subida de imágenes
+                        console.log('Subir imagen para orden:', orden.pk_id_orden);
+                      }}
+                    >
+                      📷 Añadir Imagen
+                    </button>
                   </td>
 
                   <td>
@@ -377,52 +384,78 @@ const OrdenTrabajo = () => {
         </table>
       </div>
 
-      {/* CONTROLES DE ABAJO */}
-      <div
-        className="mt-4 flex flex-col gap-1"
-        style={{ alignItems: "flex-start" }}
-      >
-        <div>
-          Mostrar{" "}
+      {/* 📑 Paginación (copiado de notificaciones) */}
+      <div className="pagination-container">
+        {/* Izquierda → selector de cantidad */}
+        <div className="page-size-selector">
+          <label htmlFor="pageSize">Mostrar</label>
           <select
-            value={registrosPorPagina}
+            id="pageSize"
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+          <span>registros por página</span>
+        </div>
+
+        {/* Centro → información de rangos */}
+        <span className="pagination-info">
+          Mostrando {startIndex + 1} – {endIndex} de {filtered.length}
+        </span>
+
+        {/* Derecha → controles de navegación */}
+        <div className="pagination-controls">
+          <button
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            data-tooltip="Primera página"
+          >
+            <FaAngleDoubleLeft />
+          </button>
+
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            data-tooltip="Página anterior"
+          >
+            <FaAngleLeft />
+          </button>
+
+          <input
+            type="number"
+            min="1"
+            max={totalPages}
+            value={currentPage}
             onChange={(e) => {
-              setRegistrosPorPagina(Number(e.target.value));
-              setPaginaActual(1);
+              let page = Number(e.target.value);
+              if (page > totalPages) page = totalPages;
+              if (page < 1) page = 1;
+              setCurrentPage(page);
             }}
-          >
-            {filasOpciones.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>{" "}
-          registros por página
-        </div>
+            className="page-input"
+          />
 
-        <div>
-          {ordenesFiltradas.length === 0 ? (
-            "Mostrando 0 a 0 de 0 registros"
-          ) : (
-            <>
-              Mostrando {mostrarInicio} a {mostrarFin} de {ordenesFiltradas.length} registros
-            </>
-          )}
-        </div>
+          <span>/ {totalPages}</span>
 
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => setPaginaActual(Math.max(pagina - 1, 1))}
-            disabled={pagina === 1}
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            data-tooltip="Página siguiente"
           >
-            {"<<<"}
-          </Button>
-          <Button
-            onClick={() => setPaginaActual(Math.min(pagina + 1, totalPaginas))}
-            disabled={pagina === totalPaginas}
+            <FaAngleRight />
+          </button>
+
+          <button
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+            data-tooltip="Última página"
           >
-            {">>>"}
-          </Button>
+            <FaAngleDoubleRight />
+          </button>
         </div>
       </div>
 
