@@ -13,7 +13,8 @@ export const getAllOrders = async () => {
       fecha_entrega,
       total,
       adelanto,
-      saldo
+      saldo,
+      imagenes
     FROM tbl_ordenes
     ORDER BY fecha_recepcion DESC
   `);
@@ -33,7 +34,8 @@ export const getOrderById = async (id) => {
       fecha_entrega,
       total,
       adelanto,
-      saldo
+      saldo,
+      imagenes
     FROM tbl_ordenes
     WHERE pk_id_orden = ?
   `, [id]);
@@ -58,15 +60,27 @@ export const createOrder = async (orderData) => {
 
   const [result] = await pool.query(`
     INSERT INTO tbl_ordenes 
-    (correlativo, paciente, direccion, correo, telefono, fecha_recepcion, fecha_entrega, total, adelanto, saldo)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (correlativo, paciente, direccion, correo, telefono, fecha_recepcion, fecha_entrega, total, adelanto, saldo, imagenes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     correlativo, paciente, direccion, correo, telefono, fecha_recepcion, fecha_entrega,
-    total, adelanto, saldo
+    total, adelanto, saldo, false
   ]);
 
   return result.insertId;
 };
+
+// Actualizar campo imagenes
+export const updateImagenes = async (ordenId, tieneImagenes) => {
+  const [result] = await pool.query(`
+    UPDATE tbl_ordenes 
+    SET imagenes = ? 
+    WHERE pk_id_orden = ?
+  `, [tieneImagenes, ordenId]);
+  
+  return result.affectedRows > 0;
+};
+
 
 export const updateOrder = async (id, orderData) => {
   const {

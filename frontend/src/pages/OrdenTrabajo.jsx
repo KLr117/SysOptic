@@ -9,6 +9,8 @@ import Button from "../components/Button";
 import PopUp from "../components/PopUp";
 import { useNavigate } from "react-router-dom";
 import { getOrdenes, deleteOrden } from "../services/ordenTrabajoService";
+import { obtenerTodasLasImagenes } from "../services/imagenesOrdenesService";
+import ImageModal from "../components/ImageModal";
 import { FaAngleDoubleLeft, FaAngleLeft, FaAngleRight, FaAngleDoubleRight } from "react-icons/fa";
 
 const OrdenTrabajo = () => {
@@ -36,8 +38,8 @@ const OrdenTrabajo = () => {
   const [error, setError] = useState(null);
 
   const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState("fechaRecepcion");
-  const [sortDirection, setSortDirection] = useState("desc");
+  const [sortField, setSortField] = useState("id");
+  const [sortDirection, setSortDirection] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -51,6 +53,53 @@ const OrdenTrabajo = () => {
 
   // Estado para orden a eliminar
   const [ordenAEliminar, setOrdenAEliminar] = useState(null);
+
+  // Estado para imágenes de órdenes desde la base de datos
+  const [imagenesOrdenes, setImagenesOrdenes] = useState({});
+  
+  // Estado para modal de imagen
+  const [modalImage, setModalImage] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Función para simular guardado de imágenes
+  const guardarImagenesOrden = (ordenId, imagenes) => {
+    if (imagenes && imagenes.length > 0) {
+      setImagenesOrdenes(prev => ({
+        ...prev,
+        [ordenId]: imagenes
+      }));
+    }
+  };
+
+  // Cargar imágenes desde la base de datos
+  useEffect(() => {
+    const cargarImagenes = async () => {
+      try {
+        const response = await obtenerTodasLasImagenes();
+        if (response.success) {
+          // Agrupar imágenes por orden_id
+          const imagenesAgrupadas = {};
+          response.imagenes.forEach(imagen => {
+            if (!imagenesAgrupadas[imagen.orden_id]) {
+              imagenesAgrupadas[imagen.orden_id] = [];
+            }
+            imagenesAgrupadas[imagen.orden_id].push({
+              id: imagen.id,
+              nombre: imagen.nombre_archivo,
+              preview: imagen.url, // URL del servidor
+              url: imagen.url // URL completa para el modal
+            });
+          });
+          setImagenesOrdenes(imagenesAgrupadas);
+          console.log('Imágenes cargadas desde BD:', imagenesAgrupadas);
+        }
+      } catch (error) {
+        console.error('Error cargando imágenes:', error);
+      }
+    };
+
+    cargarImagenes();
+  }, []);
 
   // Cargar órdenes desde el backend
   useEffect(() => {
@@ -78,6 +127,17 @@ const OrdenTrabajo = () => {
   const agregarOrden = () => navigate("/agregar-orden-trabajo");
   const editarOrden = (id) => navigate(`/editar-orden-trabajo/${id}`);
   const verOrden = (id) => navigate(`/ver-orden-trabajo/${id}`);
+  
+  // Funciones para modal de imagen
+  const openImageModal = (imagen) => {
+    setModalImage(imagen);
+    setIsModalOpen(true);
+  };
+  
+  const closeImageModal = () => {
+    setModalImage(null);
+    setIsModalOpen(false);
+  };
   
   const confirmarEliminacion = (id) => {
     setOrdenAEliminar(id);
@@ -170,12 +230,6 @@ const OrdenTrabajo = () => {
         const db = b[fieldName] ? new Date(b[fieldName]) : new Date(0);
         return dir * (da - db);
       }
-      if (sortField === "recientes") {
-        return -1 * dir * (new Date(a.fecha_recepcion) - new Date(b.fecha_recepcion));
-      }
-      if (sortField === "viejos") {
-        return dir * (new Date(a.fecha_recepcion) - new Date(b.fecha_recepcion));
-      }
       return 0;
     });
     setFiltered(result);
@@ -240,14 +294,27 @@ const OrdenTrabajo = () => {
       {/* FILA DE CONTROLES (ARRIBA) */}
       <div className="mb-4 flex justify-between items-center gap-4 flex-wrap">
         <div className="flex flex-col gap-2" style={{ flex: "1" }}>
-          <input
-            type="text"
-            placeholder="Buscar por paciente, teléfono o correo..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input-buscador"
-            style={{ width: "100%" }}
-          />
+          <div style={{ position: 'relative', width: '100%' }}>
+            <input
+              type="text"
+              placeholder="Buscar por paciente, teléfono o correo..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-buscador"
+              style={{ width: '100%', paddingLeft: '40px' }}
+            />
+            <div style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#666',
+              fontSize: '16px',
+              pointerEvents: 'none'
+            }}>
+              🔍
+            </div>
+          </div>
 
           <div className="flex gap-4 items-center">
             <label>
@@ -257,12 +324,10 @@ const OrdenTrabajo = () => {
                 onChange={(e) => setSortField(e.target.value)}
                 style={{ marginLeft: 6 }}
               >
+                <option value="id">No de Orden</option>
                 <option value="paciente">Nombre del paciente</option>
                 <option value="fechaRecepcion">Fecha Recepción</option>
                 <option value="fechaEntrega">Fecha Entrega</option>
-                <option value="id">No de Orden</option>
-                <option value="recientes">Más recientes</option>
-                <option value="viejos">Más antiguos</option>
               </select>
             </label>
 
@@ -312,15 +377,37 @@ const OrdenTrabajo = () => {
                   </td>
 
                   <td>
-                    <button 
-                      className="btn-imagen"
-                      onClick={() => {
-                        // TODO: Implementar subida de imágenes
-                        console.log('Subir imagen para orden:', orden.pk_id_orden);
-                      }}
-                    >
-                      📷 Añadir Imagen
-                    </button>
+                    <div className="imagenes-preview">
+                      {(() => {
+                        const imagenesDeOrden = imagenesOrdenes[orden.pk_id_orden];
+                        console.log(`Imágenes para orden ${orden.pk_id_orden}:`, imagenesDeOrden); // Debug
+                        console.log('Todas las imágenes disponibles:', imagenesOrdenes); // Debug
+                        return imagenesDeOrden ? (
+                          imagenesDeOrden.map((imagen, index) => (
+                            <img 
+                              key={index}
+                              src={imagen.preview} 
+                              alt={`Imagen ${index + 1}`}
+                              title={imagen.nombre}
+                              className="imagen-miniatura"
+                              onClick={() => openImageModal(imagen)}
+                              style={{ cursor: 'pointer' }}
+                              onError={(e) => {
+                                console.error('Error cargando miniatura:', e);
+                                e.target.style.display = 'none';
+                                const errorSpan = document.createElement('span');
+                                errorSpan.textContent = '❌';
+                                errorSpan.title = 'Imagen no disponible';
+                                errorSpan.style.cssText = 'color: #999; font-size: 12px; margin: 2px;';
+                                e.target.parentNode.appendChild(errorSpan);
+                              }}
+                            />
+                          ))
+                        ) : (
+                          <span className="sin-imagenes">Sin imágenes</span>
+                        );
+                      })()}
+                    </div>
                   </td>
 
                   <td>
@@ -473,6 +560,13 @@ const OrdenTrabajo = () => {
         onCancel={popup.onCancel}
         autoClose={popup.type === 'success' && !popup.showButtons}
         autoCloseDelay={3000}
+      />
+
+      {/* Modal para visualizar imágenes */}
+      <ImageModal
+        isOpen={isModalOpen}
+        onClose={closeImageModal}
+        image={modalImage}
       />
     </div>
   );

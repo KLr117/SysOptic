@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../styles/vista-orden-trabajo.css";
+import "../styles/orden-trabajo.css";
 import "../styles/popup.css";
 import logo from "../assets/logo.jpg";
 import Titulo from "../components/Titulo";
@@ -27,6 +28,8 @@ const EditarOrdenTrabajo = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+  
+  
 
   // Estados para PopUp
   const [popup, setPopup] = useState({
@@ -81,9 +84,108 @@ const EditarOrdenTrabajo = () => {
     }
   }, [id]);
 
+
   // Función para cerrar el formulario
   const cerrarFormulario = () => {
     navigate("/ordenes");
+  };
+
+
+  // Función para comprimir imagen
+  const compressImage = (file, maxWidth = 800, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(resolve, 'image/jpeg', quality);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  // Función para manejar subida de nuevas imágenes
+  const handleImageUpload = async (files) => {
+    const fileArray = Array.from(files);
+    console.log('Archivos seleccionados para edición:', fileArray.length);
+    
+    if (fileArray.length > 3) {
+      setPopup({
+        isOpen: true,
+        title: 'Máximo 3 imágenes',
+        message: 'Solo puedes subir máximo 3 fotografías.',
+        type: 'warning'
+      });
+      return;
+    }
+
+    // Comprimir imágenes
+    const compressedImages = [];
+    for (const file of fileArray) {
+      try {
+        const compressedBlob = await compressImage(file);
+        const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
+        
+        compressedImages.push({
+          id: Date.now() + Math.random(),
+          file: compressedFile,
+          preview: URL.createObjectURL(compressedFile)
+        });
+      } catch (error) {
+        console.error('Error comprimiendo imagen:', error);
+        compressedImages.push({
+          id: Date.now() + Math.random(),
+          file: file,
+          preview: URL.createObjectURL(file)
+        });
+      }
+    }
+
+    setNuevasImagenes(prev => [...prev, ...compressedImages].slice(0, 3));
+  };
+
+  // Función para manejar input de archivos
+  const handleFileInput = (e) => {
+    handleImageUpload(e.target.files);
+  };
+
+  // Función para manejar drag and drop
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    handleImageUpload(files);
+  };
+
+  // Función para eliminar imagen existente
+  const removeImagenExistente = (index) => {
+    setImagenesOrden(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Función para eliminar nueva imagen
+  const removeNuevaImagen = (id) => {
+    setNuevasImagenes(prev => prev.filter(img => img.id !== id));
   };
 
   // Función para manejar cambios en los inputs
@@ -141,6 +243,23 @@ const EditarOrdenTrabajo = () => {
       const response = await updateOrden(id, orderData);
       
       if (response.ok) {
+        // Actualizar imágenes en localStorage si hay cambios
+        if (imagenesOrden.length > 0 || nuevasImagenes.length > 0) {
+          const imagenesFinales = [...imagenesOrden, ...nuevasImagenes];
+          const imagenesData = imagenesFinales.map(img => ({
+            id: img.id,
+            nombre: img.file.name,
+            preview: img.preview
+          }));
+          
+          // Actualizar localStorage
+          const imagenesGuardadas = JSON.parse(localStorage.getItem('imagenesOrdenes') || '{}');
+          imagenesGuardadas[id] = imagenesData;
+          localStorage.setItem('imagenesOrdenes', JSON.stringify(imagenesGuardadas));
+          
+          console.log('Imágenes actualizadas en localStorage:', imagenesGuardadas);
+        }
+
         setPopup({
           isOpen: true,
           title: 'Registro Actualizado',
@@ -330,6 +449,7 @@ const EditarOrdenTrabajo = () => {
         </div>
       </div>
 
+
       {/* Botones */}
       <div className="agregarorden-actions">
         <button 
@@ -354,6 +474,7 @@ const EditarOrdenTrabajo = () => {
         autoClose={popup.type === 'success'}
         autoCloseDelay={2000}
       />
+
     </div>
   );
 };

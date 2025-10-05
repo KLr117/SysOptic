@@ -185,3 +185,116 @@ SET tipo_intervalo = 'despues_recepcion'
 WHERE fk_id_modulo_notificacion = 2
   AND tipo_intervalo = 'despues_registro';
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ALTER TABLE tbl_ordenes 
+ADD COLUMN imagenes BOOLEAN DEFAULT FALSE AFTER saldo;
+CREATE TABLE tbl_imagenes_ordenes (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  orden_id INT NOT NULL,
+  nombre_archivo VARCHAR(255) NOT NULL,
+  ruta_archivo VARCHAR(500) NOT NULL,
+  fecha_subida DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (orden_id) REFERENCES tbl_ordenes(pk_id_orden) ON DELETE CASCADE
+);
+
+
+
+
+
