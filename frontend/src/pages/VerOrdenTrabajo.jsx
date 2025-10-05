@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../styles/vista-orden-trabajo.css";
+import "../styles/orden-trabajo.css";
 import logo from "../assets/logo.jpg";
 import { getOrdenById } from "../services/ordenTrabajoService";
 
@@ -14,6 +15,7 @@ const VerOrdenTrabajo = () => {
   const [orden, setOrden] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
 
   // Cargar datos de la orden desde el backend
   useEffect(() => {
@@ -40,6 +42,7 @@ const VerOrdenTrabajo = () => {
       cargarOrden();
     }
   }, [id]);
+
 
   // Mostrar loading
   if (loading) {
@@ -89,6 +92,7 @@ const VerOrdenTrabajo = () => {
   const cerrarVista = () => {
     navigate("/ordenes");
   };
+
 
   return (
    <div className="orden-container verorden-container">
@@ -158,12 +162,14 @@ const VerOrdenTrabajo = () => {
     </div>
   </div>
 
+
   {/* Botón cerrar */}
   <div className="agregarorden-actions">
     <button className="btn-close" onClick={cerrarVista}>
       Cerrar
     </button>
   </div>
+
 </div>
   );
 };

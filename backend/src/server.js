@@ -7,7 +7,7 @@ import systemRoutes from "../routes/SystemRoutes.js";
 import ordenTrabajoRoutes from "../routes/OrdenTrabajoRoutes.js";
 import expedientesRoutes from "../routes/ExpedientesRoutes.js";
 import notificacionesRoutes from "../routes/notificacionesRoutes.js";
-
+import imagenesOrdenesRoutes from "../routes/imagenesOrdenesRoutes.js";
 
 
 
@@ -25,6 +25,9 @@ app.use("/api/bitacora", bitacoraRoutes);
 app.use("/api/ordenes", ordenTrabajoRoutes);
 app.use("/api/expedientes", expedientesRoutes);
 app.use("/api/notificaciones", notificacionesRoutes);
+app.use("/api/imagenes-ordenes", imagenesOrdenesRoutes);
+// Servir archivos estáticos (imágenes)
+app.use('/uploads', express.static('uploads'));
 
 
 
