@@ -48,3 +48,63 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   margin-top: 0.5rem;
 }
+
+/* ====== PAGINACIÓN ====== */
+/* Los estilos de paginación se importan desde vista-notificaciones.css */
+
+/* Asegurar que los botones de paginación tengan el color correcto */
+.pagination-controls button {
+  color: var(--color-text) !important;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* ====== BOTÓN DE IMAGEN ====== */
+.btn-imagen {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.btn-imagen:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-imagen:active {
+  transform: translateY(0);
+}
+
+/* ====== CENTRAR HEADERS DE TABLA ====== */
+.users-table th {
+  text-align: center !important;
+}
+
+/* ====== CELDA DE SALDO (ADAPTABLE A TEMA OSCURO) ====== */
+.saldo-cell {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+/* Tema oscuro específico para saldo */
+.dark-mode .saldo-cell {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
