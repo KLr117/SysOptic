@@ -243,6 +243,3 @@ CREATE TABLE tbl_imagenes_expedientes (
 );
 
 
-SELECT * FROM tbl_expedientes;
-
-
