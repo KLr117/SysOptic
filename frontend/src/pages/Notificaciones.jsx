@@ -1,39 +1,34 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   getNotificaciones,
   deleteNotificacion,
   updateEstadoNotificacion,
-} from "../services/notificaciones.js";
-import "../styles/vista-notificaciones.css";
-import "../styles/alerts.css";
-import "../styles/form-errors.css";
-import "../styles/pagination-tooltips.css";
-import "../styles/tables.css";
-import ConfirmModal from "../components/confirmModal.jsx";
-import {
-  FaAngleDoubleLeft,
-  FaAngleLeft,
-  FaAngleRight,
-  FaAngleDoubleRight,
-} from "react-icons/fa";
+} from '../services/notificacionesService.js';
+import '../styles/vista-notificaciones.css';
+import '../styles/alerts.css';
+import '../styles/form-errors.css';
+import '../styles/pagination-tooltips.css';
+import '../styles/tables.css';
+import ConfirmModal from '../components/confirmModal.jsx';
+import { FaAngleDoubleLeft, FaAngleLeft, FaAngleRight, FaAngleDoubleRight } from 'react-icons/fa';
 
 const intervaloLabels = {
-  despues_registro: "Días después de la fecha de registro",
-  antes_entrega: "Días antes de la fecha de entrega",
-  despues_recepcion: "Días después de la fecha de recepción",
+  despues_registro: 'Días después de la fecha de registro',
+  antes_entrega: 'Días antes de la fecha de entrega',
+  despues_recepcion: 'Días después de la fecha de recepción',
 };
 
 const estadoLabels = {
-  1: "Activa",
-  2: "Inactiva",
-  3: "Cancelada",
+  1: 'Activa',
+  2: 'Inactiva',
+  3: 'Cancelada',
 };
 
 const estadoClassMap = {
-  1: "estado-activa",
-  2: "estado-inactiva",
-  3: "estado-cancelada",
+  1: 'estado-activa',
+  2: 'estado-inactiva',
+  3: 'estado-cancelada',
 };
 
 const Notificaciones = () => {
@@ -41,23 +36,23 @@ const Notificaciones = () => {
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
 
   // Ordenamiento
-  const [sortField, setSortField] = useState("fecha_creacion");
-  const [sortDirection, setSortDirection] = useState("desc");
-  const [sortOption, setSortOption] = useState("recientes");
+  const [sortField, setSortField] = useState('fecha_creacion');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [sortOption, setSortOption] = useState('recientes');
 
   // Paginación
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageInput, setPageInput] = useState("1");
+  const [pageInput, setPageInput] = useState('1');
   const [inputError, setInputError] = useState(false);
 
   // Modales
   const [modalVisible, setModalVisible] = useState(false);
   const [notificacionSeleccionada, setNotificacionSeleccionada] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [estadoModalOpen, setEstadoModalOpen] = useState(false);
   const [selectedNoti, setSelectedNoti] = useState(null);
@@ -73,7 +68,7 @@ const Notificaciones = () => {
   useEffect(() => {
     if (location.state?.successMessage) {
       setSuccessMessage(location.state.successMessage);
-      setTimeout(() => setSuccessMessage(""), 3000);
+      setTimeout(() => setSuccessMessage(''), 3000);
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location, navigate]);
@@ -85,7 +80,7 @@ const Notificaciones = () => {
       setNotificaciones(data);
       setFiltered(data);
     } catch (error) {
-      console.error("Error al cargar notificaciones:", error);
+      console.error('Error al cargar notificaciones:', error);
     } finally {
       setLoading(false);
     }
@@ -96,8 +91,8 @@ const Notificaciones = () => {
     const q = search.toLowerCase();
     const result = notificaciones.filter(
       (n) =>
-        (n.titulo || "").toLowerCase().includes(q) ||
-        (n.descripcion || "").toLowerCase().includes(q)
+        (n.titulo || '').toLowerCase().includes(q) ||
+        (n.descripcion || '').toLowerCase().includes(q)
     );
     setFiltered(result);
     setCurrentPage(1);
@@ -106,19 +101,18 @@ const Notificaciones = () => {
   // Ordenamiento
   const sortData = (data) => {
     let result = [...data];
-    const dir = sortDirection === "asc" ? 1 : -1;
+    const dir = sortDirection === 'asc' ? 1 : -1;
 
     result.sort((a, b) => {
-      if (sortField === "id") return dir * (a.pk_id_notificacion - b.pk_id_notificacion);
-      if (sortField === "titulo")
-        return dir * (a.titulo || "").localeCompare(b.titulo || "");
-      if (sortField === "categoria")
-        return dir * (a.nombre_categoria || "").localeCompare(b.nombre_categoria || "");
-      if (sortField === "modulo")
-        return dir * (a.nombre_modulo || "").localeCompare(b.nombre_modulo || "");
-      if (sortField === "fecha_creacion")
+      if (sortField === 'id') return dir * (a.pk_id_notificacion - b.pk_id_notificacion);
+      if (sortField === 'titulo') return dir * (a.titulo || '').localeCompare(b.titulo || '');
+      if (sortField === 'categoria')
+        return dir * (a.nombre_categoria || '').localeCompare(b.nombre_categoria || '');
+      if (sortField === 'modulo')
+        return dir * (a.nombre_modulo || '').localeCompare(b.nombre_modulo || '');
+      if (sortField === 'fecha_creacion')
         return dir * (new Date(a.fecha_creacion) - new Date(b.fecha_creacion));
-      if (sortField === "intervalo_dias")
+      if (sortField === 'intervalo_dias')
         return dir * ((a.intervalo_dias || 0) - (b.intervalo_dias || 0));
       return 0;
     });
@@ -153,7 +147,7 @@ const Notificaciones = () => {
       await deleteNotificacion(selectedNoti.pk_id_notificacion);
       await fetchNotificaciones();
     } catch (error) {
-      console.error("Error al eliminar:", error);
+      console.error('Error al eliminar:', error);
     } finally {
       setIsDeleteModalOpen(false);
       setSelectedNoti(null);
@@ -172,25 +166,24 @@ const Notificaciones = () => {
     if (!selectedNoti) return;
 
     try {
-      if (modalAction === "desactivar") {
+      if (modalAction === 'desactivar') {
         // 2 = inactiva
         await updateEstadoNotificacion(selectedNoti.pk_id_notificacion, 2);
         await fetchNotificaciones();
-        setSuccessMessage("Notificación desactivada.");
-        setTimeout(() => setSuccessMessage(""), 2000);
+        setSuccessMessage('Notificación desactivada.');
+        setTimeout(() => setSuccessMessage(''), 2000);
       } else {
         // "reactivar": NO tocamos el estado aquí.
         // Solo navegamos al formulario con la intención de reactivar.
         navigate(`/notificaciones/editar/${selectedNoti.pk_id_notificacion}`, {
           state: {
             reactivateIntent: true,
-            successMessage:
-              "Revise la configuración antes de reactivar esta notificación.",
+            successMessage: 'Revise la configuración antes de reactivar esta notificación.',
           },
         });
       }
     } catch (error) {
-      console.error("Error al cambiar estado:", error);
+      console.error('Error al cambiar estado:', error);
     } finally {
       setEstadoModalOpen(false);
       setSelectedNoti(null);
@@ -206,26 +199,25 @@ const Notificaciones = () => {
   // Ordenar encabezado
   const toggleSort = (field) => {
     if (sortField === field) {
-      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
-      setSortDirection("asc");
+      setSortDirection('asc');
     }
   };
 
   const renderSortArrow = (field) =>
-    sortField === field ? (sortDirection === "asc" ? "↑" : "↓") : "↕";
+    sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
 
   // Dropdown acciones
   const [openDropdownId, setOpenDropdownId] = useState(null);
-  const toggleDropdown = (id) =>
-    setOpenDropdownId((prev) => (prev === id ? null : id));
+  const toggleDropdown = (id) => setOpenDropdownId((prev) => (prev === id ? null : id));
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.target.closest(".dropdown")) setOpenDropdownId(null);
+      if (!event.target.closest('.dropdown')) setOpenDropdownId(null);
     };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   // Paginación input
@@ -248,16 +240,21 @@ const Notificaciones = () => {
   };
 
   const getEstadoLabel = (n) =>
-    n?.nombre_estado ||
-    estadoLabels[n?.fk_id_estado_notificacion] ||
-    "Desconocido";
+    n?.nombre_estado || estadoLabels[n?.fk_id_estado_notificacion] || 'Desconocido';
 
-  const getEstadoClass = (n) =>
-    estadoClassMap[n?.fk_id_estado_notificacion] || "estado-cancelada";
+  const getEstadoClass = (n) => estadoClassMap[n?.fk_id_estado_notificacion] || 'estado-cancelada';
 
   const isActiva = (n) =>
     (n?.fk_id_estado_notificacion ?? 0) === 1 ||
-    (n?.nombre_estado || "").toLowerCase() === "activa";
+    (n?.nombre_estado || '').toLowerCase() === 'activa';
+
+  useEffect(() => {
+    if (modalVisible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [modalVisible]);
 
   return (
     <div className="notificaciones-container">
@@ -267,10 +264,7 @@ const Notificaciones = () => {
 
       {/* Barra de acciones */}
       <div className="table-actions">
-        <button
-          className="btn-agregar"
-          onClick={() => navigate("/notificaciones/nueva")}
-        >
+        <button className="btn-agregar" onClick={() => navigate('/notificaciones/nueva')}>
           ➕ Nueva Notificación
         </button>
 
@@ -314,15 +308,21 @@ const Notificaciones = () => {
             <table className="table table-notificaciones">
               <thead>
                 <tr>
-                  <th onClick={() => toggleSort("id")}>ID {renderSortArrow("id")}</th>
-                  <th onClick={() => toggleSort("titulo")}>Título {renderSortArrow("titulo")}</th>
+                  <th onClick={() => toggleSort('id')}>ID {renderSortArrow('id')}</th>
+                  <th onClick={() => toggleSort('titulo')}>Título {renderSortArrow('titulo')}</th>
                   <th>Descripción</th>
                   <th>Tipo</th>
-                  <th onClick={() => toggleSort("categoria")}>Categoría {renderSortArrow("categoria")}</th>
-                  <th onClick={() => toggleSort("modulo")}>Módulo {renderSortArrow("modulo")}</th>
-                  <th onClick={() => toggleSort("intervalo_dias")}>Intervalo (días) {renderSortArrow("intervalo_dias")}</th>
+                  <th onClick={() => toggleSort('categoria')}>
+                    Categoría {renderSortArrow('categoria')}
+                  </th>
+                  <th onClick={() => toggleSort('modulo')}>Módulo {renderSortArrow('modulo')}</th>
+                  <th onClick={() => toggleSort('intervalo_dias')}>
+                    Intervalo (días) {renderSortArrow('intervalo_dias')}
+                  </th>
                   <th>Tipo Intervalo</th>
-                  <th onClick={() => toggleSort("fecha_creacion")}>Fecha Creación {renderSortArrow("fecha_creacion")}</th>
+                  <th onClick={() => toggleSort('fecha_creacion')}>
+                    Fecha Creación {renderSortArrow('fecha_creacion')}
+                  </th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
@@ -339,7 +339,9 @@ const Notificaciones = () => {
                     <td>{n.nombre_modulo}</td>
                     <td>{n.intervalo_dias}</td>
                     <td>{intervaloLabels[n.tipo_intervalo]}</td>
-                    <td>{n.fecha_creacion ? new Date(n.fecha_creacion).toLocaleDateString() : ""}</td>
+                    <td>
+                      {n.fecha_creacion ? new Date(n.fecha_creacion).toLocaleDateString() : ''}
+                    </td>
                     <td>
                       <span className={`estado-badge ${getEstadoClass(n)}`}>
                         {getEstadoLabel(n)}
@@ -360,13 +362,21 @@ const Notificaciones = () => {
                         {openDropdownId === n.pk_id_notificacion && (
                           <div className="dropdown-content">
                             <button onClick={() => handleView(n)}>Visualizar</button>
-                            <button onClick={() => navigate(`/notificaciones/editar/${n.pk_id_notificacion}`)}>
+                            <button
+                              onClick={() =>
+                                navigate(`/notificaciones/editar/${n.pk_id_notificacion}`)
+                              }
+                            >
                               Editar
                             </button>
                             {isActiva(n) ? (
-                              <button onClick={() => handleEstadoClick(n, "desactivar")}>Desactivar</button>
+                              <button onClick={() => handleEstadoClick(n, 'desactivar')}>
+                                Desactivar
+                              </button>
                             ) : (
-                              <button onClick={() => handleEstadoClick(n, "reactivar")}>Reactivar</button>
+                              <button onClick={() => handleEstadoClick(n, 'reactivar')}>
+                                Reactivar
+                              </button>
                             )}
                             <button onClick={() => handleDeleteClick(n)}>Eliminar</button>
                           </div>
@@ -402,36 +412,48 @@ const Notificaciones = () => {
             </span>
 
             <div className="pagination-controls">
-              <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}
-                data-tooltip="Primera página">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                data-tooltip="Primera página"
+              >
                 <FaAngleDoubleLeft />
               </button>
-              <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}
-                data-tooltip="Página anterior">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                data-tooltip="Página anterior"
+              >
                 <FaAngleLeft />
               </button>
-              <span data-tooltip = "Ir a página especifica">
-              <div>
-                <input
-                  type="number"
-                  min="1"
-                  max={totalPages}
-                  step="1"
-                  value={pageInput}
-                  onInput={handlePageInput}
-                  onBlur={commitPageInput}
-                  onKeyDown={(e) => e.key === "Enter" && commitPageInput()}
-                  className={`page-input ${inputError ? "input-error" : ""}`}
-                />
-              </div>
+              <span data-tooltip="Ir a página especifica">
+                <div>
+                  <input
+                    type="number"
+                    min="1"
+                    max={totalPages}
+                    step="1"
+                    value={pageInput}
+                    onInput={handlePageInput}
+                    onBlur={commitPageInput}
+                    onKeyDown={(e) => e.key === 'Enter' && commitPageInput()}
+                    className={`page-input ${inputError ? 'input-error' : ''}`}
+                  />
+                </div>
               </span>
               <span>/ {totalPages}</span>
-              <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}
-                data-tooltip ="Página siguiente">
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                data-tooltip="Página siguiente"
+              >
                 <FaAngleRight />
               </button>
-              <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}
-                data-tooltip="Última página">
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                data-tooltip="Última página"
+              >
                 <FaAngleDoubleRight />
               </button>
             </div>
@@ -442,22 +464,88 @@ const Notificaciones = () => {
       {/* Modal detalle */}
       {modalVisible && notificacionSeleccionada && (
         <div className="modal">
-          <div className="modal-content">
-            <h3>Detalles de la Notificación</h3>
-            <p><strong>ID:</strong> {notificacionSeleccionada.pk_id_notificacion}</p>
-            <p><strong>Título:</strong> {notificacionSeleccionada.titulo}</p>
-            <p><strong>Descripción:</strong> {notificacionSeleccionada.descripcion}</p>
-            <p><strong>Tipo:</strong> {notificacionSeleccionada.nombre_tipo}</p>
-            <p><strong>Categoría:</strong> {notificacionSeleccionada.nombre_categoria}</p>
-            <p><strong>Módulo:</strong> {notificacionSeleccionada.nombre_modulo}</p>
-            <p><strong>Intervalo:</strong> {notificacionSeleccionada.intervalo_dias}</p>
-            <p><strong>Tipo Intervalo:</strong> {intervaloLabels[notificacionSeleccionada.tipo_intervalo]}</p>
-            <p><strong>Fecha Creación:</strong> {notificacionSeleccionada.fecha_creacion ? new Date(notificacionSeleccionada.fecha_creacion).toLocaleDateString() : ""}</p>
-            <p><strong>Estado:</strong> 
-              <span className={`estado-badge ${getEstadoClass(notificacionSeleccionada)}`}>
-                {getEstadoLabel(notificacionSeleccionada)}
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">
+              Detalles de la Notificación{' '}
+              <span
+                className={`badge ${
+                  notificacionSeleccionada.nombre_categoria === 'Promoción'
+                    ? 'badge-promocion'
+                    : 'badge-recordatorio'
+                }`}
+              >
+                {notificacionSeleccionada.nombre_categoria}
               </span>
+            </h3>
+            <p>
+              <strong>ID:</strong> {notificacionSeleccionada.pk_id_notificacion}
             </p>
+            <p>
+              <strong>Título:</strong> {notificacionSeleccionada.titulo}
+            </p>
+            <p>
+              <strong>Descripción:</strong> {notificacionSeleccionada.descripcion}
+            </p>
+            <p>
+              <strong>Categoría:</strong> {notificacionSeleccionada.nombre_categoria}
+            </p>
+            <p>
+              <strong>Módulo:</strong> {notificacionSeleccionada.nombre_modulo}
+            </p>
+            <p>
+              <strong>Estado:</strong> {notificacionSeleccionada.nombre_estado}
+            </p>
+
+            {/* 🔹 Si es PROMOCIÓN → mostrar fechas de inicio/fin */}
+            {notificacionSeleccionada.nombre_categoria === 'Promoción' ? (
+              <>
+                {notificacionSeleccionada.fecha_objetivo && (
+                  <p>
+                    <strong>Fecha de inicio:</strong>{' '}
+                    {new Date(notificacionSeleccionada.fecha_objetivo).toLocaleDateString()}
+                  </p>
+                )}
+                {notificacionSeleccionada.fecha_fin && (
+                  <p>
+                    <strong>Fecha de fin:</strong>{' '}
+                    {new Date(notificacionSeleccionada.fecha_fin).toLocaleDateString()}
+                  </p>
+                )}
+                <p>
+                  <strong>Duración:</strong>{' '}
+                  {(() => {
+                    const inicio = new Date(notificacionSeleccionada.fecha_objetivo);
+                    const fin = new Date(notificacionSeleccionada.fecha_fin);
+                    const diffDays = Math.round((fin - inicio) / (1000 * 60 * 60 * 24));
+                    return diffDays > 0 ? `${diffDays} días` : '—';
+                  })()}
+                </p>
+              </>
+            ) : (
+              /* 🔹 Si es RECORDATORIO → mostrar intervalo */
+              <>
+                <p>
+                  <strong>Intervalo:</strong> {notificacionSeleccionada.intervalo_dias} días
+                </p>
+                <p>
+                  <strong>Tipo de intervalo:</strong>{' '}
+                  {intervaloLabels[notificacionSeleccionada.tipo_intervalo]}
+                </p>
+              </>
+            )}
+
+            {/* 🔹 Email (si aplica) */}
+            {notificacionSeleccionada.enviar_email === 1 && (
+              <>
+                <p>
+                  <strong>Asunto Email:</strong> {notificacionSeleccionada.asunto_email}
+                </p>
+                <p>
+                  <strong>Cuerpo Email:</strong> {notificacionSeleccionada.cuerpo_email}
+                </p>
+              </>
+            )}
+
             <button onClick={() => setModalVisible(false)} className="btn-cerrar">
               Cerrar
             </button>
@@ -477,11 +565,11 @@ const Notificaciones = () => {
       {/* Modal de estado */}
       <ConfirmModal
         isOpen={estadoModalOpen}
-        title={modalAction === "desactivar" ? "Desactivar Notificación" : "Reactivar Notificación"}
+        title={modalAction === 'desactivar' ? 'Desactivar Notificación' : 'Reactivar Notificación'}
         message={
-          modalAction === "desactivar"
-            ? "¿Está seguro de que desea desactivar esta notificación? Podrá reactivarla más adelante."
-            : "Antes de reactivar esta notificación, asegúrese de revisar su configuración. ¿Desea continuar?"
+          modalAction === 'desactivar'
+            ? '¿Está seguro de que desea desactivar esta notificación? Podrá reactivarla más adelante.'
+            : 'Antes de reactivar esta notificación, asegúrese de revisar su configuración. ¿Desea continuar?'
         }
         onConfirm={confirmEstadoChange}
         onCancel={() => setEstadoModalOpen(false)}
