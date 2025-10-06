@@ -76,3 +76,15 @@ INSERT INTO tbl_modulos_notificacion (nombre_modulo) VALUES ('Expedientes'), ('O
 
 INSERT INTO tbl_estados_notificacion (nombre_estado) VALUES ('pendiente'), ('atendida'), ('cancelada');
 
+-- ========================================
+-- 🔄 Migración de estados de notificación
+-- ========================================
+
+-- 1️⃣ Actualiza nombres existentes
+UPDATE tbl_estados_notificacion 
+SET nombre_estado = 'activa' 
+WHERE nombre_estado = 'pendiente';
+
+UPDATE tbl_estados_notificacion 
+SET nombre_estado = 'inactiva' 
+WHERE nombre_estado = 'atendida';

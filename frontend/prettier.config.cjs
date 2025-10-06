@@ -1,9 +1,20 @@
 // prettier.config.cjs
 module.exports = {
-  semi: true,
-  singleQuote: true,
-  trailingComma: "es5",
-  printWidth: 80,
+// === Reglas principales ===
+  semi: true,                // punto y coma obligatorio
+  singleQuote: true,         // comillas simples en JS/JSX
+  trailingComma: 'es5',      // coma final donde ES5 lo permite
+  printWidth: 100,           // ancho de línea recomendado para React
+  tabWidth: 2,               // 2 espacios por indentación
+  useTabs: false,            // usa espacios, no tabs
+  bracketSpacing: true,      // espacios entre llaves { foo: bar }
+  arrowParens: 'always',     // siempre usar paréntesis en arrow functions
+  jsxSingleQuote: false,     // en JSX usar comillas dobles
+  jsxBracketSameLine: false, // > en JSX va en nueva línea
+  endOfLine: 'auto',         // adapta a Windows/Linux automáticamente
+
+  // === Opcional: para asegurar formato en otros tipos ===
+  proseWrap: 'preserve',     // no forzar saltos de línea en texto (Markdown)
 
   /*
   // Agrega punto y coma al final de cada línea

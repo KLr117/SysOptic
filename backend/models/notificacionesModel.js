@@ -137,3 +137,63 @@ export const updateEstadoNotificacion = async (id, nuevoEstadoId) => {
     connection.release();
   }
 };
+
+// 🔎 Promos activas hoy (enviar_email=1, estado=activa, dentro de ventana de fechas)
+export const getPromosActivasHoy = async (hoyISO /* 'YYYY-MM-DD' */) => {
+  const sql = `
+    SELECT 
+      pk_id_notificacion,
+      titulo,
+      asunto_email,
+      cuerpo_email,
+      fk_id_modulo_notificacion,
+      fecha_objetivo,  -- inicio promo
+      fecha_fin
+    FROM tbl_notificaciones
+    WHERE fk_id_categoria_notificacion = 2         -- Promoción
+      AND fk_id_estado_notificacion = 1            -- Activa
+      AND enviar_email = 1
+      AND (fecha_objetivo IS NULL OR fecha_objetivo <= ?)
+      AND (fecha_fin IS NULL OR fecha_fin >= ?)
+  `;
+  const [rows] = await pool.query(sql, [hoyISO, hoyISO]);
+  return rows;
+};
+
+// 📧 Correos pendientes (aún no registrados en tbl_notificaciones_enviadas) por módulo
+export const getPendingEmailsForPromo = async (notificacionId, moduloId) => {
+  if (moduloId === 1) {
+    // Expedientes: campo de email = 'email'
+    const sql = `
+      SELECT DISTINCT LOWER(TRIM(e.email)) AS correo
+      FROM tbl_expedientes e
+      LEFT JOIN tbl_notificaciones_enviadas ne
+        ON ne.correo_destino = LOWER(TRIM(e.email))
+       AND ne.fk_id_notificacion = ?
+      WHERE e.email IS NOT NULL
+        AND e.email <> ''
+        AND ne.pk_id_envio IS NULL
+    `;
+    const [rows] = await pool.query(sql, [notificacionId]);
+    return rows.map(r => r.correo);
+  }
+
+  if (moduloId === 2) {
+    // Órdenes: campo de email = 'correo'
+    const sql = `
+      SELECT DISTINCT LOWER(TRIM(o.correo)) AS correo
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_notificaciones_enviadas ne
+        ON ne.correo_destino = LOWER(TRIM(o.correo))
+       AND ne.fk_id_notificacion = ?
+      WHERE o.correo IS NOT NULL
+        AND o.correo <> ''
+        AND ne.pk_id_envio IS NULL
+    `;
+    const [rows] = await pool.query(sql, [notificacionId]);
+    return rows.map(r => r.correo);
+  }
+
+  // Si aparece otro módulo (por compatibilidad futura)
+  return [];
+};
