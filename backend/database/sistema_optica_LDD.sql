@@ -229,7 +229,7 @@ CREATE TABLE tbl_imagenes_ordenes (
   fecha_subida DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (orden_id) REFERENCES tbl_ordenes(pk_id_orden) ON DELETE CASCADE
 );
-<<<<<<< HEAD
+
 
 ALTER TABLE tbl_expedientes  
 ADD COLUMN imagenes BOOLEAN DEFAULT FALSE AFTER fecha_registro;
@@ -245,5 +245,4 @@ CREATE TABLE tbl_imagenes_expedientes (
 
 SELECT * FROM tbl_expedientes;
 
-=======
->>>>>>> 390333dc2f8a43d403b7cecde779b0e8d7c8ed4e
+
