@@ -149,15 +149,27 @@ textarea {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000; /* asegúrate de que sea más alto que el menú de acciones */
+  pointer-events: all; /* 🔒 bloquea interacción del fondo */
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .modal-content {
   background: var(--color-bg-secondary);
   padding: 20px;
   border-radius: 12px;
-  width: 450px;
+  width: 500px;
+  max-width: 90%;
   text-align: left;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
   color: var(--color-text);
+  z-index: 1001; /* encima del overlay */
+  position: relative
 }
 
 /* ==== Search Box ==== */
@@ -295,3 +307,18 @@ textarea {
   color: #374151;
 }
 
+/* ====== BADGES DE CATEGORÍA EN MODAL ====== */
+.badge {
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-left: 6px;
+}
+.badge-promocion {
+  background-color: #e0f2fe;
+  color: #075985;
+}
+.badge-recordatorio {
+  background-color: #fef9c3;
+  color: #92400e;
+}

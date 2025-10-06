@@ -4,7 +4,7 @@ import {
   createNotificacion,
   getNotificacionById,
   updateNotificacion
-} from "../services/notificaciones.js";
+} from "../services/notificacionesService";
 import "../styles/vista-notificaciones.css";
 import "../styles/form-errors.css";
 import ConfirmModal from "../components/confirmModal";

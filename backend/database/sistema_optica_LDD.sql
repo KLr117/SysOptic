@@ -185,104 +185,40 @@ SET tipo_intervalo = 'despues_recepcion'
 WHERE fk_id_modulo_notificacion = 2
   AND tipo_intervalo = 'despues_registro';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ALTER TABLE tbl_notificaciones
+ALTER COLUMN fk_id_estado_notificacion SET DEFAULT 1;
+
+ALTER TABLE tbl_notificaciones
+MODIFY COLUMN tipo_intervalo ENUM('despues_registro','antes_entrega','despues_recepcion')
+NULL DEFAULT NULL;
+
+-- ==============================================
+--  TABLA para control de notificaciones enviadas
+-- ==============================================
+
+CREATE TABLE IF NOT EXISTS tbl_notificaciones_enviadas (
+  pk_id_envio INT AUTO_INCREMENT PRIMARY KEY,
+  fk_id_notificacion INT NOT NULL,
+  correo_destino VARCHAR(150) NOT NULL,
+  fecha_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  -- Evita envíos duplicados de la misma notificación al mismo correo
+  UNIQUE KEY unique_envio (fk_id_notificacion, correo_destino),
+
+  -- Acelera búsquedas por correo
+  INDEX idx_correo (correo_destino),
+
+  -- Mantiene integridad referencial
+  CONSTRAINT fk_notificacion_envio
+    FOREIGN KEY (fk_id_notificacion)
+    REFERENCES tbl_notificaciones(pk_id_notificacion)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+);
+
+-- ==============================================================
+--  TABLA para imágenes asociadas a órdenes + Alter a tbl_ordenes
+-- ==============================================================
 ALTER TABLE tbl_ordenes 
 ADD COLUMN imagenes BOOLEAN DEFAULT FALSE AFTER saldo;
 CREATE TABLE tbl_imagenes_ordenes (
@@ -293,6 +229,7 @@ CREATE TABLE tbl_imagenes_ordenes (
   fecha_subida DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (orden_id) REFERENCES tbl_ordenes(pk_id_orden) ON DELETE CASCADE
 );
+<<<<<<< HEAD
 
 ALTER TABLE tbl_expedientes  
 ADD COLUMN imagenes BOOLEAN DEFAULT FALSE AFTER fecha_registro;
@@ -308,3 +245,5 @@ CREATE TABLE tbl_imagenes_expedientes (
 
 SELECT * FROM tbl_expedientes;
 
+=======
+>>>>>>> 390333dc2f8a43d403b7cecde779b0e8d7c8ed4e

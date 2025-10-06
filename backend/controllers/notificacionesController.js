@@ -1,5 +1,6 @@
 import * as notificacionesModel from "../models/notificacionesModel.js";
 import { updateEstadoNotificacion } from "../models/notificacionesModel.js";
+import * as notificacionesEnviadasModel from "../models/NotificacionesEnviosModel.js";
 
 // 🔍 Validación con soporte a Promoción
 const validarTipoIntervaloPorModulo = (moduloId, tipoIntervalo, categoriaId) => {
@@ -119,6 +120,66 @@ export const cambiarEstadoNotificacion = async (req, res) => {
       success: false,
       message: "Error al actualizar el estado de la notificación.",
       error: error.message
+    });
+  }
+};
+
+// =============================
+// PROCESAR PROMOCIONES ACTIVAS
+// =============================
+
+export const procesarPromocionesActivas = async (req, res) => {
+  try {
+    const hoyISO = new Date().toISOString().slice(0, 10);
+
+    const promos = await notificacionesModel.getPromosActivasHoy(hoyISO);
+
+    let totalInsertados = 0;
+    const detalle = [];
+
+    for (const p of promos) {
+      const pendientes = await notificacionesModel.getPendingEmailsForPromo(
+        p.pk_id_notificacion,
+        p.fk_id_modulo_notificacion
+      );
+
+      if (pendientes.length === 0) {
+        detalle.push({
+          id_notificacion: p.pk_id_notificacion,
+          modulo: p.fk_id_modulo_notificacion,
+          pendientes: 0,
+          insertados: 0,
+        });
+        continue;
+      }
+
+      // (En el futuro aquí irá el envío real de emails)
+      const insertados = await notificacionesEnviadasModel.insertEnviosBatch(
+        p.pk_id_notificacion,
+        pendientes
+      );
+
+      totalInsertados += insertados;
+      detalle.push({
+        id_notificacion: p.pk_id_notificacion,
+        modulo: p.fk_id_modulo_notificacion,
+        pendientes: pendientes.length,
+        insertados,
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Promociones procesadas correctamente.",
+      total_enviadas_registradas: totalInsertados,
+      promociones: detalle,
+    });
+  } catch (err) {
+    console.error("Error al procesar promociones:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Ocurrió un error al procesar promociones.",
+      error: err?.message || String(err),
     });
   }
 };
