@@ -34,10 +34,25 @@ export const getExpediente = async (req, res) => {
   }
 };
 
-// Crear un nuevo expediente
+// Crear un nuevo expediente (CON SOPORTE PARA FOTOS)
 export const createExpedienteController = async (req, res) => {
   try {
-    const expedienteData = req.body;
+    // Si viene como FormData, los campos están en req.body y las fotos en req.files
+    const expedienteData = {
+      correlativo: req.body.correlativo,
+      nombre: req.body.nombre,
+      telefono: req.body.telefono,
+      direccion: req.body.direccion,
+      email: req.body.email,
+      fecha_registro: req.body.fecha_registro,
+      // Las fotos vendrán en req.files si usas multer
+      foto: req.files ? req.files.map(file => ({
+        filename: file.filename,
+        path: file.path,
+        mimetype: file.mimetype,
+        size: file.size
+      })) : []
+    };
 
     // Validaciones básicas
     if (!expedienteData.correlativo || !expedienteData.nombre) {
@@ -60,11 +75,26 @@ export const createExpedienteController = async (req, res) => {
   }
 };
 
-// Actualizar expediente existente
+// Actualizar expediente existente (CON SOPORTE PARA FOTOS)
 export const updateExpedienteController = async (req, res) => {
   try {
     const { pk_id_expediente } = req.params;
-    const expedienteData = req.body;
+    
+    const expedienteData = {
+      correlativo: req.body.correlativo,
+      nombre: req.body.nombre,
+      telefono: req.body.telefono,
+      direccion: req.body.direccion,
+      email: req.body.email,
+      fecha_registro: req.body.fecha_registro,
+      // Las fotos vendrán en req.files si usas multer
+      foto: req.files ? req.files.map(file => ({
+        filename: file.filename,
+        path: file.path,
+        mimetype: file.mimetype,
+        size: file.size
+      })) : []
+    };
 
     const existingExpediente = await getExpedienteById(pk_id_expediente);
     if (!existingExpediente) {
