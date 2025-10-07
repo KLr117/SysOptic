@@ -187,10 +187,11 @@ const AgregarOrdenTrabajo = () => {
 
   // Función para formatear teléfono automáticamente
   const formatearTelefono = (telefono) => {
-    // Remover todos los caracteres no numéricos
-    const numeros = telefono.replace(/\D/g, '');
+    // Permitir números, guiones, paréntesis, espacios y signo +
+    const telefonoLimpio = telefono.replace(/[^0-9\-\(\)\s\+]/g, '');
     
     // Si tiene 8 dígitos, formatear como 1234-5678 (número local)
+    const numeros = telefonoLimpio.replace(/\D/g, '');
     if (numeros.length === 8) {
       return `${numeros.slice(0, 4)}-${numeros.slice(4)}`;
     }
@@ -221,20 +222,21 @@ const AgregarOrdenTrabajo = () => {
       return `(${codigoPais}) ${numeroLocal.slice(0, 3)}-${numeroLocal.slice(3, 6)}-${numeroLocal.slice(6)}`;
     }
     
-    // Para otros casos, devolver tal como está
-    return telefono;
+    // Para otros casos, devolver tal como está (solo números, guiones, paréntesis y espacios)
+    return telefonoLimpio;
   };
 
   // Función para manejar cambios en los inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Formatear teléfono automáticamente
+    // Para teléfono, solo limpiar caracteres no permitidos, no formatear automáticamente
     if (name === 'telefono') {
-      const telefonoFormateado = formatearTelefono(value);
+      // Permitir números, guiones, paréntesis, espacios y signo +
+      const telefonoLimpio = value.replace(/[^0-9\-\(\)\s\+]/g, '');
       setFormData(prev => ({
         ...prev,
-        [name]: telefonoFormateado
+        [name]: telefonoLimpio
       }));
     } else {
       setFormData(prev => ({
@@ -257,6 +259,18 @@ const AgregarOrdenTrabajo = () => {
     }
   };
 
+  // Función para formatear teléfono cuando el usuario termine de escribir
+  const handleTelefonoBlur = (e) => {
+    const telefono = e.target.value;
+    if (telefono) {
+      const telefonoFormateado = formatearTelefono(telefono);
+      setFormData(prev => ({
+        ...prev,
+        telefono: telefonoFormateado
+      }));
+    }
+  };
+
   // Funciones de validación
   const validarCorreo = (correo) => {
     if (!correo) return true; // Correo es opcional
@@ -264,12 +278,6 @@ const AgregarOrdenTrabajo = () => {
     return emailRegex.test(correo);
   };
 
-  const validarTelefono = (telefono) => {
-    if (!telefono) return false; // Teléfono es obligatorio
-    // Acepta formatos internacionales flexibles: (123) 456-7890, (123) 4567-8901, 4567-8901, 123-4567-8901
-    const telefonoRegex = /^(\(\d{3}\)\s?\d{3,4}-\d{3,4}|\d{4}-\d{4}|\d{3}-\d{4}-\d{4})$/;
-    return telefonoRegex.test(telefono);
-  };
 
   const validarFechas = (fechaRecepcion, fechaEntrega) => {
     if (!fechaRecepcion || !fechaEntrega) return true; // Si no hay fechas, no validar
@@ -305,19 +313,6 @@ const AgregarOrdenTrabajo = () => {
       return false;
     }
 
-    // Validar teléfono
-    if (!validarTelefono(formData.telefono)) {
-      setPopup({
-        isOpen: true,
-        title: 'Teléfono Inválido',
-        message: 'Por favor ingrese un teléfono válido. Formatos aceptados: (123) 456-7890, (123) 4567-8901, 4567-8901, 123-4567-8901',
-        type: 'warning',
-        showButtons: true,
-        confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
-      });
-      return false;
-    }
 
     // Validar fechas
     if (!validarFechas(formData.fecha_recepcion, formData.fecha_entrega)) {
@@ -546,6 +541,7 @@ const AgregarOrdenTrabajo = () => {
               name="telefono"
               value={formData.telefono}
               onChange={handleInputChange}
+              onBlur={handleTelefonoBlur}
               placeholder="Número de teléfono" 
             />
           </div>

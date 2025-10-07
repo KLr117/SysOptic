@@ -13,6 +13,8 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   color: var(--color-text);
+  overflow: visible;
+  padding-bottom: 3rem;
 }
 
 /* Marca de agua */

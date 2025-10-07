@@ -581,7 +581,10 @@
   display: flex !important;
   gap: 10px !important;
   margin-top: 20px !important;
+  margin-bottom: 20px !important;
   justify-content: center !important;
+  padding: 10px 0 !important;
+  overflow: visible !important;
 }
 
 .btn-save, .btn-close {
@@ -595,12 +598,15 @@
   transition: background-color 0.2s !important;
   color: #fff !important;
   font-size: 18px !important;
-  padding: 0.5rem 1rem !important;
+  padding: 0.75rem 1.5rem !important;
   border-radius: 0.25rem !important;
   border: none !important;
   font-weight: 500 !important;
   min-width: 120px !important;
+  min-height: 50px !important;
   text-align: center !important;
+  line-height: 1.2 !important;
+  box-sizing: border-box !important;
 }
 
 .btn-save {
