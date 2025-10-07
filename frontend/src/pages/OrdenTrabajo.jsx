@@ -315,12 +315,12 @@ const OrdenTrabajo = () => {
   // Mostrar loading
   if (loading) {
     return (
-      <div className="p-4">
+      <div className="ordenes-container">
         <div className="flex justify-between items-center mb-4">
           <Titulo text="Órdenes de Trabajo" className="titulo" />
-          <Button onClick={agregarOrden} className="agregar">
+          <button onClick={agregarOrden} className="btn-agregar-orden">
             ➕ Agregar Orden
-          </Button>
+          </button>
         </div>
         <div className="text-center py-8">
           <p>Cargando órdenes...</p>
@@ -332,12 +332,12 @@ const OrdenTrabajo = () => {
   // Mostrar error
   if (error) {
     return (
-      <div className="p-4">
+      <div className="ordenes-container">
         <div className="flex justify-between items-center mb-4">
           <Titulo text="Órdenes de Trabajo" className="titulo" />
-          <Button onClick={agregarOrden} className="agregar">
+          <button onClick={agregarOrden} className="btn-agregar-orden">
             ➕ Agregar Orden
-          </Button>
+          </button>
         </div>
         <div className="text-center py-8 text-red-600">
           <p>Error: {error}</p>
@@ -353,12 +353,12 @@ const OrdenTrabajo = () => {
   }
 
   return (
-    <div className="p-4">
+    <div className="ordenes-container">
       <div className="flex justify-between items-center mb-4">
         <Titulo text="Órdenes de Trabajo" className="titulo" />
-        <Button onClick={agregarOrden} className="agregar">
+        <button onClick={agregarOrden} className="btn-agregar-orden">
           ➕ Agregar Orden
-        </Button>
+        </button>
       </div>
 
       {/* FILA DE CONTROLES (ARRIBA) */}

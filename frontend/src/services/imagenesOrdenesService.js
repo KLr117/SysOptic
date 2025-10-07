@@ -1,121 +1,63 @@
-const API_BASE_URL = 'http://localhost:4000/api';
+import axios from 'axios';
 
-// Función para obtener el token de autenticación
-const getAuthToken = () => {
-  return localStorage.getItem('token');
-};
-
-// Función para hacer peticiones autenticadas
-const makeAuthenticatedRequest = async (url, options = {}) => {
-  const token = getAuthToken();
-  
-  const defaultOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      // 'Authorization': `Bearer ${token}`, // Temporalmente deshabilitado
-      ...options.headers
-    },
-    ...options
-  };
-
-  const response = await fetch(url, defaultOptions);
-  
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  
-  return response.json();
-};
+const API_URL = import.meta.env.VITE_API_URL + "/api/imagenes-ordenes";
 
 // Subir imagen
 export const subirImagen = async (ordenId, imagenFile) => {
-  try {
-    const token = getAuthToken();
-    const formData = new FormData();
-    formData.append('imagen', imagenFile);
-    formData.append('orden_id', ordenId);
-
-    const response = await fetch(`${API_BASE_URL}/imagenes-ordenes/subir`, {
-      method: 'POST',
-      // headers: {
-      //   'Authorization': `Bearer ${token}` // Temporalmente deshabilitado
-      // },
-      body: formData
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  const formData = new FormData();
+  formData.append('imagen', imagenFile);
+  formData.append('orden_id', ordenId);
+  
+  const res = await axios.post(`${API_URL}/subir`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error subiendo imagen:', error);
-    throw error;
-  }
+  });
+  return res.data;
 };
 
 // Obtener imágenes de una orden específica
 export const obtenerImagenesPorOrden = async (ordenId) => {
-  try {
-    const response = await makeAuthenticatedRequest(`${API_BASE_URL}/imagenes-ordenes/orden/${ordenId}`);
-    
-    // Agregar URL completa para cada imagen
-    if (response.success && response.imagenes) {
-      response.imagenes = response.imagenes.map(imagen => ({
-        ...imagen,
-        url: `${API_BASE_URL}/imagenes-ordenes/servir/${imagen.id}`,
-        urlPorRuta: `${API_BASE_URL}/imagenes-ordenes/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`
-      }));
-    }
-    
-    return response;
-  } catch (error) {
-    console.error('Error obteniendo imágenes por orden:', error);
-    throw error;
+  const res = await axios.get(`${API_URL}/orden/${ordenId}`);
+  
+  // Agregar URL completa para cada imagen
+  if (res.data.success && res.data.imagenes) {
+    res.data.imagenes = res.data.imagenes.map(imagen => ({
+      ...imagen,
+      url: `${import.meta.env.VITE_API_URL}/api/imagenes-ordenes/servir/${imagen.id}`,
+      urlPorRuta: `${import.meta.env.VITE_API_URL}/api/imagenes-ordenes/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`
+    }));
   }
+  
+  return res.data;
 };
 
 // Obtener todas las imágenes
 export const obtenerTodasLasImagenes = async () => {
-  try {
-    const response = await makeAuthenticatedRequest(`${API_BASE_URL}/imagenes-ordenes/todas`);
-    
-    // Agregar URL completa para cada imagen
-    if (response.success && response.imagenes) {
-      response.imagenes = response.imagenes.map(imagen => ({
-        ...imagen,
-        url: `${API_BASE_URL}/imagenes-ordenes/servir/${imagen.id}`,
-        urlPorRuta: `${API_BASE_URL}/imagenes-ordenes/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`
-      }));
-    }
-    
-    return response;
-  } catch (error) {
-    console.error('Error obteniendo todas las imágenes:', error);
-    throw error;
+  const res = await axios.get(`${API_URL}/todas`);
+  
+  // Agregar URL completa para cada imagen
+  if (res.data.success && res.data.imagenes) {
+    res.data.imagenes = res.data.imagenes.map(imagen => ({
+      ...imagen,
+      url: `${import.meta.env.VITE_API_URL}/api/imagenes-ordenes/servir/${imagen.id}`,
+      urlPorRuta: `${import.meta.env.VITE_API_URL}/api/imagenes-ordenes/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`
+    }));
   }
+  
+  return res.data;
 };
 
 // Eliminar imagen
 export const eliminarImagen = async (imagenId) => {
-  try {
-    return await makeAuthenticatedRequest(`${API_BASE_URL}/imagenes-ordenes/${imagenId}`, {
-      method: 'DELETE'
-    });
-  } catch (error) {
-    console.error('Error eliminando imagen:', error);
-    throw error;
-  }
+  const res = await axios.delete(`${API_URL}/${imagenId}`);
+  return res.data;
 };
 
 // Contar imágenes por orden
 export const contarImagenesPorOrden = async (ordenId) => {
-  try {
-    return await makeAuthenticatedRequest(`${API_BASE_URL}/imagenes-ordenes/contar/${ordenId}`);
-  } catch (error) {
-    console.error('Error contando imágenes por orden:', error);
-    throw error;
-  }
+  const res = await axios.get(`${API_URL}/contar/${ordenId}`);
+  return res.data;
 };
 
 // Función para comprimir imagen

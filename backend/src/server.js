@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cron from "node-cron";
 import { authMiddleware } from "../middlewares/Auth.js";
 import bitacoraRoutes from "../routes/bitacora.js";
 import authRoutes from "../routes/AuthRoutes.js";
@@ -8,7 +9,7 @@ import ordenTrabajoRoutes from "../routes/OrdenTrabajoRoutes.js";
 import expedientesRoutes from "../routes/ExpedientesRoutes.js";
 import notificacionesRoutes from "../routes/notificacionesRoutes.js";
 import imagenesOrdenesRoutes from "../routes/imagenesOrdenesRoutes.js";
-
+import { procesarPromocionesActivas, procesarRecordatoriosActivos } from "../controllers/notificacionesController.js";
 
 
 
@@ -34,8 +35,46 @@ app.use('/uploads', express.static('uploads'));
 
 
 
-
-
 app.listen(PORT, () => {
   console.log(`✅ Backend corriendo en http://localhost:${PORT}`);
-});
+
+  // ==========================
+  // 🕒 CRON DE PROMOCIONES SYSOPTIC
+  // ==========================
+
+  // Cron configurado para ejecutarse a las 6:00am, 12:00pm y 6:00pm todos los días
+  cron.schedule("0 6,12,18 * * *", async () => {   //PARA PRUEBAS: "* * * * *" PARA EJECUTAR CADA MINUTO, LUEGO CAMBIAR A "0 6,12,18 * * *"
+    console.log("⏰ [CRON SYSOPTIC] Ejecutando cron de notificaciones...");
+  // === BLOQUE 1: Promociones ===
+    try {
+      const resultadoPromo = await procesarPromocionesActivas();
+      console.log(
+        `✅ [CRON SYSOPTIC] ${new Date().toLocaleString()} | Promociones procesadas: ${
+          resultadoPromo?.total_enviadas_registradas ?? 0
+        }`
+      );
+    } catch (error) {
+      console.error(
+        `❌ [CRON SYSOPTIC] ${new Date().toLocaleString()} | Error en promociones:`,
+        error.message
+      );
+    }
+
+    // === BLOQUE 2: Recordatorios ===
+    try {
+      const resultadoRec = await procesarRecordatoriosActivos();
+      console.log(
+        `✅ [CRON SYSOPTIC] ${new Date().toLocaleString()} | Recordatorios procesados: ${
+          resultadoRec?.total_insertados ?? 0
+        }`
+      );
+    } catch (error) {
+      console.error(
+        `❌ [CRON SYSOPTIC] ${new Date().toLocaleString()} | Error en recordatorios:`,
+        error.message
+      );
+    }
+
+    console.log("🏁 [CRON SYSOPTIC] Ciclo de notificaciones completado.\n");
+    }); 
+  });
