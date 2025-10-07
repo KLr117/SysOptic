@@ -52,40 +52,22 @@ export async function getExpedienteById(id) {
   return handleResponse(res);
 }
 
-// Crear nuevo expediente CON FOTOS
+// Crear nuevo expediente (SIN FOTOS por ahora)
 export async function createExpediente(expedienteData) {
   try {
-    const token = getAuthToken();
-    const formData = new FormData();
-    
-    // Agregar campos de texto
-    formData.append('correlativo', expedienteData.correlativo || '');
-    formData.append('nombre', expedienteData.nombre || '');
-    formData.append('telefono', expedienteData.telefono || '');
-    formData.append('direccion', expedienteData.direccion || '');
-    formData.append('email', expedienteData.email || '');
-    formData.append('fecha_registro', expedienteData.fecha_registro || '');
-
-    // Agregar fotos como archivos
-    if (expedienteData.foto && Array.isArray(expedienteData.foto)) {
-      expedienteData.foto.forEach((fotoBase64, index) => {
-        if (fotoBase64 && typeof fotoBase64 === 'string') {
-          try {
-            const blob = base64ToBlob(fotoBase64);
-            formData.append(`fotos`, blob, `foto_${index}.jpg`);
-          } catch (error) {
-            console.warn(`Error procesando foto ${index}:`, error);
-          }
-        }
-      });
-    }
-
     const response = await fetch(`${API_URL}/api/expedientes`, {
       method: 'POST',
-      // headers: {
-      //   'Authorization': `Bearer ${token}` // Temporalmente deshabilitado
-      // },
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        correlativo: expedienteData.correlativo || '',
+        nombre: expedienteData.nombre || '',
+        telefono: expedienteData.telefono || '',
+        direccion: expedienteData.direccion || '',
+        email: expedienteData.email || '',
+        fecha_registro: expedienteData.fecha_registro || ''
+      })
     });
 
     if (!response.ok) {
@@ -99,40 +81,22 @@ export async function createExpediente(expedienteData) {
   }
 }
 
-// Actualizar expediente CON FOTOS
+// Actualizar expediente (SIN FOTOS por ahora)
 export async function updateExpediente(id, expedienteData) {
   try {
-    const token = getAuthToken();
-    const formData = new FormData();
-    
-    // Agregar campos de texto
-    formData.append('correlativo', expedienteData.correlativo || '');
-    formData.append('nombre', expedienteData.nombre || '');
-    formData.append('telefono', expedienteData.telefono || '');
-    formData.append('direccion', expedienteData.direccion || '');
-    formData.append('email', expedienteData.email || '');
-    formData.append('fecha_registro', expedienteData.fecha_registro || '');
-
-    // Agregar fotos como archivos
-    if (expedienteData.foto && Array.isArray(expedienteData.foto)) {
-      expedienteData.foto.forEach((fotoBase64, index) => {
-        if (fotoBase64 && typeof fotoBase64 === 'string') {
-          try {
-            const blob = base64ToBlob(fotoBase64);
-            formData.append(`fotos`, blob, `foto_${index}.jpg`);
-          } catch (error) {
-            console.warn(`Error procesando foto ${index}:`, error);
-          }
-        }
-      });
-    }
-
     const response = await fetch(`${API_URL}/api/expedientes/${id}`, {
       method: 'PUT',
-      // headers: {
-      //   'Authorization': `Bearer ${token}` // Temporalmente deshabilitado
-      // },
-      body: formData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        correlativo: expedienteData.correlativo || '',
+        nombre: expedienteData.nombre || '',
+        telefono: expedienteData.telefono || '',
+        direccion: expedienteData.direccion || '',
+        email: expedienteData.email || '',
+        fecha_registro: expedienteData.fecha_registro || ''
+      })
     });
 
     if (!response.ok) {

@@ -48,7 +48,7 @@ export const getExpedienteById = async (id) => {
   return null;
 };
 
-// Crear nuevo expediente (CON SOPORTE PARA FOTOS)
+// Crear nuevo expediente (SIN FOTOS por ahora)
 export const createExpediente = async (expedienteData) => {
   const {
     correlativo,
@@ -56,27 +56,23 @@ export const createExpediente = async (expedienteData) => {
     telefono,
     direccion,
     email,
-    fecha_registro,
-    foto = [] // Array de fotos en Base64 o rutas
+    fecha_registro
   } = expedienteData;
 
   const correlativoGenerado = correlativo || `EXP-${Date.now()}`;
 
-  // Convertir array de fotos a JSON string
-  const fotosJSON = foto.length > 0 ? JSON.stringify(foto) : null;
-
   const [result] = await pool.query(`
     INSERT INTO tbl_expedientes 
-    (correlativo, nombre, telefono, direccion, email, fecha_registro, fotos)
+    (correlativo, nombre, telefono, direccion, email, fecha_registro, imagenes)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `, [
-    correlativoGenerado, nombre, telefono, direccion, email, fecha_registro, fotosJSON
+    correlativoGenerado, nombre, telefono, direccion, email, fecha_registro, false
   ]);
 
   return result.insertId;
 };
 
-// Actualizar expediente (CON SOPORTE PARA FOTOS)
+// Actualizar expediente (SIN FOTOS por ahora)
 export const updateExpediente = async (id, expedienteData) => {
   const {
     correlativo,
@@ -84,20 +80,16 @@ export const updateExpediente = async (id, expedienteData) => {
     telefono,
     direccion,
     email,
-    fecha_registro,
-    foto = []
+    fecha_registro
   } = expedienteData;
-
-  // Convertir array de fotos a JSON string
-  const fotosJSON = foto.length > 0 ? JSON.stringify(foto) : null;
 
   const [result] = await pool.query(`
     UPDATE tbl_expedientes 
     SET correlativo = ?, nombre = ?, telefono = ?, direccion = ?,
-        email = ?, fecha_registro = ?, fotos = ?
+        email = ?, fecha_registro = ?
     WHERE pk_id_expediente = ?
   `, [
-    correlativo, nombre, telefono, direccion, email, fecha_registro, fotosJSON, id
+    correlativo, nombre, telefono, direccion, email, fecha_registro, id
   ]);
 
   return result.affectedRows > 0;
