@@ -243,23 +243,6 @@ const EditarOrdenTrabajo = () => {
       const response = await updateOrden(id, orderData);
       
       if (response.ok) {
-        // Actualizar imágenes en localStorage si hay cambios
-        if (imagenesOrden.length > 0 || nuevasImagenes.length > 0) {
-          const imagenesFinales = [...imagenesOrden, ...nuevasImagenes];
-          const imagenesData = imagenesFinales.map(img => ({
-            id: img.id,
-            nombre: img.file.name,
-            preview: img.preview
-          }));
-          
-          // Actualizar localStorage
-          const imagenesGuardadas = JSON.parse(localStorage.getItem('imagenesOrdenes') || '{}');
-          imagenesGuardadas[id] = imagenesData;
-          localStorage.setItem('imagenesOrdenes', JSON.stringify(imagenesGuardadas));
-          
-          console.log('Imágenes actualizadas en localStorage:', imagenesGuardadas);
-        }
-
         setPopup({
           isOpen: true,
           title: 'Registro Actualizado',

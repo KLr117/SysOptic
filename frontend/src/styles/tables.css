@@ -49,6 +49,33 @@ body.dark-mode .table th.sortable:hover {
   background-color: #374151; /* gris oscuro en tema oscuro */
 }
 
+/* Encabezados clickeables con flechas */
+.table th[onclick] {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.table th[onclick]:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.table th[onclick]:active {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+/* Estilo para las flechas de ordenamiento */
+.table th[onclick] span {
+  margin-left: 5px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.table th[onclick]:hover span {
+  color: #3b82f6;
+}
+
 /* ================== PAGINACIÓN BASE ================== */
 .paginacion {
   display: flex;
