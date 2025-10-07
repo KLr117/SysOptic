@@ -1,4 +1,6 @@
 import db from '../database/db.js';
+import { ImagenesOrdenesController, upload } from '../controllers/imagenesOrdenesController.js';
+import { authMiddleware } from '../middlewares/Auth.js';
 
 class ImagenesExpedientesModel {
   // Crear nueva imagen

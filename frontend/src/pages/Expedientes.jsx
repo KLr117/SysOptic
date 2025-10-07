@@ -1,6 +1,7 @@
 // ===============   WENDYs    ===============
 //en la base de datos iniciar en la linea 297 en el ldd modificacion con alter table 
 import React, { useState, useEffect } from "react";
+import ConfirmModal from "../components/ConfirmModal";
 import "../styles/vista-expedientes.css";
 import "../styles/popup.css";
 import Titulo from "../components/Titulo";
@@ -50,6 +51,7 @@ export default function Expedientes() {
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [fotoIndex, setFotoIndex] = useState(0);
   const [fotoMensaje, setFotoMensaje] = useState(false);
+  const [showConfirmSubirOtra, setShowConfirmSubirOtra] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [popupType, setPopupType] = useState("success"); // "success", "error", "warning", "info"
@@ -106,8 +108,7 @@ export default function Expedientes() {
 
   useEffect(() => {
     if (fotoMensaje && formData.foto.length < 2) {
-      const confirmacion = window.confirm("¿Desea subir otra foto?");
-      if (!confirmacion) setFotoMensaje(false);
+      setShowConfirmSubirOtra(true);
     }
   }, [fotoMensaje, formData.foto.length]);
 
@@ -188,6 +189,18 @@ export default function Expedientes() {
     setEditando(null);
     setMostrarFormulario(false);
   };
+
+  // Función para mostrar flecha de ordenamiento
+    const renderSortArrow = (field) =>
+      sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
+  
+    // Estados para PopUp
+    const [popup, setPopup] = useState({
+      isOpen: false,
+      title: '',
+      message: '',
+      type: 'success'
+    });
 
   // 🔹 Filtrado y ordenamiento
   const filtro = search.trim().toLowerCase();
@@ -303,17 +316,18 @@ export default function Expedientes() {
 
       {/* 🔹 MOSTRAR CONTROLES SOLO CUANDO NO ESTÉ EN MODO FORMULARIO */}
       {!mostrarFormulario && (
-        <div className="flex justify-between items-center mb-3">
-          <input
-            type="text"
-            placeholder="Buscar por nombre, correo o teléfono..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input-busqueda"
-          />
+        <div className="flex justify-between items-start mb-3">
+          {/* Columna izquierda: búsqueda arriba, ordenamiento abajo */}
+          <div className="flex flex-col gap-2 w-full max-w-xl">
+            <input
+              type="text"
+              placeholder="Buscar por nombre, correo o teléfono..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-busqueda"
+            />
 
-          <div className="flex items-center gap-2">
-            {/* Ordenamiento */}
+            {/* Ordenamiento (debajo de la barra de búsqueda, alineado a la izquierda) */}
             <select
               value={sortField + "-" + sortDirection}
               onChange={(e) => {
@@ -321,6 +335,7 @@ export default function Expedientes() {
                 setSortField(field);
                 setSortDirection(direction);
               }}
+              className="ordenamiento-select"
             >
               <option value="id-asc">ID - Más antiguo</option>
               <option value="id-desc">ID - Más reciente</option>
@@ -329,13 +344,15 @@ export default function Expedientes() {
               <option value="nombre-asc">Nombre A-Z</option>
               <option value="nombre-desc">Nombre Z-A</option>
             </select>
+          </div>
 
-            {/* Botón Crear expediente */}
+          {/* Columna derecha: botón crear */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setMostrarFormulario(true)}
               className="btn-success"
             >
-              Crear expediente
+              ➕ Crear expediente
             </button>
           </div>
         </div>
@@ -376,9 +393,11 @@ export default function Expedientes() {
                               objectFit: "cover",
                             }}
                             onClick={() => {
-                              setExpedienteVisualizar(exp);
+                              // Abrir solo la foto sin mostrar la información del expediente
+                              const primeraFoto = Array.isArray(exp.foto) ? exp.foto[0] : exp.foto;
+                              setFotoAmpliada(primeraFoto);
+                              setExpedienteVisualizar(null);
                               setFotoIndex(0);
-                              setFotoAmpliada(exp.foto[0]);
                             }}
                           />
                         ) : (
@@ -593,6 +612,22 @@ export default function Expedientes() {
           </div>
         </form>
       )}
+
+      {/* Modal de confirmación para subir otra foto */}
+      <ConfirmModal
+        isOpen={showConfirmSubirOtra}
+        title="Subir otra foto"
+        message="¿Desea subir otra foto?"
+        onConfirm={() => {
+          // Mantener la intención de subir otra foto; solo cerramos el modal
+          setShowConfirmSubirOtra(false);
+        }}
+        onCancel={() => {
+          // Cancelar intención y cerrar el modal
+          setShowConfirmSubirOtra(false);
+          setFotoMensaje(false);
+        }}
+      />
 
       {/* 🔹 Modal para visualizar expediente COMPLETO */}
       {expedienteVisualizar && (
