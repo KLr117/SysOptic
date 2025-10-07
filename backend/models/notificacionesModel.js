@@ -197,3 +197,48 @@ export const getPendingEmailsForPromo = async (notificacionId, moduloId) => {
   // Si aparece otro módulo (por compatibilidad futura)
   return [];
 };
+
+// 🔁 Obtener notificaciones activas tipo RECORDATORIO (no promociones)
+export const getRecordatoriosActivos = async () => {
+  const query = `
+    SELECT *
+    FROM tbl_notificaciones
+    WHERE fk_id_categoria_notificacion != 2
+      AND fk_id_estado_notificacion = 1
+      AND fk_id_tipo_notificacion = 1
+      AND enviar_email = 1
+  `;
+  const [rows] = await pool.query(query);
+  return rows;
+};
+
+// 🧾 Obtener expedientes y sus correos válidos
+export const getExpedientes = async () => {
+  const query = `
+    SELECT pk_id_expediente AS id, email AS correo, fecha_registro
+    FROM tbl_expedientes
+    WHERE email IS NOT NULL AND email != ''
+  `;
+  const [rows] = await pool.query(query);
+  return rows;
+};
+
+// 🧾 Obtener órdenes con sus fechas clave y correos
+export const getOrdenes = async () => {
+  const query = `
+    SELECT pk_id_orden AS id, correo, fecha_recepcion, fecha_entrega
+    FROM tbl_ordenes
+    WHERE correo IS NOT NULL AND correo != ''
+  `;
+  const [rows] = await pool.query(query);
+  return rows;
+};
+
+// 📨 Registrar envío en la tabla tbl_notificaciones_enviadas
+export const registrarEnvio = async (idNotificacion, correo) => {
+  const query = `
+    INSERT IGNORE INTO tbl_notificaciones_enviadas (fk_id_notificacion, correo_destino)
+    VALUES (?, ?)
+  `;
+  await pool.query(query, [idNotificacion, correo]);
+};

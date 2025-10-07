@@ -348,7 +348,7 @@ const handleSubmit = async (e) => {
                 name="intervaloCantidad"
                 value={formData.intervaloCantidad}
                 onChange={handleChange}
-                min="1"
+                min="0"
               />
               <select
                 name="intervaloUnidad"

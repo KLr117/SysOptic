@@ -7,6 +7,7 @@ import {
   deleteNotificacion,
   cambiarEstadoNotificacion,
   procesarPromocionesActivas,
+  procesarRecordatoriosActivos
 } from "../controllers/notificacionesController.js";
 
 const router = express.Router();
@@ -18,6 +19,7 @@ router.put("/:id", updateNotificacion);
 router.delete("/:id", deleteNotificacion);
 router.put("/estado/:id", cambiarEstadoNotificacion);
 router.post("/procesar-promociones", procesarPromocionesActivas);
+router.post("/procesar-recordatorios", procesarRecordatoriosActivos);
 
 export default router;
 // Rutas de Notificaciones
