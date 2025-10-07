@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/orden-trabajo.css";
 import "../styles/table-responsive.css";
+import "../styles/tables.css";
 import "../styles/popup.css";
 import "../styles/pagination-tooltips.css";
 import "../styles/vista-notificaciones.css";
@@ -42,6 +43,20 @@ const OrdenTrabajo = () => {
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Función para cambiar ordenamiento
+  const toggleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Función para mostrar flecha de ordenamiento
+  const renderSortArrow = (field) =>
+    sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
 
   // Estados para PopUp
   const [popup, setPopup] = useState({
@@ -126,10 +141,11 @@ const OrdenTrabajo = () => {
 
   const agregarOrden = () => navigate("/agregar-orden-trabajo");
   const editarOrden = (id) => navigate(`/editar-orden-trabajo/${id}`);
+
   const verOrden = (id) => navigate(`/ver-orden-trabajo/${id}`);
   
   // Funciones para modal de imagen
-  const openImageModal = (imagen) => {
+  const openImageModal = (imagen, ordenId) => {
     setModalImage(imagen);
     setIsModalOpen(true);
   };
@@ -166,7 +182,10 @@ const OrdenTrabajo = () => {
           type: 'success',
           showButtons: true,
           confirmText: 'Aceptar',
-          onConfirm: () => setOrdenAEliminar(null)
+          onConfirm: () => {
+            setOrdenAEliminar(null);
+            setPopup(prev => ({ ...prev, isOpen: false }));
+          }
         });
       } else {
         setPopup({
@@ -176,7 +195,10 @@ const OrdenTrabajo = () => {
           type: 'error',
           showButtons: true,
           confirmText: 'Aceptar',
-          onConfirm: () => setOrdenAEliminar(null)
+          onConfirm: () => {
+            setOrdenAEliminar(null);
+            setPopup(prev => ({ ...prev, isOpen: false }));
+          }
         });
       }
     } catch (err) {
@@ -188,7 +210,10 @@ const OrdenTrabajo = () => {
         type: 'error',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setOrdenAEliminar(null)
+        onConfirm: () => {
+          setOrdenAEliminar(null);
+          setPopup(prev => ({ ...prev, isOpen: false }));
+        }
       });
     }
   };
@@ -210,11 +235,56 @@ const OrdenTrabajo = () => {
   useEffect(() => {
     const result = ordenesData.filter((orden) => {
       if (!search.trim()) return true;
-      const filtro = search.toLowerCase();
+      const filtro = search.toLowerCase().trim();
+      
+      // Función para normalizar texto (quitar acentos y tildes)
+      const normalizarTexto = (texto) => {
+        return texto
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase();
+      };
+      
+      // Función para formatear fechas para búsqueda
+      const formatearFecha = (fecha) => {
+        if (!fecha) return '';
+        const date = new Date(fecha);
+        return date.toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+      };
+
+      // Búsqueda en diferentes campos (normalizada)
+      const busquedaPaciente = normalizarTexto(orden.paciente || "").includes(normalizarTexto(filtro));
+      const busquedaTelefono = (orden.telefono || "").toLowerCase().includes(filtro);
+      const busquedaCorreo = normalizarTexto(orden.correo || "").includes(normalizarTexto(filtro));
+      const busquedaDireccion = normalizarTexto(orden.direccion || "").includes(normalizarTexto(filtro));
+      const busquedaId = (orden.pk_id_orden || "").toString().includes(filtro);
+      
+      // Búsqueda en fechas (formato DD/MM/YYYY)
+      const fechaRecepcionFormateada = formatearFecha(orden.fecha_recepcion);
+      const fechaEntregaFormateada = formatearFecha(orden.fecha_entrega);
+      const busquedaFechaRecepcion = fechaRecepcionFormateada.includes(filtro);
+      const busquedaFechaEntrega = fechaEntregaFormateada.includes(filtro);
+      
+      // Búsqueda en totales (formato numérico)
+      const busquedaTotal = (orden.total || "").toString().includes(filtro);
+      const busquedaAdelanto = (orden.adelanto || "").toString().includes(filtro);
+      const busquedaSaldo = (orden.saldo || "").toString().includes(filtro);
+
       return (
-        (orden.paciente || "").toLowerCase().includes(filtro) ||
-        (orden.telefono || "").toLowerCase().includes(filtro) ||
-        (orden.correo || "").toLowerCase().includes(filtro)
+        busquedaPaciente ||
+        busquedaTelefono ||
+        busquedaCorreo ||
+        busquedaDireccion ||
+        busquedaId ||
+        busquedaFechaRecepcion ||
+        busquedaFechaEntrega ||
+        busquedaTotal ||
+        busquedaAdelanto ||
+        busquedaSaldo
       );
     }).sort((a, b) => {
       // Ordenar según combobox
@@ -249,7 +319,7 @@ const OrdenTrabajo = () => {
         <div className="flex justify-between items-center mb-4">
           <Titulo text="Órdenes de Trabajo" className="titulo" />
           <Button onClick={agregarOrden} className="agregar">
-            Agregar Orden
+            ➕ Agregar Orden
           </Button>
         </div>
         <div className="text-center py-8">
@@ -266,7 +336,7 @@ const OrdenTrabajo = () => {
         <div className="flex justify-between items-center mb-4">
           <Titulo text="Órdenes de Trabajo" className="titulo" />
           <Button onClick={agregarOrden} className="agregar">
-            Agregar Orden
+            ➕ Agregar Orden
           </Button>
         </div>
         <div className="text-center py-8 text-red-600">
@@ -287,60 +357,22 @@ const OrdenTrabajo = () => {
       <div className="flex justify-between items-center mb-4">
         <Titulo text="Órdenes de Trabajo" className="titulo" />
         <Button onClick={agregarOrden} className="agregar">
-          Agregar Orden
+          ➕ Agregar Orden
         </Button>
       </div>
 
       {/* FILA DE CONTROLES (ARRIBA) */}
-      <div className="mb-4 flex justify-between items-center gap-4 flex-wrap">
-        <div className="flex flex-col gap-2" style={{ flex: "1" }}>
+      <div className="mb-4 flex justify-center items-center gap-4 flex-wrap">
+        <div className="flex flex-col gap-2" style={{ maxWidth: '400px', width: '100%' }}>
           <div style={{ position: 'relative', width: '100%' }}>
             <input
               type="text"
-              placeholder="Buscar por paciente, teléfono o correo..."
+              placeholder="🔍 Buscar por paciente, teléfono, correo, fechas, totales..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input-buscador"
-              style={{ width: '100%', paddingLeft: '40px' }}
+              style={{ width: '100%', paddingLeft: '12px', paddingRight: '12px' }}
             />
-            <div style={{
-              position: 'absolute',
-              left: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#666',
-              fontSize: '16px',
-              pointerEvents: 'none'
-            }}>
-              🔍
-            </div>
-          </div>
-
-          <div className="flex gap-4 items-center">
-            <label>
-              Ordenar por:{" "}
-              <select
-                value={sortField}
-                onChange={(e) => setSortField(e.target.value)}
-                style={{ marginLeft: 6 }}
-              >
-                <option value="id">No de Orden</option>
-                <option value="paciente">Nombre del paciente</option>
-                <option value="fechaRecepcion">Fecha Recepción</option>
-                <option value="fechaEntrega">Fecha Entrega</option>
-              </select>
-            </label>
-
-            {/* Botón asc/desc */}
-            <button
-              type="button"
-              className="btn-quick"
-              onClick={() =>
-                setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))
-              }
-            >
-              {sortDirection === "asc" ? "A ↑" : "A ↓"}
-            </button>
           </div>
         </div>
       </div>
@@ -350,9 +382,20 @@ const OrdenTrabajo = () => {
         <table className="table orden-table">
           <thead>
             <tr>
-              {columns.map((col, index) => (
-                <th key={index}>{col}</th>
-              ))}
+              <th onClick={() => toggleSort('id')}>No Orden {renderSortArrow('id')}</th>
+              <th onClick={() => toggleSort('paciente')}>Paciente {renderSortArrow('paciente')}</th>
+              <th>Dirección</th>
+              <th>Correo</th>
+              <th>Teléfono</th>
+              <th onClick={() => toggleSort('fechaRecepcion')}>Fecha Recepción {renderSortArrow('fechaRecepcion')}</th>
+              <th onClick={() => toggleSort('fechaEntrega')}>Fecha Entrega {renderSortArrow('fechaEntrega')}</th>
+              <th>Total</th>
+              <th>Adelanto</th>
+              <th>Saldo</th>
+              <th>Imágenes</th>
+              <th>Acciones</th>
+              <th>Notificaciones</th>
+              <th>Estado</th>
             </tr>
           </thead>
           <tbody>
@@ -390,7 +433,7 @@ const OrdenTrabajo = () => {
                               alt={`Imagen ${index + 1}`}
                               title={imagen.nombre}
                               className="imagen-miniatura"
-                              onClick={() => openImageModal(imagen)}
+                              onClick={() => openImageModal(imagen, orden.pk_id_orden)}
                               style={{ cursor: 'pointer' }}
                               onError={(e) => {
                                 console.error('Error cargando miniatura:', e);
@@ -567,6 +610,13 @@ const OrdenTrabajo = () => {
         isOpen={isModalOpen}
         onClose={closeImageModal}
         image={modalImage}
+        images={modalImage ? imagenesOrdenes[Object.keys(imagenesOrdenes).find(id => 
+          imagenesOrdenes[id]?.some(img => 
+            img.id === modalImage.id || 
+            img.url === modalImage.url || 
+            img.preview === modalImage.preview
+          )
+        )] || [] : []}
       />
     </div>
   );

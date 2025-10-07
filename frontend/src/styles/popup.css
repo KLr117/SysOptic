@@ -11,6 +11,8 @@
   align-items: center;
   z-index: 1000;
   animation: fadeIn 0.3s ease-out;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .popup-container {
@@ -18,10 +20,12 @@
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   max-width: 400px;
-  width: 90%;
+  width: 100%;
   max-height: 90vh;
   overflow: hidden;
   animation: slideIn 0.3s ease-out;
+  margin: auto;
+  position: relative;
 }
 
 .popup-header {
@@ -182,11 +186,24 @@
   }
 }
 
+/* Centrado perfecto */
+.popup-overlay {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
+  .popup-overlay {
+    padding: 10px;
+  }
+  
   .popup-container {
-    margin: 20px;
-    width: calc(100% - 40px);
+    margin: 0;
+    width: 100%;
+    max-width: none;
   }
   
   .popup-header {

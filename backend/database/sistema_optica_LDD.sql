@@ -230,6 +230,7 @@ CREATE TABLE tbl_imagenes_ordenes (
   FOREIGN KEY (orden_id) REFERENCES tbl_ordenes(pk_id_orden) ON DELETE CASCADE
 );
 
+
 ALTER TABLE tbl_expedientes  
 ADD COLUMN imagenes BOOLEAN DEFAULT FALSE AFTER fecha_registro;
 CREATE TABLE tbl_imagenes_expedientes (

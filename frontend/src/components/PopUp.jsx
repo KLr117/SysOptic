@@ -44,15 +44,17 @@ const PopUp = ({
   const handleConfirm = () => {
     if (onConfirm) {
       onConfirm();
+    } else {
+      onClose();
     }
-    onClose();
   };
 
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
+    } else {
+      onClose();
     }
-    onClose();
   };
 
   const getIcon = () => {

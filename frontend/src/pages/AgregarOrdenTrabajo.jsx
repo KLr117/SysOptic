@@ -185,13 +185,63 @@ const AgregarOrdenTrabajo = () => {
     obtenerSiguienteNumeroOrden();
   }, []);
 
+  // Función para formatear teléfono automáticamente
+  const formatearTelefono = (telefono) => {
+    // Remover todos los caracteres no numéricos
+    const numeros = telefono.replace(/\D/g, '');
+    
+    // Si tiene 8 dígitos, formatear como 1234-5678 (número local)
+    if (numeros.length === 8) {
+      return `${numeros.slice(0, 4)}-${numeros.slice(4)}`;
+    }
+    
+    // Si tiene 10 dígitos, formatear como 123-4567-8901
+    if (numeros.length === 10) {
+      return `${numeros.slice(0, 3)}-${numeros.slice(3, 7)}-${numeros.slice(7)}`;
+    }
+    
+    // Si tiene 11 dígitos, asumir código de país de 3 dígitos
+    if (numeros.length === 11) {
+      const codigoPais = numeros.slice(0, 3);
+      const numeroLocal = numeros.slice(3);
+      return `(${codigoPais}) ${numeroLocal.slice(0, 4)}-${numeroLocal.slice(4)}`;
+    }
+    
+    // Si tiene 12 dígitos, asumir código de país de 3 dígitos + 9 dígitos
+    if (numeros.length === 12) {
+      const codigoPais = numeros.slice(0, 3);
+      const numeroLocal = numeros.slice(3);
+      return `(${codigoPais}) ${numeroLocal.slice(0, 3)}-${numeroLocal.slice(3, 6)}-${numeroLocal.slice(6)}`;
+    }
+    
+    // Si tiene 13 dígitos, asumir código de país de 3 dígitos + 10 dígitos
+    if (numeros.length === 13) {
+      const codigoPais = numeros.slice(0, 3);
+      const numeroLocal = numeros.slice(3);
+      return `(${codigoPais}) ${numeroLocal.slice(0, 3)}-${numeroLocal.slice(3, 6)}-${numeroLocal.slice(6)}`;
+    }
+    
+    // Para otros casos, devolver tal como está
+    return telefono;
+  };
+
   // Función para manejar cambios en los inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Formatear teléfono automáticamente
+    if (name === 'telefono') {
+      const telefonoFormateado = formatearTelefono(value);
+      setFormData(prev => ({
+        ...prev,
+        [name]: telefonoFormateado
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
 
     // Calcular saldo automáticamente cuando cambian total o adelanto
     if (name === 'total' || name === 'adelanto') {
@@ -207,19 +257,111 @@ const AgregarOrdenTrabajo = () => {
     }
   };
 
-  // Función para guardar la orden
-  const handleGuardar = async () => {
+  // Funciones de validación
+  const validarCorreo = (correo) => {
+    if (!correo) return true; // Correo es opcional
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(correo);
+  };
+
+  const validarTelefono = (telefono) => {
+    if (!telefono) return false; // Teléfono es obligatorio
+    // Acepta formatos internacionales flexibles: (123) 456-7890, (123) 4567-8901, 4567-8901, 123-4567-8901
+    const telefonoRegex = /^(\(\d{3}\)\s?\d{3,4}-\d{3,4}|\d{4}-\d{4}|\d{3}-\d{4}-\d{4})$/;
+    return telefonoRegex.test(telefono);
+  };
+
+  const validarFechas = (fechaRecepcion, fechaEntrega) => {
+    if (!fechaRecepcion || !fechaEntrega) return true; // Si no hay fechas, no validar
+    return fechaRecepcion !== fechaEntrega;
+  };
+
+  const validarFormulario = () => {
+    // Validar campos obligatorios
+    if (!formData.paciente || !formData.telefono) {
+      setPopup({
+        isOpen: true,
+        title: 'Campos Requeridos',
+        message: 'Paciente y teléfono son campos obligatorios.',
+        type: 'warning',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      });
+      return false;
+    }
+
+    // Validar correo electrónico
+    if (formData.correo && !validarCorreo(formData.correo)) {
+      setPopup({
+        isOpen: true,
+        title: 'Correo Inválido',
+        message: 'Por favor ingrese un correo electrónico válido con formato: ejemplo@correo.com',
+        type: 'warning',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      });
+      return false;
+    }
+
+    // Validar teléfono
+    if (!validarTelefono(formData.telefono)) {
+      setPopup({
+        isOpen: true,
+        title: 'Teléfono Inválido',
+        message: 'Por favor ingrese un teléfono válido. Formatos aceptados: (123) 456-7890, (123) 4567-8901, 4567-8901, 123-4567-8901',
+        type: 'warning',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      });
+      return false;
+    }
+
+    // Validar fechas
+    if (!validarFechas(formData.fecha_recepcion, formData.fecha_entrega)) {
+      setPopup({
+        isOpen: true,
+        title: 'Fechas Inválidas',
+        message: 'La fecha de recepción no puede ser igual a la fecha de entrega.',
+        type: 'warning',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  // Función para mostrar popup de confirmación
+  const mostrarConfirmacion = () => {
+    // Primero validar el formulario
+    if (!validarFormulario()) {
+      return;
+    }
+
+    setPopup({
+      isOpen: true,
+      title: 'Confirmar Guardado',
+      message: '¿Desea guardar esta nueva orden de trabajo?',
+      type: 'info',
+      showButtons: true,
+      confirmText: 'Aceptar',
+      cancelText: 'Cancelar',
+      onConfirm: () => {
+        setPopup(prev => ({ ...prev, isOpen: false }));
+        guardarOrden();
+      },
+      onCancel: () => setPopup(prev => ({ ...prev, isOpen: false }))
+    });
+  };
+
+  // Función para guardar la orden (lógica original)
+  const guardarOrden = async () => {
     try {
-      // Validaciones básicas
-      if (!formData.paciente || !formData.telefono) {
-        setPopup({
-          isOpen: true,
-          title: 'Campos Requeridos',
-          message: 'Paciente y teléfono son campos obligatorios.',
-          type: 'warning'
-        });
-        return;
-      }
 
       // Preparar datos para enviar
       const orderData = {
@@ -270,18 +412,23 @@ const AgregarOrdenTrabajo = () => {
           isOpen: true,
           title: 'Registro Ingresado',
           message: 'La orden de trabajo ha sido creada exitosamente.',
-          type: 'success'
+          type: 'success',
+          showButtons: true,
+          confirmText: 'Aceptar',
+          onConfirm: () => {
+            setPopup(prev => ({ ...prev, isOpen: false }));
+            navigate("/ordenes");
+          }
         });
-        // Navegar después de mostrar el mensaje
-        setTimeout(() => {
-          navigate("/ordenes");
-        }, 2000);
       } else {
         setPopup({
           isOpen: true,
           title: 'Error',
           message: 'Error al crear la orden. Intente nuevamente.',
-          type: 'error'
+          type: 'error',
+          showButtons: true,
+          confirmText: 'Aceptar',
+          onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
         });
       }
     } catch (error) {
@@ -290,9 +437,17 @@ const AgregarOrdenTrabajo = () => {
         isOpen: true,
         title: 'Error',
         message: 'Error al crear la orden. Intente nuevamente.',
-        type: 'error'
+        type: 'error',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
       });
     }
+  };
+
+  // Función para manejar el clic en guardar (ahora muestra confirmación)
+  const handleGuardar = () => {
+    mostrarConfirmacion();
   };
 
   return (
@@ -349,7 +504,7 @@ const AgregarOrdenTrabajo = () => {
       <div className="orden-info">
         <div className="orden-row">
           <div className="orden-field">
-            <label>Paciente</label>
+            <label>Paciente *</label>
             <input 
               type="text" 
               name="paciente"
@@ -372,7 +527,7 @@ const AgregarOrdenTrabajo = () => {
             />
           </div>
           <div className="orden-field">
-            <label>Correo</label>
+            <label>Correo (Opcional)</label>
             <input 
               type="email" 
               name="correo"
@@ -385,7 +540,7 @@ const AgregarOrdenTrabajo = () => {
 
         <div className="orden-row">
           <div className="orden-field">
-            <label>Teléfono</label>
+            <label>Teléfono *</label>
             <input 
               type="tel" 
               name="telefono"
@@ -534,7 +689,12 @@ const AgregarOrdenTrabajo = () => {
         title={popup.title}
         message={popup.message}
         type={popup.type}
-        autoClose={popup.type === 'success'}
+        showButtons={popup.showButtons}
+        confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        onConfirm={popup.onConfirm}
+        onCancel={popup.onCancel}
+        autoClose={popup.type === 'success' && !popup.showButtons}
         autoCloseDelay={2000}
       />
     </div>
