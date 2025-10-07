@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/orden-trabajo.css";
 import "../styles/table-responsive.css";
+import "../styles/tables.css";
 import "../styles/popup.css";
 import "../styles/pagination-tooltips.css";
 import "../styles/vista-notificaciones.css";
