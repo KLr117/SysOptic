@@ -1,5 +1,9 @@
-// helpers/updateImagenesExpediente.js
 import db from '../database/db.js';
+import ImagenesOrdenesModel from '../models/imagenesOrdenesModel.js';
+import { updateImagenes } from '../models/OrdenTrabajoModel.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 /**
  * Actualiza el campo imagenes en la tabla tbl_expedientes
