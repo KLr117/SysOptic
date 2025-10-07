@@ -184,4 +184,107 @@ export const procesarPromocionesActivas = async (req, res) => {
   }
 };
 
+// 🧠 Procesar recordatorios automáticos (Expedientes y Órdenes)
+export const procesarRecordatoriosActivos = async (req, res) => {
+  try {
+    const notificaciones = await notificacionesModel.getRecordatoriosActivos();
+    const expedientes = await notificacionesModel.getExpedientes();
+    const ordenes = await notificacionesModel.getOrdenes();
+
+    const hoy = new Date();
+    let totalInsertados = 0;
+    const resumen = [];
+
+    for (const noti of notificaciones) {
+      let candidatos = [];
+
+      // 🩺 Si el módulo es EXPEDIENTES
+      if (noti.fk_id_modulo_notificacion === 1) {
+        candidatos = expedientes.filter((exp) => {
+          const fechaBase = new Date(exp.fecha_registro);
+          const fechaEnvio = new Date(
+            fechaBase.getTime() + noti.intervalo_dias * 24 * 60 * 60 * 1000
+          );
+
+          const fechaCreacionNoti = new Date(noti.fecha_creacion);
+
+          // 💡 Prospectivo inteligente:
+          // Si el expediente es anterior a la notificación,
+          // solo se omite si su fecha objetivo ya pasó.
+          if (fechaBase < fechaCreacionNoti && fechaEnvio < hoy) {
+            return false; // ya vencido → no aplica
+          }
+
+          // ✅ Coincide la fecha de envío con hoy
+          return (
+            fechaEnvio.toISOString().slice(0, 10) === hoy.toISOString().slice(0, 10)
+          );
+        });
+      }
+
+
+      // 📦 Si el módulo es ÓRDENES
+      if (noti.fk_id_modulo_notificacion === 2) {
+        candidatos = ordenes.filter((ord) => {
+          const { fecha_recepcion, fecha_entrega } = ord;
+          if (!fecha_recepcion && !fecha_entrega) return false;
+
+          let fechaEnvio = null;
+          let fechaBase = null;
+
+          if (noti.tipo_intervalo === "despues_recepcion" && fecha_recepcion) {
+            fechaBase = new Date(fecha_recepcion);
+            fechaEnvio = new Date(
+              fechaBase.getTime() + noti.intervalo_dias * 24 * 60 * 60 * 1000
+            );
+          } else if (noti.tipo_intervalo === "antes_entrega" && fecha_entrega) {
+            fechaBase = new Date(fecha_entrega);
+            fechaEnvio = new Date(
+              fechaBase.getTime() - noti.intervalo_dias * 24 * 60 * 60 * 1000
+            );
+          }
+
+          const fechaCreacionNoti = new Date(noti.fecha_creacion);
+          // 💡 Prospectivo inteligente
+          if (fechaBase < fechaCreacionNoti && fechaEnvio < hoy) return false;
+
+          return (
+            fechaEnvio &&
+            fechaEnvio.toISOString().slice(0, 10) === hoy.toISOString().slice(0, 10)
+          );
+        });
+      }
+
+      // 📤 Registrar los correos pendientes sin duplicar
+      for (const c of candidatos) {
+        await notificacionesModel.registrarEnvio(noti.pk_id_notificacion, c.correo);
+        totalInsertados++;
+      }
+
+      resumen.push({
+        id_notificacion: noti.pk_id_notificacion,
+        modulo: noti.fk_id_modulo_notificacion,
+        pendientes: candidatos.length,
+        insertados: totalInsertados,
+      });
+    }
+
+    const resultado = {
+      success: true,
+      message: "Recordatorios procesados correctamente.",
+      total_insertados: totalInsertados,
+      notificaciones: resumen,
+    };
+
+    // Si viene de cron → no se necesita respuesta HTTP
+    if (!req) return resultado;
+
+    res.json(resultado);
+  } catch (error) {
+    console.error("Error al procesar recordatorios:", error);
+    if (res)
+      res.status(500).json({ success: false, message: "Error en recordatorios", error: error.message });
+  }
+};
+
 // Controlador de Notificaciones
