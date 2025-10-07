@@ -519,29 +519,37 @@
   gap: 8px;
 }
 
+
 .sugerencia-texto {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
+  font-size: 18px;
 }
 
 .sugerencia-texto strong {
   color: #01579b;
-  font-size: 14px;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .btn-usar-sugerencia {
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 500;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 120px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-usar-sugerencia:hover {
@@ -570,8 +578,24 @@
   color: #93c5fd;
 }
 
+.dark-mode .sugerencia-texto {
+  font-size: 18px;
+}
+
 .dark-mode .sugerencia-texto strong {
   color: #dbeafe;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.dark-mode .btn-usar-sugerencia {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .btn-usar-sugerencia:hover {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
 }
 
 /* ====== FIX PARA BOTONES SIEMPRE VISIBLES ====== */
