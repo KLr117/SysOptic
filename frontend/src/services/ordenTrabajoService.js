@@ -1,45 +1,33 @@
-import { API_URL } from "./api.js";
+import axios from 'axios';
 
-export async function getOrdenes() {
-  const res = await fetch(`${API_URL}/api/ordenes`);
-  if (!res.ok) throw new Error("Error al obtener órdenes");
-  return res.json();
-}
+const API_URL = import.meta.env.VITE_API_URL + "/api/ordenes";
 
-export async function getOrdenById(id) {
-  const res = await fetch(`${API_URL}/api/ordenes/${id}`);
-  if (!res.ok) throw new Error("Error al obtener la orden");
-  return res.json();
-}
+// Obtener todas las órdenes
+export const getOrdenes = async () => {
+  const res = await axios.get(API_URL);
+  return res.data;
+};
 
-export async function createOrden(data) {
-  const res = await fetch(`${API_URL}/api/ordenes`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Error al crear la orden");
-  return res.json();
-}
+// Obtener orden por ID
+export const getOrdenById = async (id) => {
+  const res = await axios.get(`${API_URL}/${id}`);
+  return res.data;
+};
 
-export async function updateOrden(id, data) {
-  const res = await fetch(`${API_URL}/api/ordenes/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error("Error al actualizar la orden");
-  return res.json();
-}
+// Crear nueva orden
+export const createOrden = async (data) => {
+  const res = await axios.post(API_URL, data);
+  return res.data;
+};
 
-export async function deleteOrden(id) {
-  const res = await fetch(`${API_URL}/api/ordenes/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) throw new Error("Error al eliminar la orden");
-  return res.json();
-}
+// Actualizar orden
+export const updateOrden = async (id, data) => {
+  const res = await axios.put(`${API_URL}/${id}`, data);
+  return res.data;
+};
+
+// Eliminar orden
+export const deleteOrden = async (id) => {
+  const res = await axios.delete(`${API_URL}/${id}`);
+  return res.data;
+};

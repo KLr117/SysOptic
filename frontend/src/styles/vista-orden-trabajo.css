@@ -87,6 +87,100 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Campo de teléfono con ancho reducido */
+.telefono-field {
+  flex: 0 0 auto;
+  max-width: 300px;
+}
+
+.telefono-field input {
+  max-width: 300px;
+  width: 300px;
+}
+
+/* Campo de paciente alargado */
+.paciente-field {
+  flex: 0 0 auto;
+  max-width: 500px;
+}
+
+.paciente-field input {
+  width: 500px;
+  max-width: 500px;
+}
+
+/* Campo de correo con ancho alargado en fila de 3 */
+.correo-field {
+  flex: 2;
+  min-width: 300px;
+}
+
+.correo-field input {
+  width: 100%;
+  min-width: 300px;
+}
+
+/* Campo de número de orden más grande */
+.orden-no input {
+  width: 200px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Marco rojo para el campo de número de orden */
+.numero-orden-input {
+  border: 2px solid #dc2626 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 0 0 1px #dc2626 !important;
+}
+
+.numero-orden-input:focus {
+  border-color: #b91c1c !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2) !important;
+  outline: none !important;
+}
+
+/* Tooltip para campos obligatorios */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+}
+
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
 .orden-field label {
   font-weight: 500;
   margin-bottom: 0.3rem;

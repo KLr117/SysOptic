@@ -2,14 +2,14 @@
    ESTILOS ADMIN PANEL
    ========================= */
 
-.admin-panel {
+.usuarios-container {
   padding: 20px;
-  background-color: var(--color-bg-primary);
+  background-color: var(--color-bg);
   min-height: 100vh;
   color: var(--color-text);
 }
 
-.flex-header {
+.usuarios-container .usuarios-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -21,14 +21,14 @@
   border: 1px solid var(--color-border);
 }
 
-.flex-header h1 {
+.usuarios-container .usuarios-header h1 {
   color: var(--color-text);
   margin: 0;
   font-size: 2rem;
   font-weight: 600;
 }
 
-.btn-bitacora {
+.usuarios-container .btn-bitacora {
   background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
   color: white;
   border: none;
@@ -41,7 +41,7 @@
   box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
 }
 
-.btn-bitacora:hover {
+.usuarios-container .btn-bitacora:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
@@ -153,15 +153,10 @@ body:not(.dark-mode) .usuarios-container {
   border: 1px solid var(--color-border);
   position: relative;
   z-index: 1;
-  transition: all 0.3s ease;
 }
 
-.main-form-container:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-}
 
-.form-overlay {
+.usuarios-container .form-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -174,7 +169,7 @@ body:not(.dark-mode) .usuarios-container {
   z-index: 1000;
 }
 
-.form-container {
+.usuarios-container .form-container {
   background: var(--color-bg-secondary);
   padding: 30px;
   border-radius: 15px;
@@ -186,7 +181,7 @@ body:not(.dark-mode) .usuarios-container {
   border: 1px solid var(--color-border);
 }
 
-.form-container h2 {
+.usuarios-container .usuarios-container .form-container h2 {
   color: var(--color-text);
   margin-bottom: 1.5rem;
   text-align: center;
@@ -198,24 +193,24 @@ body:not(.dark-mode) .usuarios-container {
   background-clip: text;
 }
 
-.usuario-form {
+.usuarios-container .usuario-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.form-row {
+.usuarios-container .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
-.form-group {
+.usuarios-container .form-group {
   display: flex;
   flex-direction: column;
 }
 
-.form-group label {
+.usuarios-container .form-group label {
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: 0.5rem;
@@ -225,55 +220,55 @@ body:not(.dark-mode) .usuarios-container {
   gap: 0.5rem;
 }
 
-.form-group input,
-.form-group select {
+.usuarios-container .form-group input,
+.usuarios-container .form-group select {
   padding: 0.75rem 1rem;
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: var(--color-bg-primary) !important;
+  background: var(--color-bg) !important;
   color: var(--color-text) !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 /* Forzar colores consistentes en todos los temas */
-body:not(.dark-mode) .form-group input,
-body:not(.dark-mode) .form-group select {
-  background: var(--color-bg-primary) !important;
+body:not(.dark-mode) .usuarios-container .form-group input,
+body:not(.dark-mode) .usuarios-container .form-group select {
+  background: var(--color-bg) !important;
   color: var(--color-text) !important;
   border-color: var(--color-border) !important;
 }
 
-.dark-mode .form-group input,
-.dark-mode .form-group select {
-  background: var(--color-bg-primary) !important;
+.dark-mode .usuarios-container .form-group input,
+.dark-mode .usuarios-container .form-group select {
+  background: var(--color-bg) !important;
   color: var(--color-text) !important;
   border-color: var(--color-border) !important;
 }
 
-.form-group input:focus,
-.form-group select:focus {
+.usuarios-container .form-group input:focus,
+.usuarios-container .form-group select:focus {
   outline: none;
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: var(--color-bg-primary) !important;
+  background: var(--color-bg) !important;
   color: var(--color-text) !important;
 }
 
 /* Asegurar que todos los inputs tengan el mismo estilo */
-.usuario-form input[type="text"],
-.usuario-form input[type="password"],
-.usuario-form select {
-  background: var(--color-bg-primary) !important;
+.usuarios-container .usuario-form input[type="text"],
+.usuarios-container .usuario-form input[type="password"],
+.usuarios-container .usuario-form select {
+  background: var(--color-bg) !important;
   color: var(--color-text) !important;
   border: 1px solid var(--color-border) !important;
 }
 
-.usuario-form input[type="text"]:focus,
-.usuario-form input[type="password"]:focus,
-.usuario-form select:focus {
-  background: var(--color-bg-primary) !important;
+.usuarios-container .usuario-form input[type="text"]:focus,
+.usuarios-container .usuario-form input[type="password"]:focus,
+.usuarios-container .usuario-form select:focus {
+  background: var(--color-bg) !important;
   color: var(--color-text) !important;
   border-color: var(--color-primary) !important;
 }
@@ -584,7 +579,7 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
 
 /* Estilos mejorados para el título con icono */
 .main-form-container h2,
-.form-container h2 {
+.usuarios-container .form-container h2 {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -619,7 +614,7 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
   border-radius: 2px;
 }
 
-.form-icon {
+.usuarios-container .form-icon {
   font-size: 2rem;
   filter: brightness(0) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   animation: float 3s ease-in-out infinite;
@@ -627,7 +622,7 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
 }
 
 /* Estilos específicos para el icono en modo oscuro */
-.dark-mode .form-icon {
+.dark-mode .usuarios-container .form-icon {
   filter: brightness(0) invert(1) drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3));
   animation: glow 2s ease-in-out infinite alternate;
 }
@@ -653,19 +648,19 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
 /* Responsive para el título */
 @media (max-width: 768px) {
   .main-form-container h2,
-  .form-container h2 {
+  .usuarios-container .form-container h2 {
     font-size: 1.5rem;
     gap: 0.5rem;
     padding: 0.75rem;
   }
   
-  .form-icon {
+  .usuarios-container .form-icon {
     font-size: 1.75rem;
   }
 }
 
 /* Estilos para alertas de éxito y error */
-.alert {
+.usuarios-container .alert {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -676,21 +671,21 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
   animation: slideIn 0.3s ease-out;
 }
 
-.alert-success {
+.usuarios-container .alert-success {
   background: linear-gradient(135deg, #d4edda, #c3e6cb);
   color: #155724;
   border: 1px solid #c3e6cb;
   box-shadow: 0 2px 8px rgba(21, 87, 36, 0.1);
 }
 
-.alert-error {
+.usuarios-container .alert-error {
   background: linear-gradient(135deg, #f8d7da, #f5c6cb);
   color: #721c24;
   border: 1px solid #f5c6cb;
   box-shadow: 0 2px 8px rgba(114, 28, 36, 0.1);
 }
 
-.alert-icon {
+.usuarios-container .alert-icon {
   font-size: 1.2rem;
   flex-shrink: 0;
 }
@@ -848,7 +843,7 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
    BOTONES
    ========================= */
 
-.form-actions {
+.usuarios-container .form-actions {
   display: flex;
   gap: 20px;
   justify-content: center;
@@ -1654,7 +1649,7 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
     font-size: 1.5rem;
   }
   
-  .form-actions {
+  .usuarios-container .form-actions {
     flex-direction: column;
     gap: 10px;
   }
