@@ -182,7 +182,6 @@ function Card({ title, value, type, onClick }) {
       <div className="card-content">
         <div className="card-info">
           <p className="card-title">{title}</p>
-          <p className="card-value">{value}</p>
         </div>
         <div className="card-icon">
           {icons[type]}
