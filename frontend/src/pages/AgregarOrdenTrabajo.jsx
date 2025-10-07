@@ -285,12 +285,38 @@ const AgregarOrdenTrabajo = () => {
   };
 
   const validarFormulario = () => {
-    // Validar campos obligatorios
-    if (!formData.paciente || !formData.telefono) {
+    // Validar campos obligatorios individualmente
+    if (!formData.numero_orden) {
       setPopup({
         isOpen: true,
-        title: 'Campos Requeridos',
-        message: 'Paciente y teléfono son campos obligatorios.',
+        title: 'Campo Requerido',
+        message: 'El campo "No de orden" es obligatorio.',
+        type: 'warning',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      });
+      return false;
+    }
+
+    if (!formData.paciente) {
+      setPopup({
+        isOpen: true,
+        title: 'Campo Requerido',
+        message: 'El campo "Paciente" es obligatorio.',
+        type: 'warning',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      });
+      return false;
+    }
+
+    if (!formData.telefono) {
+      setPopup({
+        isOpen: true,
+        title: 'Campo Requerido',
+        message: 'El campo "Teléfono" es obligatorio.',
         type: 'warning',
         showButtons: true,
         confirmText: 'Aceptar',
@@ -455,20 +481,24 @@ const AgregarOrdenTrabajo = () => {
 
         </div>
         <div className="orden-no">
-          <label>No Orden</label>
+          <label>No Orden *</label>
           <div className="orden-no-container">
-            <input 
-              type="text" 
-              name="numero_orden"
-              value={formData.numero_orden}
-              onChange={handleInputChange}
-              placeholder="Ej: 003"
-              style={{
-                backgroundColor: 'var(--color-bg)',
-                color: 'var(--color-text)',
-                cursor: 'text'
-              }}
-            />
+            <div className="tooltip">
+              <input 
+                type="text" 
+                name="numero_orden"
+                value={formData.numero_orden}
+                onChange={handleInputChange}
+                placeholder="Ej: 003"
+                className="numero-orden-input"
+                style={{
+                  backgroundColor: 'var(--color-bg)',
+                  color: 'var(--color-text)',
+                  cursor: 'text'
+                }}
+              />
+              <span className="tooltiptext">Este campo es obligatorio</span>
+            </div>
             <div className="sugerencia-orden">
               {loadingSugerencia ? (
                 <span className="sugerencia-loading">🔄 Obteniendo siguiente número...</span>
@@ -498,15 +528,18 @@ const AgregarOrdenTrabajo = () => {
       {/* Información del paciente */}
       <div className="orden-info">
         <div className="orden-row">
-          <div className="orden-field">
+          <div className="orden-field paciente-field">
             <label>Paciente *</label>
-            <input 
-              type="text" 
-              name="paciente"
-              value={formData.paciente}
-              onChange={handleInputChange}
-              placeholder="Nombre del paciente" 
-            />
+            <div className="tooltip">
+              <input 
+                type="text" 
+                name="paciente"
+                value={formData.paciente}
+                onChange={handleInputChange}
+                placeholder="Nombre del paciente" 
+              />
+              <span className="tooltiptext">Este campo es obligatorio</span>
+            </div>
           </div>
         </div>
 
@@ -521,7 +554,24 @@ const AgregarOrdenTrabajo = () => {
               placeholder="Dirección del paciente" 
             />
           </div>
-          <div className="orden-field">
+          <div className="orden-field telefono-field">
+            <label>Teléfono *</label>
+            <div className="tooltip">
+              <input 
+                type="tel" 
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleInputChange}
+                onBlur={handleTelefonoBlur}
+                placeholder="Número de teléfono" 
+              />
+              <span className="tooltiptext">Este campo es obligatorio</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="orden-row">
+          <div className="orden-field correo-field">
             <label>Correo (Opcional)</label>
             <input 
               type="email" 
@@ -531,23 +581,6 @@ const AgregarOrdenTrabajo = () => {
               placeholder="ejemplo@correo.com" 
             />
           </div>
-        </div>
-
-        <div className="orden-row">
-          <div className="orden-field">
-            <label>Teléfono *</label>
-            <input 
-              type="tel" 
-              name="telefono"
-              value={formData.telefono}
-              onChange={handleInputChange}
-              onBlur={handleTelefonoBlur}
-              placeholder="Número de teléfono" 
-            />
-          </div>
-        </div>
-
-        <div className="orden-row">
           <div className="orden-field">
             <label>Fecha Recepción</label>
             <input 
