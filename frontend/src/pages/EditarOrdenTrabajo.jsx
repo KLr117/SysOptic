@@ -125,7 +125,10 @@ const EditarOrdenTrabajo = () => {
         isOpen: true,
         title: 'Máximo 3 imágenes',
         message: 'Solo puedes subir máximo 3 fotografías.',
-        type: 'warning'
+        type: 'warning',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
       });
       return;
     }
@@ -211,21 +214,43 @@ const EditarOrdenTrabajo = () => {
     }
   };
 
-  // Función para guardar los cambios
-  const handleGuardar = async () => {
+  // Función para mostrar confirmación de actualización
+  const handleGuardar = () => {
+    // Validaciones básicas
+    if (!formData.paciente || !formData.telefono) {
+      setPopup({
+        isOpen: true,
+        title: 'Campos Requeridos',
+        message: 'Paciente y teléfono son campos obligatorios.',
+        type: 'warning',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      });
+      return;
+    }
+
+    // Mostrar popup de confirmación
+    setPopup({
+      isOpen: true,
+      title: 'Confirmar Actualización',
+      message: '¿Desea guardar los cambios realizados?',
+      type: 'info',
+      showButtons: true,
+      confirmText: 'Guardar',
+      cancelText: 'Cancelar',
+      onConfirm: () => {
+        setPopup(prev => ({ ...prev, isOpen: false }));
+        actualizarOrden();
+      },
+      onCancel: () => setPopup(prev => ({ ...prev, isOpen: false }))
+    });
+  };
+
+  // Función para actualizar la orden (lógica original)
+  const actualizarOrden = async () => {
     try {
       setSaving(true);
-      
-      // Validaciones básicas
-      if (!formData.paciente || !formData.telefono) {
-        setPopup({
-          isOpen: true,
-          title: 'Campos Requeridos',
-          message: 'Paciente y teléfono son campos obligatorios.',
-          type: 'warning'
-        });
-        return;
-      }
 
       // Preparar datos para enviar
       const orderData = {
@@ -247,18 +272,23 @@ const EditarOrdenTrabajo = () => {
           isOpen: true,
           title: 'Registro Actualizado',
           message: 'La orden de trabajo ha sido actualizada exitosamente.',
-          type: 'success'
+          type: 'success',
+          showButtons: true,
+          confirmText: 'Aceptar',
+          onConfirm: () => {
+            setPopup(prev => ({ ...prev, isOpen: false }));
+            navigate("/ordenes");
+          }
         });
-        // Navegar después de mostrar el mensaje
-        setTimeout(() => {
-          navigate("/ordenes");
-        }, 2000);
       } else {
         setPopup({
           isOpen: true,
           title: 'Error',
           message: 'Error al actualizar la orden. Intente nuevamente.',
-          type: 'error'
+          type: 'error',
+          showButtons: true,
+          confirmText: 'Aceptar',
+          onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
         });
       }
     } catch (error) {
@@ -267,7 +297,10 @@ const EditarOrdenTrabajo = () => {
         isOpen: true,
         title: 'Error',
         message: 'Error al actualizar la orden. Intente nuevamente.',
-        type: 'error'
+        type: 'error',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
       });
     } finally {
       setSaving(false);
@@ -454,6 +487,11 @@ const EditarOrdenTrabajo = () => {
         title={popup.title}
         message={popup.message}
         type={popup.type}
+        showButtons={popup.showButtons}
+        confirmText={popup.confirmText}
+        cancelText={popup.cancelText}
+        onConfirm={popup.onConfirm}
+        onCancel={popup.onCancel}
         autoClose={popup.type === 'success'}
         autoCloseDelay={2000}
       />

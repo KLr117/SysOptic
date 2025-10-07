@@ -91,20 +91,20 @@ const PopUp = ({
         
         {showButtons && (
           <div className="popup-footer">
+            <button 
+              className="popup-btn popup-btn-primary" 
+              onClick={handleConfirm}
+            >
+              {confirmText}
+            </button>
             {onCancel && (
               <button 
-                className="popup-btn popup-btn-cancel" 
+                className="popup-btn popup-btn-cancel-red" 
                 onClick={handleCancel}
               >
                 {cancelText}
               </button>
             )}
-            <button 
-              className={`popup-btn popup-btn-${type}`} 
-              onClick={handleConfirm}
-            >
-              {confirmText}
-            </button>
           </div>
         )}
       </div>

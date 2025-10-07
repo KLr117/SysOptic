@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getStats } from "../services/api";
 import { getOrdenes } from "../services/ordenTrabajoService";
-import { getExpedientes } from "../services/expedientesService";
 import "../styles/dashboard.css";
 import "../styles/pagination-tooltips.css";
 import "../styles/tables.css";
@@ -15,7 +14,6 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [err, setErr] = useState(null);
   const [ultimasOrdenes, setUltimasOrdenes] = useState([]);
-  const [ultimosExpedientes, setUltimosExpedientes] = useState([]);
   const [loadingTablas, setLoadingTablas] = useState(true);
   const [sortField, setSortField] = useState("id");
   const [sortDirection, setSortDirection] = useState("desc");
@@ -36,7 +34,6 @@ export default function Dashboard() {
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
 
   // Funciones de navegación
-  const navegarAExpedientes = () => navigate('/expedientes');
   const navegarAOrdenesTrabajo = () => navigate('/ordenes');
   const navegarANotificaciones = () => navigate('/notificaciones');
   const navegarAPanelAdmin = () => navigate('/admin');
@@ -63,18 +60,6 @@ export default function Dashboard() {
         console.log('No se encontraron órdenes o formato incorrecto');
       }
 
-      // Cargar últimos expedientes (últimos 5)
-      const expedientesResponse = await getExpedientes();
-      console.log('Expedientes response:', expedientesResponse);
-      if (expedientesResponse && Array.isArray(expedientesResponse)) {
-        const expedientesOrdenados = expedientesResponse
-          .sort((a, b) => new Date(b.fecha_creacion || b.created_at) - new Date(a.fecha_creacion || a.created_at))
-          .slice(0, 5);
-        console.log('Expedientes ordenados:', expedientesOrdenados);
-        setUltimosExpedientes(expedientesOrdenados);
-      } else {
-        console.log('No se encontraron expedientes o formato incorrecto');
-      }
       
       setUltimaActualizacion(new Date());
     } catch (error) {
@@ -139,7 +124,7 @@ export default function Dashboard() {
             <div className="grid-optical optical-3">🔍</div>
             <div className="grid-optical optical-4">👁️</div>
           </div>
-          <Card title="Expedientes" value={stats.expedientes} type="expedientes" onClick={navegarAExpedientes} />
+          <Card title="Expedientes" value={stats.expedientes} type="expedientes" />
           <Card title="Órdenes de Trabajo" value={stats.ordenes} type="ordenes" onClick={navegarAOrdenesTrabajo} />
           <Card title="Notificaciones" value={stats.notificaciones} type="notificaciones" onClick={navegarANotificaciones} />
           <Card title="Panel Administrativo" value="" type="admin" onClick={navegarAPanelAdmin} />
@@ -176,13 +161,6 @@ export default function Dashboard() {
               />
             </div>
 
-            <div className="dashboard-table-section">
-              <div className="table-header-decoration">
-                <div className="table-icon-bg">📁</div>
-              </div>
-              <h3 className="table-section-title">📁 Últimos Expedientes</h3>
-              <TablaExpedientes expedientes={ultimosExpedientes} loading={loadingTablas} />
-            </div>
           </div>
         </>
       )}
@@ -200,10 +178,11 @@ function Card({ title, value, type, onClick }) {
   };
 
   return (
-    <div className={`dashboard-card card-${type} clickable-card`} onClick={onClick}>
+    <div className={`dashboard-card card-${type} ${onClick ? 'clickable-card' : ''}`} onClick={onClick}>
       <div className="card-content">
         <div className="card-info">
           <p className="card-title">{title}</p>
+          <p className="card-value">{value}</p>
         </div>
         <div className="card-icon">
           {icons[type]}
@@ -277,47 +256,3 @@ function TablaOrdenes({ ordenes, loading }) {
   );
 }
 
-// Componente para tabla de expedientes
-function TablaExpedientes({ expedientes, loading }) {
-  if (loading) {
-    return <div className="dashboard-loading">Cargando expedientes...</div>;
-  }
-
-  if (expedientes.length === 0) {
-    return <div className="dashboard-empty">No hay expedientes recientes</div>;
-  }
-
-  return (
-    <div className="table-container dashboard-scroll-container">
-      <table className="table">
-        <thead>
-          <tr>
-            <th>No. Correlativo</th>
-            <th>Nombre</th>
-            <th>Teléfono</th>
-            <th>Dirección</th>
-            <th>Email</th>
-            <th>Fecha Registro</th>
-          </tr>
-        </thead>
-        <tbody>
-          {expedientes.map((expediente) => (
-            <tr key={expediente.pk_id_expediente}>
-              <td>#{expediente.pk_id_expediente}</td>
-              <td>{expediente.paciente || 'N/A'}</td>
-              <td>{expediente.telefono || 'N/A'}</td>
-              <td>{expediente.direccion || 'N/A'}</td>
-              <td>{expediente.correo || 'N/A'}</td>
-              <td>
-                {expediente.fecha_creacion 
-                  ? new Date(expediente.fecha_creacion).toLocaleDateString('es-ES')
-                  : 'N/A'
-                }
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
