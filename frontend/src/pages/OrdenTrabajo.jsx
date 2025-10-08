@@ -68,17 +68,33 @@ const OrdenTrabajo = () => {
         setSortField('id');
         setSortDirection('asc');
         break;
+      case 'idDesc':
+        setSortField('id');
+        setSortDirection('desc');
+        break;
       case 'paciente':
         setSortField('paciente');
         setSortDirection('asc');
+        break;
+      case 'pacienteDesc':
+        setSortField('paciente');
+        setSortDirection('desc');
         break;
       case 'fechaRecepcion':
         setSortField('fechaRecepcion');
         setSortDirection('asc');
         break;
+      case 'fechaRecepcionDesc':
+        setSortField('fechaRecepcion');
+        setSortDirection('desc');
+        break;
       case 'fechaEntrega':
         setSortField('fechaEntrega');
         setSortDirection('asc');
+        break;
+      case 'fechaEntregaDesc':
+        setSortField('fechaEntrega');
+        setSortDirection('desc');
         break;
       case '':
         // No hacer nada si no se ha seleccionado
@@ -431,13 +447,18 @@ const OrdenTrabajo = () => {
             value={sortOption}
             onChange={(e) => handleSortChange(e.target.value)}
             className="sort-combobox"
+            style={{ width: '180px', fontSize: '14px' }}
             data-tooltip="Selecciona una ordenación rápida"
           >
             <option value="" disabled>Seleccione</option>
-            <option value="id">#</option>
-            <option value="fechaRecepcion">Fecha de recepción</option>
-            <option value="fechaEntrega">Fecha de entrega</option>
-            <option value="paciente">Paciente</option>
+            <option value="id"># Ascendente</option>
+            <option value="idDesc"># Descendente</option>
+            <option value="fechaRecepcion">Recepción (antigua)</option>
+            <option value="fechaRecepcionDesc">Recepción (reciente)</option>
+            <option value="fechaEntrega">Entrega (antigua)</option>
+            <option value="fechaEntregaDesc">Entrega (reciente)</option>
+            <option value="paciente">Paciente A-Z</option>
+            <option value="pacienteDesc">Paciente Z-A</option>
           </select>
         </div>
       </div>
