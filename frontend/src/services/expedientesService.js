@@ -1,121 +1,104 @@
 import { API_URL } from "./api.js";
-// Función para obtener el token de autenticación
-const getAuthToken = () => {
-  return localStorage.getItem('token');
-};
+import axios from 'axios';
 
-// Función para hacer peticiones autenticadas
-const makeAuthenticatedRequest = async (url, options = {}) => {
-  const token = getAuthToken();
-  
-  const defaultOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      // 'Authorization': `Bearer ${token}`, // Temporalmente deshabilitado
-      ...options.headers
-    },
-    ...options
-  };
+// Crear instancia de axios con configuración base
+const apiClient = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
-  const response = await fetch(url, defaultOptions);
-  
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+// Interceptor para agregar token si está disponible
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // config.headers.Authorization = `Bearer ${token}`; // Temporalmente deshabilitado
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  
-  return response.json();
-};
+);
 
-// Función para manejar respuestas de la API
-async function handleResponse(res) {
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Error en la API: ${res.status} - ${text}`);
+// Interceptor para manejar respuestas
+apiClient.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    console.error('Error en la petición:', error);
+    throw error;
   }
-  try {
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
+);
 
 // Obtener todos los expedientes
 export async function getExpedientes() {
-  const res = await fetch(`${API_URL}/api/expedientes`);
-  const data = await res.json();
-  return data.expedientes || [];
+  try {
+    const response = await apiClient.get('/api/expedientes');
+    return response.expedientes || [];
+  } catch (error) {
+    console.error('Error obteniendo expedientes:', error);
+    throw new Error(`Error al obtener expedientes: ${error.message}`);
+  }
 }
 
 // Obtener expediente por ID
 export async function getExpedienteById(id) {
-  const res = await fetch(`${API_URL}/api/expedientes/${id}`);
-  return handleResponse(res);
-}
-
-// Crear nuevo expediente (SIN FOTOS por ahora)
-export async function createExpediente(expedienteData) {
   try {
-    const response = await fetch(`${API_URL}/api/expedientes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        correlativo: expedienteData.correlativo || '',
-        nombre: expedienteData.nombre || '',
-        telefono: expedienteData.telefono || '',
-        direccion: expedienteData.direccion || '',
-        email: expedienteData.email || '',
-        fecha_registro: expedienteData.fecha_registro || ''
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return await response.json();
+    const response = await apiClient.get(`/api/expedientes/${id}`);
+    return response;
   } catch (error) {
-    console.error('Error creando expediente:', error);
-    throw error;
+    console.error(`Error obteniendo expediente ${id}:`, error);
+    throw new Error(`Error al obtener el expediente: ${error.message}`);
   }
 }
 
-// Actualizar expediente (SIN FOTOS por ahora)
+// Crear nuevo expediente
+export async function createExpediente(expedienteData) {
+  try {
+    const response = await apiClient.post('/api/expedientes', {
+      correlativo: expedienteData.correlativo || '',
+      nombre: expedienteData.nombre || '',
+      telefono: expedienteData.telefono || '',
+      direccion: expedienteData.direccion || '',
+      email: expedienteData.email || '',
+      fecha_registro: expedienteData.fecha_registro || ''
+    });
+    return response;
+  } catch (error) {
+    console.error('Error creando expediente:', error);
+    throw new Error(`Error al crear expediente: ${error.message}`);
+  }
+}
+
+// Actualizar expediente
 export async function updateExpediente(id, expedienteData) {
   try {
-    const response = await fetch(`${API_URL}/api/expedientes/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        correlativo: expedienteData.correlativo || '',
-        nombre: expedienteData.nombre || '',
-        telefono: expedienteData.telefono || '',
-        direccion: expedienteData.direccion || '',
-        email: expedienteData.email || '',
-        fecha_registro: expedienteData.fecha_registro || ''
-      })
+    const response = await apiClient.put(`/api/expedientes/${id}`, {
+      correlativo: expedienteData.correlativo || '',
+      nombre: expedienteData.nombre || '',
+      telefono: expedienteData.telefono || '',
+      direccion: expedienteData.direccion || '',
+      email: expedienteData.email || '',
+      fecha_registro: expedienteData.fecha_registro || ''
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return await response.json();
+    return response;
   } catch (error) {
-    console.error('Error actualizando expediente:', error);
-    throw error;
+    console.error(`Error actualizando expediente ${id}:`, error);
+    throw new Error(`Error al actualizar expediente: ${error.message}`);
   }
 }
 
 // Eliminar expediente
 export async function deleteExpediente(id) {
-  const res = await fetch(`${API_URL}/api/expedientes/${id}`, {
-    method: "DELETE",
-  });
-  return handleResponse(res);
+  try {
+    const response = await apiClient.delete(`/api/expedientes/${id}`);
+    return response;
+  } catch (error) {
+    console.error(`Error eliminando expediente ${id}:`, error);
+    throw new Error(`Error al eliminar expediente: ${error.message}`);
+  }
 }
 
 // ===== SERVICIOS PARA MANEJO ESPECÍFICO DE FOTOS =====
@@ -123,34 +106,26 @@ export async function deleteExpediente(id) {
 // Subir foto a expediente existente
 export const subirFotoExpediente = async (expedienteId, imagenFile) => {
   try {
-    const token = getAuthToken();
     const formData = new FormData();
     formData.append('imagen', imagenFile);
     formData.append('expediente_id', expedienteId);
 
-    const response = await fetch(`${API_URL}/api/imagenes-expedientes/subir`, {
-      method: 'POST',
-      // headers: {
-      //   'Authorization': `Bearer ${token}` // Temporalmente deshabilitado
-      // },
-      body: formData
+    const response = await apiClient.post('/api/imagenes-expedientes/subir', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return await response.json();
+    return response;
   } catch (error) {
     console.error('Error subiendo imagen de expediente:', error);
-    throw error;
+    throw new Error(`Error al subir imagen: ${error.message}`);
   }
 };
 
 // Obtener fotos de un expediente específico
 export const obtenerFotosPorExpediente = async (expedienteId) => {
   try {
-    const response = await makeAuthenticatedRequest(`${API_URL}/api/imagenes-expedientes/expediente/${expedienteId}`);
+    const response = await apiClient.get(`/api/imagenes-expedientes/expediente/${expedienteId}`);
     
     // Agregar URL completa para cada imagen
     if (response.success && response.imagenes) {
@@ -164,57 +139,35 @@ export const obtenerFotosPorExpediente = async (expedienteId) => {
     return response;
   } catch (error) {
     console.error('Error obteniendo imágenes por expediente:', error);
-    throw error;
+    throw new Error(`Error al obtener imágenes: ${error.message}`);
   }
 };
 
 // Eliminar foto de expediente
 export const eliminarFotoExpediente = async (imagenId) => {
   try {
-    return await makeAuthenticatedRequest(`${API_URL}/api/imagenes-expedientes/${imagenId}`, {
-      method: 'DELETE'
-    });
+    const response = await apiClient.delete(`/api/imagenes-expedientes/${imagenId}`);
+    return response;
   } catch (error) {
     console.error('Error eliminando imagen de expediente:', error);
-    throw error;
+    throw new Error(`Error al eliminar imagen: ${error.message}`);
   }
 };
 
 // Contar fotos por expediente
 export const contarFotosPorExpediente = async (expedienteId) => {
   try {
-    return await makeAuthenticatedRequest(`${API_URL}/api/imagenes-expedientes/contar/${expedienteId}`);
+    const response = await apiClient.get(`/api/imagenes-expedientes/contar/${expedienteId}`);
+    return response;
   } catch (error) {
     console.error('Error contando imágenes por expediente:', error);
-    throw error;
+    throw new Error(`Error al contar imágenes: ${error.message}`);
   }
 };
 
 // ===== FUNCIONES AUXILIARES =====
 
-// Función para convertir Base64 a Blob
-function base64ToBlob(base64) {
-  if (!base64 || typeof base64 !== 'string') {
-    throw new Error('Base64 no válido');
-  }
-  
-  const parts = base64.split(';base64,');
-  if (parts.length !== 2) {
-    throw new Error('Formato Base64 incorrecto');
-  }
-  
-  const contentType = parts[0].split(':')[1];
-  const raw = window.atob(parts[1]);
-  const uInt8Array = new Uint8Array(raw.length);
-  
-  for (let i = 0; i < raw.length; ++i) {
-    uInt8Array[i] = raw.charCodeAt(i);
-  }
-  
-  return new Blob([uInt8Array], { type: contentType });
-}
-
-// Función para comprimir imagen (igual que en órdenes)
+// Función para comprimir imagen
 export const comprimirImagen = (file, maxWidth = 800, quality = 0.8) => {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
@@ -252,4 +205,40 @@ export const comprimirImagen = (file, maxWidth = 800, quality = 0.8) => {
     img.onerror = () => reject(new Error('Error al cargar la imagen'));
     img.src = URL.createObjectURL(file);
   });
+};
+
+// Función para validar imagen
+export const validarImagenExpediente = (file, maxSizeMB = 5) => {
+  const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+  if (!tiposPermitidos.includes(file.type)) {
+    return {
+      isValid: false,
+      error: `Tipo de archivo no permitido. Use: ${tiposPermitidos.join(', ')}`
+    };
+  }
+
+  if (file.size > maxSizeBytes) {
+    return {
+      isValid: false,
+      error: `El archivo es demasiado grande. Máximo: ${maxSizeMB}MB`
+    };
+  }
+
+  return { isValid: true, error: null };
+};
+
+export default {
+  getExpedientes,
+  getExpedienteById,
+  createExpediente,
+  updateExpediente,
+  deleteExpediente,
+  subirFotoExpediente,
+  obtenerFotosPorExpediente,
+  eliminarFotoExpediente,
+  contarFotosPorExpediente,
+  comprimirImagen,
+  validarImagenExpediente
 };
