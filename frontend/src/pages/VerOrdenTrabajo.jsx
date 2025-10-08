@@ -26,6 +26,8 @@ const VerOrdenTrabajo = () => {
         const response = await getOrdenById(id);
         
         if (response.ok) {
+          console.log("📋 Datos de la orden recibidos:", response.order);
+          console.log("🔢 Correlativo:", response.order.correlativo);
           setOrden(response.order);
         } else {
           setError("Error al cargar la orden");
@@ -102,8 +104,8 @@ const VerOrdenTrabajo = () => {
       <img src={logo} alt="Logo Empresa" />
     </div>
     <div className="orden-no">
-      <label>No Orden</label>
-      <p>{orden.correlativo || orden.pk_id_orden}</p>
+      <label>No de orden</label>
+      <p>{orden.correlativo}</p>
     </div>
   </div>
 

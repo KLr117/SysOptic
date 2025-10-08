@@ -54,6 +54,24 @@ export default function Login() {
 
   return (
     <div className="login-container">
+      {/* Iconos flotantes decorativos */}
+      <div className="decoration-circle circle-1"></div>
+      <div className="decoration-circle circle-2"></div>
+      <div className="decoration-circle circle-3"></div>
+      <div className="decoration-circle circle-4"></div>
+      <div className="decoration-circle circle-5"></div>
+      
+      <div className="decoration-glasses glasses-1">👓</div>
+      <div className="decoration-glasses glasses-2">🥽</div>
+      <div className="decoration-glasses glasses-3">👓</div>
+      <div className="decoration-glasses glasses-4">🥽</div>
+      <div className="decoration-glasses glasses-5">👓</div>
+      
+      <div className="decoration-tools tool-1">🔧</div>
+      <div className="decoration-tools tool-2">⚙️</div>
+      <div className="decoration-tools tool-3">🔨</div>
+      <div className="decoration-tools tool-4">🛠️</div>
+
       {/* Panel Izquierdo */}
       <div className="login-left">
         <img src={logo} alt="Logo Óptica" className="login-logo" />

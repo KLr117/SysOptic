@@ -7,7 +7,7 @@
   --color-bg: #f9fafb;
   --color-bg-secondary: #ffffff;
   --color-header-bg: #ffffff;
-  --color-sidebar-bg: linear-gradient(180deg, #1e293b 0%, #334155 100%);
+  --color-sidebar-bg: linear-gradient(180deg, #eee5df 0%, #a95455 100%);
 
   --color-text: #1f2937;
   --color-text-muted: #6b7280;
@@ -16,10 +16,10 @@
   --color-border: #e2e8f0;
   --color-border-gradient: linear-gradient(90deg, transparent, #e2e8f0, transparent);
 
-  --color-hover: rgba(0, 0, 0, 0.05);
+  --color-hover: rgba(137, 13, 15, 0.1);
 
-  --color-primary: #3b82f6;
-  --color-accent: #1d4ed8;
+  --color-primary: #890D0F;
+  --color-accent: #A01A1C;
   --color-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 
   /* ✅ Colores de estado */
@@ -46,8 +46,8 @@
   -moz-osx-font-smoothing: grayscale;
 
   /* Colores específicos para las tablas*/
-  --color-tablas-header-bg: #e79090;
-  --color-tablas-header-text: #111111; /* similar a #070707 pero mejor legible */
+  --color-tablas-header-bg: #890D0F;
+  --color-tablas-header-text: #ffffff;
 
    /* Hover de filas en tablas */
   --color-row-hover: rgba(0, 0, 0, 0.04);
@@ -62,7 +62,7 @@ body.dark-mode {
   --color-bg: #1e1e1e;
   --color-bg-secondary: #2b2b2b;
   --color-header-bg: #2d2d2d;
-  --color-sidebar-bg: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+  --color-sidebar-bg: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
 
   --color-text: #f9fafb;
   --color-text-muted: #9ca3af;
@@ -71,10 +71,10 @@ body.dark-mode {
   --color-border: #374151;
   --color-border-gradient: linear-gradient(90deg, transparent, #374151, transparent);
 
-  --color-hover: rgba(255, 255, 255, 0.1);
+  --color-hover: rgba(160, 26, 28, 0.15);
 
-  --color-primary: #60a5fa;
-  --color-accent: #3b82f6;
+  --color-primary: #A01A1C;
+  --color-accent: #890D0F;
   --color-danger: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
 
   /* ✅ Colores de estado adaptados */
@@ -92,8 +92,8 @@ body.dark-mode {
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4);
 
   /*Tablas*/
-   /* Un rojo más profundo para contrastar en oscuro */
-  --color-tablas-header-bg: #b85c5c;
+   /* Vino tinto más intenso para modo oscuro */
+  --color-tablas-header-bg: #A01A1C;
   --color-tablas-header-text: #ffffff;
 
   --color-row-hover: rgba(255, 255, 255, 0.06);
@@ -129,7 +129,7 @@ body {
   border-radius: 6px;
   cursor: pointer;
   margin: 8px;
-  background: var(--color-primary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
   color: var(--color-text-contrast);
   font-weight: 600;
   transition: all 0.3s ease;

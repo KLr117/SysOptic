@@ -39,9 +39,6 @@ const AgregarOrdenTrabajo = () => {
   const [imagenes, setImagenes] = useState([]);
   const [isDragOver, setIsDragOver] = useState(false);
   
-  // Estado para número de orden sugerido
-  const [siguienteNumeroOrden, setSiguienteNumeroOrden] = useState(null);
-  const [loadingSugerencia, setLoadingSugerencia] = useState(true);
 
   // Función para comprimir imagen
   const compressImage = (file, maxWidth = 800, quality = 0.8) => {
@@ -146,44 +143,6 @@ const AgregarOrdenTrabajo = () => {
     navigate("/ordenes"); // Redirige a la lista de órdenes
   };
 
-  // Obtener el siguiente número de orden
-  useEffect(() => {
-    const obtenerSiguienteNumeroOrden = async () => {
-      try {
-        setLoadingSugerencia(true);
-        console.log('Obteniendo siguiente número de orden...');
-        
-        // Usar el servicio existente para obtener órdenes
-        const response = await getOrdenes();
-        console.log('Respuesta completa del servicio:', response);
-        
-        // El servicio devuelve un objeto con {ok: true, orders: Array}
-        if (response && response.ok && response.orders && Array.isArray(response.orders) && response.orders.length > 0) {
-          // Encontrar el ID más alto
-          const maxId = Math.max(...response.orders.map(orden => orden.pk_id_orden || 0));
-          const siguienteId = maxId + 1;
-          console.log(`Último ID encontrado: ${maxId}, siguiente sugerencia: ${siguienteId}`);
-          console.log('IDs encontrados:', response.orders.map(orden => orden.pk_id_orden));
-          setSiguienteNumeroOrden(siguienteId);
-        } else {
-          // Si no hay órdenes, empezar con 1
-          console.log('No hay órdenes existentes, empezando con 1');
-          console.log('Response.ok:', response?.ok, 'Orders length:', response?.orders?.length);
-          setSiguienteNumeroOrden(1);
-        }
-      } catch (error) {
-        console.error('Error obteniendo siguiente número de orden:', error);
-        // Fallback: usar timestamp como sugerencia
-        const fallbackId = Math.floor(Date.now() / 1000) % 10000;
-        console.log(`Usando fallback ID: ${fallbackId}`);
-        setSiguienteNumeroOrden(fallbackId);
-      } finally {
-        setLoadingSugerencia(false);
-      }
-    };
-
-    obtenerSiguienteNumeroOrden();
-  }, []);
 
   // Función para formatear teléfono automáticamente
   const formatearTelefono = (telefono) => {
@@ -386,6 +345,7 @@ const AgregarOrdenTrabajo = () => {
 
       // Preparar datos para enviar
       const orderData = {
+        correlativo: formData.numero_orden,
         paciente: formData.paciente,
         direccion: formData.direccion,
         correo: formData.correo,
@@ -498,24 +458,6 @@ const AgregarOrdenTrabajo = () => {
                 }}
               />
               <span className="tooltiptext">Este campo es obligatorio</span>
-            </div>
-            <div className="sugerencia-orden">
-              {loadingSugerencia ? (
-                <span className="sugerencia-loading">🔄 Obteniendo siguiente número...</span>
-              ) : (
-                <div className="sugerencia-contenido">
-                  <span className="sugerencia-texto">
-                    💡 Sugerencia: <strong>{siguienteNumeroOrden}</strong>
-                  </span>
-                  <button 
-                    type="button"
-                    className="btn-usar-sugerencia"
-                    onClick={() => setFormData(prev => ({ ...prev, numero_orden: siguienteNumeroOrden.toString() }))}
-                  >
-                    Usar este número
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>

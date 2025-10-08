@@ -1,145 +1,477 @@
-/* ================== TABLAS BASE ================== */
+/* ================== TABLAS BASE MEJORADAS ================== */
 .table {
   width: 100%;
   border-collapse: collapse;
   background: var(--color-bg-secondary);
   color: var(--color-text);
   border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-md);
+  position: relative;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.table::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  border-radius: 0.75rem 0.75rem 0 0;
 }
 
 .table th,
 .table td {
-  padding: 12px 15px;
+  padding: 1rem 1.25rem;
   text-align: left;
   border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
-  cursor: default; /* por defecto normal */
+  cursor: default;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .table thead th {
-  background-color: var(--color-tablas-header-bg);
+  background: linear-gradient(135deg, var(--color-tablas-header-bg), var(--color-tablas-header-bg));
   color: var(--color-tablas-header-text);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.875rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
+  position: relative;
+  overflow: hidden;
+}
+
+.table thead th:first-child {
+  border-radius: 0.75rem 0 0 0;
+}
+
+.table thead th:last-child {
+  border-radius: 0 0.75rem 0 0;
+}
+
+.table tbody tr {
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .table tbody tr:hover {
-  background-color: var(--color-row-hover);
-  transition: background-color 0.2s ease;
+  background: linear-gradient(90deg, var(--color-hover), transparent);
+  transform: translateX(2px);
+  box-shadow: inset 4px 0 0 var(--color-primary);
 }
 
-/* ====== Columnas ordenables ====== */
+.table tbody tr:hover td {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ====== Columnas ordenables mejoradas ====== */
 
 .table th.sortable {
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.table th.sortable::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
 }
 
 .table th.sortable:hover {
-  background-color: #fca5a5; /* rojo claro para tema claro */
+  background: linear-gradient(135deg, var(--color-tablas-header-bg), var(--color-tablas-header-bg));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
-body.dark-mode .table th.sortable:hover {
-  background-color: #374151; /* gris oscuro en tema oscuro */
+.table th.sortable:hover::before {
+  left: 100%;
 }
 
-/* Encabezados clickeables con flechas */
+/* Encabezados clickeables con flechas mejorados */
 .table th[onclick] {
   cursor: pointer;
   user-select: none;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s ease;
   position: relative;
+  overflow: hidden;
+}
+
+.table th[onclick]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
 }
 
 .table th[onclick]:hover {
-  background-color: rgba(59, 130, 246, 0.1);
+  background: linear-gradient(135deg, var(--color-tablas-header-bg), var(--color-tablas-header-bg));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.table th[onclick]:hover::before {
+  left: 100%;
 }
 
 .table th[onclick]:active {
-  background-color: rgba(59, 130, 246, 0.2);
+  transform: translateY(0);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Estilo para las flechas de ordenamiento */
+/* Estilo mejorado para las flechas de ordenamiento */
 .table th[onclick] span {
-  margin-left: 5px;
-  font-size: 12px;
-  color: #6b7280;
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  transition: all 0.3s ease;
+  display: inline-block;
+  font-weight: 900;
 }
 
 .table th[onclick]:hover span {
-  color: #3b82f6;
+  color: var(--color-primary);
+  transform: scale(1.1);
 }
 
-/* ================== PAGINACIÓN BASE ================== */
+/* ================== PAGINACIÓN MEJORADA ================== */
 .paginacion {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
-  margin-top: 15px;
+  gap: 1rem;
+  margin-top: 1.5rem;
   color: var(--color-text);
+  padding: 1rem;
+  background: var(--color-bg-secondary);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
 }
 
 .paginacion .controls {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 1rem;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .botones-paginacion {
   display: flex;
-  justify-content: flex-start;
-  gap: 5px;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .botones-paginacion button {
-  background-color: var(--color-bg-secondary);
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-bg-secondary));
   color: var(--color-text);
   border: 1px solid var(--color-border);
-  padding: 6px 12px;
+  padding: 0.75rem 1rem;
   cursor: pointer;
-  font-size: 14px;
-  border-radius: 4px;
-  transition: background-color 0.2s, transform 0.2s, border-color 0.2s;
-}
-.botones-paginacion button:hover:not(:disabled) {
-  background-color: var(--color-hover);
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
-}
-.botones-paginacion button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  min-width: 2.5rem;
+  text-align: center;
 }
 
-/* ================== MODAL BASE ================== */
+.botones-paginacion button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.botones-paginacion button:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: white;
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.botones-paginacion button:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.botones-paginacion button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.botones-paginacion button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.botones-paginacion button.active {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ================== MODAL MEJORADO ================== */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .modal-contenido {
   background: var(--color-bg-secondary);
   color: var(--color-text);
-  padding: 2rem;
-  border-radius: 0.5rem;
-  width: 400px;
+  padding: 2.5rem;
+  border-radius: 1rem;
+  width: 450px;
   max-width: 90%;
   border: 1px solid var(--color-border);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  animation: slideIn 0.3s ease;
+  overflow: hidden;
 }
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-contenido::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  border-radius: 1rem 1rem 0 0;
+}
+
 .modal-contenido h2 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.modal-contenido h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 3rem;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  border-radius: 2px;
+}
+
+/* Botones de modal mejorados */
+.modal-contenido button {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-contenido button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.modal-contenido button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.modal-contenido button:hover::before {
+  left: 100%;
+}
+
+.modal-contenido button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ================== ESTILOS ADICIONALES MEJORADOS ================== */
+
+/* Contenedor de tabla mejorado */
+.table-container {
+  background: var(--color-bg-secondary);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+  position: relative;
+}
+
+.table-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+/* Estados de carga mejorados */
+.table-loading {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--color-bg), var(--color-bg-secondary));
+  border-radius: 0.75rem;
+  border: 2px dashed var(--color-border);
+  position: relative;
+}
+
+.table-loading::before {
+  content: '⏳';
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 1rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.table-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--color-bg), var(--color-bg-secondary));
+  border-radius: 0.75rem;
+  border: 2px dashed var(--color-border);
+  position: relative;
+}
+
+.table-empty::before {
+  content: '📋';
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Responsive mejorado */
+@media (max-width: 768px) {
+  .table th,
+  .table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .table thead th {
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+  
+  .paginacion {
+    padding: 0.75rem;
+    margin-top: 1rem;
+  }
+  
+  .botones-paginacion button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    min-width: 2rem;
+  }
+  
+  .modal-contenido {
+    padding: 1.5rem;
+    width: 95%;
+  }
+}
+
+@media (max-width: 480px) {
+  .table th,
+  .table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+  
+  .table thead th {
+    font-size: 0.7rem;
+  }
+  
+  .botones-paginacion {
+    gap: 0.25rem;
+  }
+  
+  .botones-paginacion button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    min-width: 1.75rem;
+  }
 }

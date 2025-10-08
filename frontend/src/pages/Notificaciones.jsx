@@ -41,7 +41,36 @@ const Notificaciones = () => {
   // Ordenamiento
   const [sortField, setSortField] = useState('fecha_creacion');
   const [sortDirection, setSortDirection] = useState('desc');
-  const [sortOption, setSortOption] = useState('recientes');
+  const [sortOption, setSortOption] = useState('');
+
+  // Función para manejar el cambio del select de ordenamiento
+  const handleSortChange = (option) => {
+    setSortOption(option);
+    switch (option) {
+      case '':
+        // No hacer nada cuando se selecciona "Seleccione"
+        break;
+      case 'tipo':
+        setSortField('tipo');
+        setSortDirection('asc');
+        break;
+      case 'categoria':
+        setSortField('categoria');
+        setSortDirection('asc');
+        break;
+      case 'modulos':
+        setSortField('modulo');
+        setSortDirection('asc');
+        break;
+      case 'id':
+        setSortField('id');
+        setSortDirection('asc');
+        break;
+      default:
+        setSortField('fecha_creacion');
+        setSortDirection('desc');
+    }
+  };
 
   // Paginación
   const [pageSize, setPageSize] = useState(10);
@@ -209,16 +238,6 @@ const Notificaciones = () => {
   const renderSortArrow = (field) =>
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
 
-  // Dropdown acciones
-  const [openDropdownId, setOpenDropdownId] = useState(null);
-  const toggleDropdown = (id) => setOpenDropdownId((prev) => (prev === id ? null : id));
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.dropdown')) setOpenDropdownId(null);
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
 
   // Paginación input
   const commitPageInput = () => {
@@ -268,6 +287,12 @@ const Notificaciones = () => {
           ➕ Nueva Notificación
         </button>
 
+        {/* Iconos decorativos de campanitas */}
+        <div className="decoration-tools tool-1">🔔</div>
+        <div className="decoration-tools tool-2">🔔</div>
+        <div className="decoration-tools tool-3">🔔</div>
+        <div className="decoration-tools tool-4">🔔</div>
+
         <input
           type="text"
           placeholder="🔍 Buscar..."
@@ -284,17 +309,15 @@ const Notificaciones = () => {
           <select
             id="sortSelect"
             value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
+            onChange={(e) => handleSortChange(e.target.value)}
             className="sort-combobox"
             data-tooltip="Selecciona una ordenación rápida"
           >
-            <option value="recientes">Más recientes primero</option>
-            <option value="antiguos">Más antiguos primero</option>
-            <option value="tituloAZ">Título A → Z</option>
-            <option value="tituloZA">Título Z → A</option>
-            <option value="tipo">Por tipo</option>
-            <option value="intervaloAsc">Intervalo ↑</option>
-            <option value="intervaloDesc">Intervalo ↓</option>
+            <option value="" disabled>Seleccione</option>
+            <option value="tipo">Tipo</option>
+            <option value="categoria">Categoría</option>
+            <option value="modulos">Módulos</option>
+            <option value="id">ID</option>
           </select>
         </div>
       </div>
@@ -348,40 +371,30 @@ const Notificaciones = () => {
                       </span>
                     </td>
                     <td>
-                      <div className="dropdown">
-                        <button
-                          className="dropbtn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleDropdown(n.pk_id_notificacion);
-                          }}
-                          data-tooltip="Acciones disponibles"
-                        >
-                          Acciones ▾
-                        </button>
-                        {openDropdownId === n.pk_id_notificacion && (
-                          <div className="dropdown-content">
-                            <button onClick={() => handleView(n)}>Visualizar</button>
-                            <button
-                              onClick={() =>
-                                navigate(`/notificaciones/editar/${n.pk_id_notificacion}`)
-                              }
-                            >
-                              Editar
-                            </button>
-                            {isActiva(n) ? (
-                              <button onClick={() => handleEstadoClick(n, 'desactivar')}>
-                                Desactivar
-                              </button>
-                            ) : (
-                              <button onClick={() => handleEstadoClick(n, 'reactivar')}>
-                                Reactivar
-                              </button>
-                            )}
-                            <button onClick={() => handleDeleteClick(n)}>Eliminar</button>
-                          </div>
+                      <select
+                        className="acciones-select"
+                        defaultValue="Acciones"
+                        onChange={(e) => {
+                          const accion = e.target.value;
+                          if (accion === "Visualizar") handleView(n);
+                          else if (accion === "Editar") navigate(`/notificaciones/editar/${n.pk_id_notificacion}`);
+                          else if (accion === "Desactivar") handleEstadoClick(n, 'desactivar');
+                          else if (accion === "Reactivar") handleEstadoClick(n, 'reactivar');
+                          else if (accion === "Eliminar") handleDeleteClick(n);
+                          e.target.value = "Acciones";
+                        }}
+                        data-tooltip="Acciones disponibles"
+                      >
+                        <option disabled>Acciones</option>
+                        <option value="Visualizar">Visualizar</option>
+                        <option value="Editar">Editar</option>
+                        {isActiva(n) ? (
+                          <option value="Desactivar">Desactivar</option>
+                        ) : (
+                          <option value="Reactivar">Reactivar</option>
                         )}
-                      </div>
+                        <option value="Eliminar">Eliminar</option>
+                      </select>
                     </td>
                   </tr>
                 ))}
