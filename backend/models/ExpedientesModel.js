@@ -63,7 +63,7 @@ export const createExpediente = async (expedienteData) => {
 
   const [result] = await pool.query(`
     INSERT INTO tbl_expedientes 
-    (correlativo, nombre, telefono, direccion, email, fecha_registro, imagenes)
+    (correlativo, nombre, telefono, direccion, email, fecha_registro, fotos)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `, [
     correlativoGenerado, nombre, telefono, direccion, email, fecha_registro, false
