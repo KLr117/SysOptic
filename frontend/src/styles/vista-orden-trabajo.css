@@ -323,9 +323,14 @@
 .titulo {
   font-size: 32px;
   font-weight: bold;
-  color: var(--color-text);
+  color: #890D0F;
   margin-bottom: 1rem;
   text-align: center;
+  text-shadow: 0 2px 4px rgba(137, 13, 15, 0.3);
+  border-bottom: 3px solid #890D0F;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+  width: 100%;
 }
 
 /* =========================

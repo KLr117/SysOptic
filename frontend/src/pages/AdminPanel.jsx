@@ -162,7 +162,7 @@ export default function AdminPanel() {
   return (
     <div className="usuarios-container">
       <div className="usuarios-header">
-        <h1>Panel Administrativo</h1>
+        <Titulo text="Panel Administrativo" className="titulo" />
         <div className="header-buttons">
           <button 
             className="btn-mostrar-usuarios"
