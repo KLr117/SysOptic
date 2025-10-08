@@ -1,6 +1,9 @@
 import * as notificacionesModel from "../models/notificacionesModel.js";
 import { updateEstadoNotificacion } from "../models/notificacionesModel.js";
 import * as notificacionesEnviadasModel from "../models/NotificacionesEnviosModel.js";
+import { sendEmail } from "../utils/mailer.js";
+import { buildEmailTemplate } from "../utils/templates/emailTemplate.js";
+
 
 // 🔍 Validación con soporte a Promoción
 const validarTipoIntervaloPorModulo = (moduloId, tipoIntervalo, categoriaId) => {
@@ -158,6 +161,29 @@ export const procesarPromocionesActivas = async (req, res) => {
         p.pk_id_notificacion,
         pendientes
       );
+      
+      // ✅ Enviar correos reales si está activo enviar_email
+      if (p.enviar_email) {
+        for (const cliente of pendientes) {
+          if (!cliente.correo) continue;
+
+          const html = buildEmailTemplate({
+            titulo: p.titulo,
+            cuerpo: p.cuerpo_email || "Te compartimos nuestra promoción vigente.",
+          });
+
+          try {
+            await sendEmail({
+              to: cliente.correo,
+              subject: p.asunto_email || p.titulo || "Promoción - Fundación Visual Óptica",
+              html,
+              fromName: "Fundación Visual Óptica",
+            });
+          } catch (err) {
+            console.error("⚠️ Error al enviar correo promo:", cliente.correo, err.message);
+          }
+        }
+      }
 
       totalInsertados += insertados;
       detalle.push({
@@ -259,6 +285,25 @@ export const procesarRecordatoriosActivos = async (req, res) => {
       for (const c of candidatos) {
         await notificacionesModel.registrarEnvio(noti.pk_id_notificacion, c.correo);
         totalInsertados++;
+
+        // ✅ Envío real del correo si está habilitado
+        if (noti.enviar_email && c.correo) {
+          const html = buildEmailTemplate({
+            titulo: noti.titulo,
+            cuerpo: noti.cuerpo_email,
+          });
+
+          try {
+            await sendEmail({
+              to: c.correo,
+              subject: noti.asunto_email || noti.titulo || "Recordatorio - Fundación Visual Óptica",
+              html,
+              fromName: "Fundación Visual Óptica",
+            });
+          } catch (err) {
+            console.error("⚠️ Error al enviar correo recordatorio:", c.correo, err.message);
+          }
+        }
       }
 
       resumen.push({

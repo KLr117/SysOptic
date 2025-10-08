@@ -10,7 +10,7 @@ import expedientesRoutes from "../routes/ExpedientesRoutes.js";
 import notificacionesRoutes from "../routes/notificacionesRoutes.js";
 import imagenesOrdenesRoutes from "../routes/imagenesOrdenesRoutes.js";
 import { procesarPromocionesActivas, procesarRecordatoriosActivos } from "../controllers/notificacionesController.js";
-
+import mailTestRoutes from "../routes/mailTestRoutes.js";
 
 
 const app = express();
@@ -29,7 +29,8 @@ app.use("/api/notificaciones", notificacionesRoutes);
 app.use("/api/imagenes-ordenes", imagenesOrdenesRoutes);
 // Servir archivos estáticos (imágenes)
 app.use('/uploads', express.static('uploads'));
-
+app.use("/public", express.static("public"));
+app.use("/api/mail", mailTestRoutes);
 
 
 
