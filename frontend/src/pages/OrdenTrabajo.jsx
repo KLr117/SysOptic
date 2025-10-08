@@ -18,6 +18,7 @@ const OrdenTrabajo = () => {
   const navigate = useNavigate();
 
   const columns = [
+    "#",
     "No Orden",
     "Paciente",
     "Dirección",
@@ -41,6 +42,7 @@ const OrdenTrabajo = () => {
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState("id");
   const [sortDirection, setSortDirection] = useState("asc");
+  const [sortOption, setSortOption] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -57,6 +59,35 @@ const OrdenTrabajo = () => {
   // Función para mostrar flecha de ordenamiento
   const renderSortArrow = (field) =>
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
+
+  // Función para manejar el cambio del select de ordenamiento
+  const handleSortChange = (option) => {
+    setSortOption(option);
+    switch (option) {
+      case 'id':
+        setSortField('id');
+        setSortDirection('asc');
+        break;
+      case 'paciente':
+        setSortField('paciente');
+        setSortDirection('asc');
+        break;
+      case 'fechaRecepcion':
+        setSortField('fechaRecepcion');
+        setSortDirection('asc');
+        break;
+      case 'fechaEntrega':
+        setSortField('fechaEntrega');
+        setSortDirection('asc');
+        break;
+      case '':
+        // No hacer nada si no se ha seleccionado
+        break;
+      default:
+        setSortField('id');
+        setSortDirection('asc');
+    }
+  };
 
   // Estados para PopUp
   const [popup, setPopup] = useState({
@@ -262,6 +293,7 @@ const OrdenTrabajo = () => {
       const busquedaCorreo = normalizarTexto(orden.correo || "").includes(normalizarTexto(filtro));
       const busquedaDireccion = normalizarTexto(orden.direccion || "").includes(normalizarTexto(filtro));
       const busquedaId = (orden.pk_id_orden || "").toString().includes(filtro);
+      const busquedaCorrelativo = (orden.correlativo || "").toString().includes(filtro);
       
       // Búsqueda en fechas (formato DD/MM/YYYY)
       const fechaRecepcionFormateada = formatearFecha(orden.fecha_recepcion);
@@ -280,6 +312,7 @@ const OrdenTrabajo = () => {
         busquedaCorreo ||
         busquedaDireccion ||
         busquedaId ||
+        busquedaCorrelativo ||
         busquedaFechaRecepcion ||
         busquedaFechaEntrega ||
         busquedaTotal ||
@@ -354,26 +387,58 @@ const OrdenTrabajo = () => {
 
   return (
     <div className="ordenes-container">
-      <div className="flex justify-between items-center mb-4">
-        <Titulo text="Órdenes de Trabajo" className="titulo" />
-        <button onClick={agregarOrden} className="btn-agregar-orden">
-          ➕ Agregar Orden
-        </button>
-      </div>
+      {/* Iconos flotantes decorativos */}
+      <div className="decoration-circle circle-1"></div>
+      <div className="decoration-circle circle-2"></div>
+      <div className="decoration-circle circle-3"></div>
+      <div className="decoration-circle circle-4"></div>
+      <div className="decoration-circle circle-5"></div>
+      
+      <div className="decoration-glasses glasses-1">👓</div>
+      <div className="decoration-glasses glasses-2">🥽</div>
+      <div className="decoration-glasses glasses-3">👓</div>
+      <div className="decoration-glasses glasses-4">🥽</div>
+      <div className="decoration-glasses glasses-5">👓</div>
+      
+      <div className="decoration-tools tool-1">🔧</div>
+      <div className="decoration-tools tool-2">⚙️</div>
+      <div className="decoration-tools tool-3">🔨</div>
+      <div className="decoration-tools tool-4">🛠️</div>
+
+      <h2>Órdenes de Trabajo</h2>
 
       {/* FILA DE CONTROLES (ARRIBA) */}
-      <div className="mb-4 flex justify-center items-center gap-4 flex-wrap">
-        <div className="flex flex-col gap-2" style={{ maxWidth: '400px', width: '100%' }}>
-          <div style={{ position: 'relative', width: '100%' }}>
-            <input
-              type="text"
-              placeholder="🔍 Buscar por paciente, teléfono, correo, fechas, totales..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="input-buscador"
-              style={{ width: '100%', paddingLeft: '12px', paddingRight: '12px' }}
-            />
-          </div>
+      <div className="table-actions">
+        <button onClick={agregarOrden} className="btn-agregar">
+          ➕ Agregar Orden
+        </button>
+
+        <input
+          type="text"
+          placeholder="🔍 Buscar por paciente, teléfono, correo, fechas, totales..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="search-box"
+          data-tooltip="Filtra por paciente, teléfono, correo, fechas, totales"
+        />
+
+        <div className="sort-container">
+          <label htmlFor="sortSelect" className="sort-label">
+            Ordenar por:
+          </label>
+          <select
+            id="sortSelect"
+            value={sortOption}
+            onChange={(e) => handleSortChange(e.target.value)}
+            className="sort-combobox"
+            data-tooltip="Selecciona una ordenación rápida"
+          >
+            <option value="" disabled>Seleccione</option>
+            <option value="id">#</option>
+            <option value="fechaRecepcion">Fecha de recepción</option>
+            <option value="fechaEntrega">Fecha de entrega</option>
+            <option value="paciente">Paciente</option>
+          </select>
         </div>
       </div>
 
@@ -382,13 +447,37 @@ const OrdenTrabajo = () => {
         <table className="table orden-table">
           <thead>
             <tr>
-              <th onClick={() => toggleSort('id')}>No Orden {renderSortArrow('id')}</th>
+              <th onClick={() => toggleSort('id')} className="sortable-header">
+                <div className="header-text">
+                  <div>#</div>
+                  <div>{renderSortArrow('id')}</div>
+                </div>
+              </th>
+              <th>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                  <div>No.</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>Orden</span>
+                    <span style={{ fontSize: '12px' }}>↕</span>
+                  </div>
+                </div>
+              </th>
               <th onClick={() => toggleSort('paciente')}>Paciente {renderSortArrow('paciente')}</th>
               <th>Dirección</th>
               <th>Correo</th>
               <th>Teléfono</th>
-              <th onClick={() => toggleSort('fechaRecepcion')}>Fecha Recepción {renderSortArrow('fechaRecepcion')}</th>
-              <th onClick={() => toggleSort('fechaEntrega')}>Fecha Entrega {renderSortArrow('fechaEntrega')}</th>
+              <th onClick={() => toggleSort('fechaRecepcion')} className="sortable-header">
+                <div className="header-text">
+                  <div>Fecha</div>
+                  <div>Recepción {renderSortArrow('fechaRecepcion')}</div>
+                </div>
+              </th>
+              <th onClick={() => toggleSort('fechaEntrega')} className="sortable-header">
+                <div className="header-text">
+                  <div>Fecha</div>
+                  <div>Entrega {renderSortArrow('fechaEntrega')}</div>
+                </div>
+              </th>
               <th>Total</th>
               <th>Adelanto</th>
               <th>Saldo</th>
@@ -403,6 +492,7 @@ const OrdenTrabajo = () => {
               ordenesPaginadas.map((orden) => (
                 <tr key={orden.pk_id_orden}>
                   <td>{orden.pk_id_orden}</td>
+                  <td>#{orden.correlativo}</td>
                   <td>{orden.paciente}</td>
                   <td>{orden.direccion}</td>
                   <td>{orden.correo}</td>

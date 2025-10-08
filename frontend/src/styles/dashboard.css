@@ -9,9 +9,9 @@
   min-height: 100vh;
   background: linear-gradient(135deg, 
     var(--color-bg) 0%, 
-    rgba(59, 130, 246, 0.05) 25%, 
-    rgba(16, 185, 129, 0.05) 50%, 
-    rgba(245, 158, 11, 0.05) 75%, 
+    rgba(137, 13, 15, 0.05) 25%, 
+    rgba(160, 26, 28, 0.05) 50%, 
+    rgba(137, 13, 15, 0.05) 75%, 
     var(--color-bg) 100%
   );
 }
@@ -20,9 +20,9 @@
 body:not(.dark-mode) .dashboard-container {
   background: linear-gradient(135deg, 
     var(--color-bg) 0%, 
-    rgba(59, 130, 246, 0.08) 25%, 
-    rgba(16, 185, 129, 0.08) 50%, 
-    rgba(245, 158, 11, 0.08) 75%, 
+    rgba(137, 13, 15, 0.08) 25%, 
+    rgba(160, 26, 28, 0.08) 50%, 
+    rgba(137, 13, 15, 0.08) 75%, 
     var(--color-bg) 100%
   );
 }
@@ -517,27 +517,27 @@ body:not(.dark-mode) .welcome-message {
 
 /* Colores específicos para cada card */
 .card-expedientes {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #890D0F 0%, #A01A1C 100%);
   color: white;
 }
 
 .card-ordenes {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #890D0F 0%, #A01A1C 100%);
   color: white;
 }
 
 .card-pendientes {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(135deg, #890D0F 0%, #A01A1C 100%);
   color: white;
 }
 
 .card-notificaciones {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #890D0F 0%, #A01A1C 100%);
   color: white;
 }
 
 .card-admin {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #890D0F 0%, #A01A1C 100%);
   color: white;
 }
 
@@ -883,5 +883,319 @@ body:not(.dark-mode) .welcome-message {
   
   .logo-placeholder {
     font-size: 1.5rem;
+  }
+}
+
+/* Estilos para headers ordenables */
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  transition: all 0.2s ease;
+  padding: 0.75rem 0.5rem;
+}
+
+/* Estilos para texto de header en dos líneas */
+.header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.header-text div {
+  margin: 0;
+  padding: 0;
+}
+
+.sortable-header:hover {
+  background-color: var(--color-hover);
+  color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+.sortable-header:active {
+  transform: translateY(0);
+}
+
+/* Indicador visual de ordenamiento */
+.sortable-header::after {
+  content: '';
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.sortable-header:hover::after {
+  opacity: 0.7;
+}
+
+/* Animación para las flechas de ordenamiento */
+.sortable-header span {
+  display: inline-block;
+  transition: transform 0.2s ease;
+  margin-left: 0.25rem;
+}
+
+.sortable-header:hover span {
+  transform: scale(1.1);
+}
+
+/* Mejorar visibilidad en tema claro */
+body:not(.dark-mode) .sortable-header:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #1e40af;
+}
+
+/* Responsive para headers ordenables */
+@media (max-width: 768px) {
+  .sortable-header {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.875rem;
+  }
+  
+  .sortable-header::after {
+    right: 0.25rem;
+  }
+}
+
+/* ================== ESTILOS MEJORADOS PARA TABLAS DEL DASHBOARD ================== */
+
+/* Contenedor de tabla del dashboard */
+.dashboard-table-section {
+  background: var(--color-bg-secondary);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-table-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #890D0F, #A01A1C);
+  border-radius: 1rem 1rem 0 0;
+}
+
+/* Header de sección de tabla */
+.table-section-title {
+  color: var(--color-text);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.table-header-decoration {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.table-icon-bg {
+  width: 3rem;
+  height: 3rem;
+  background: linear-gradient(135deg, #890D0F, #A01A1C);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+}
+
+/* Tabla mejorada del dashboard */
+.dashboard-table-section .table {
+  background: var(--color-bg-secondary);
+  border: none;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin: 0;
+}
+
+.dashboard-table-section .table thead th {
+  background: linear-gradient(135deg, var(--color-tablas-header-bg), var(--color-tablas-header-bg));
+  color: var(--color-tablas-header-text);
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1rem 1.25rem;
+  border: none;
+  position: relative;
+}
+
+.dashboard-table-section .table thead th:first-child {
+  border-radius: 0.75rem 0 0 0;
+}
+
+.dashboard-table-section .table thead th:last-child {
+  border-radius: 0 0.75rem 0 0;
+}
+
+.dashboard-table-section .table tbody td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  transition: all 0.2s ease;
+}
+
+.dashboard-table-section .table tbody tr {
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.dashboard-table-section .table tbody tr:hover {
+  background: linear-gradient(90deg, var(--color-hover), transparent);
+  transform: translateX(4px);
+}
+
+.dashboard-table-section .table tbody tr:hover td {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.dashboard-table-section .table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Estados de carga y vacío mejorados */
+.dashboard-loading {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--color-bg), var(--color-bg-secondary));
+  border-radius: 0.75rem;
+  border: 2px dashed var(--color-border);
+}
+
+.dashboard-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--color-bg), var(--color-bg-secondary));
+  border-radius: 0.75rem;
+  border: 2px dashed var(--color-border);
+  position: relative;
+}
+
+.dashboard-empty::before {
+  content: '📋';
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Contenedor de scroll mejorado */
+.dashboard-scroll-container {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Mejoras para headers ordenables en dashboard */
+.dashboard-table-section .sortable-header {
+  background: linear-gradient(135deg, var(--color-tablas-header-bg), var(--color-tablas-header-bg));
+  color: var(--color-tablas-header-text);
+  font-weight: 700;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dashboard-table-section .sortable-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.dashboard-table-section .sortable-header:hover {
+  background: linear-gradient(135deg, var(--color-tablas-header-bg), var(--color-tablas-header-bg));
+  color: var(--color-tablas-header-text);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  opacity: 0.9;
+}
+
+.dashboard-table-section .sortable-header:hover::before {
+  left: 100%;
+}
+
+/* Animación para las flechas en dashboard */
+.dashboard-table-section .sortable-header span {
+  display: inline-block;
+  transition: all 0.3s ease;
+  margin-left: 0.5rem;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.dashboard-table-section .sortable-header:hover span {
+  transform: scale(1.2) rotate(5deg);
+  color: var(--color-tablas-header-text);
+}
+
+/* Responsive para tablas del dashboard */
+@media (max-width: 768px) {
+  .dashboard-table-section {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .dashboard-table-section .table thead th,
+  .dashboard-table-section .table tbody td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .table-section-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .table-icon-bg {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-table-section .table thead th,
+  .dashboard-table-section .table tbody td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
+  }
+  
+  .dashboard-table-section .sortable-header {
+    font-size: 0.75rem;
   }
 }

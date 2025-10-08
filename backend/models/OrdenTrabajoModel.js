@@ -44,6 +44,7 @@ export const getOrderById = async (id) => {
 
 export const createOrder = async (orderData) => {
   const {
+    correlativo,
     paciente,
     direccion,
     correo,
@@ -52,11 +53,12 @@ export const createOrder = async (orderData) => {
     fecha_entrega,
     total,
     adelanto,
-    saldo
+    saldo,
+    imagenes
   } = orderData;
 
-  // Generar correlativo automático
-  const correlativo = `ORD-${Date.now()}`;
+  // Determinar si tiene imágenes
+  const tieneImagenes = imagenes && imagenes.length > 0;
 
   const [result] = await pool.query(`
     INSERT INTO tbl_ordenes 
@@ -64,7 +66,7 @@ export const createOrder = async (orderData) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     correlativo, paciente, direccion, correo, telefono, fecha_recepcion, fecha_entrega,
-    total, adelanto, saldo, false
+    total, adelanto, saldo, tieneImagenes
   ]);
 
   return result.insertId;

@@ -3,7 +3,13 @@
 /* Contenedor principal */
 .app-layout {
   min-height: 100vh;
-  background: var(--color-bg);
+  background: linear-gradient(135deg, 
+    var(--color-bg) 0%, 
+    rgba(137, 13, 15, 0.02) 25%, 
+    rgba(160, 26, 28, 0.02) 50%, 
+    rgba(137, 13, 15, 0.02) 75%, 
+    var(--color-bg) 100%
+  );
   display: flex;
   font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--color-text);
@@ -11,7 +17,7 @@
 
 /* Sidebar */
 .app-sidebar {
-  width: 280px;
+  width: 320px;
   background: var(--color-sidebar-bg);
   box-shadow: var(--shadow-md);
   position: relative;
@@ -22,7 +28,13 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+  background: linear-gradient(180deg, 
+    rgba(255,255,255,0.05) 0%, 
+    rgba(137, 13, 15, 0.03) 25%, 
+    rgba(160, 26, 28, 0.03) 50%, 
+    rgba(137, 13, 15, 0.03) 75%, 
+    rgba(255,255,255,0.02) 100%
+  );
   pointer-events: none;
 }
 
@@ -32,25 +44,28 @@
   text-align: center;
   border-bottom: 1px solid var(--color-border);
   position: relative;
+  background: linear-gradient(135deg, 
+    transparent 0%, 
+    rgba(137, 13, 15, 0.05) 50%, 
+    transparent 100%
+  );
 }
 
-.app-logo h1 {
-  font-size: 1.75rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-.app-logo::after {
-  content: '👓';
+.logo-image {
+  max-width: 220px;
+  max-height: 100px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: brightness(1.1) contrast(1.1);
+  transition: all 0.3s ease;
   display: block;
-  font-size: 2rem;
-  margin-top: 0.5rem;
-  opacity: 0.8;
+  margin: 0 auto;
+}
+
+.logo-image:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2) contrast(1.2);
 }
 
 /* Navegación */
@@ -77,7 +92,12 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(137, 13, 15, 0.1), 
+    rgba(160, 26, 28, 0.1), 
+    transparent
+  );
   transition: left 0.5s;
 }
 
@@ -113,11 +133,16 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--color-bg-secondary);
+  background: linear-gradient(135deg, 
+    var(--color-bg-secondary) 0%, 
+    rgba(137, 13, 15, 0.01) 50%, 
+    var(--color-bg-secondary) 100%
+  );
   border-radius: 20px 0 0 20px;
   margin: 1rem 1rem 1rem 0;
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+  position: relative;
 }
 
 /* Header */
@@ -129,7 +154,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 2rem;
+  padding: 0 3rem;
   position: relative;
 }
 
@@ -140,7 +165,12 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: var(--color-border-gradient);
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(137, 13, 15, 0.3), 
+    rgba(160, 26, 28, 0.3), 
+    transparent
+  );
 }
 
 .user-info { display: flex; align-items: center; gap: 0.75rem; color: var(--color-text); }
@@ -179,7 +209,12 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255,255,255,0.2), 
+    rgba(137, 13, 15, 0.1), 
+    transparent
+  );
   transition: left 0.5s;
 }
 
@@ -193,8 +228,12 @@
 /* Área de contenido */
 .app-content {
   flex: 1;
-  padding: 2rem;
-  background: var(--color-bg);
+  padding: 2.5rem 3rem;
+  background: linear-gradient(135deg, 
+    var(--color-bg) 0%, 
+    rgba(137, 13, 15, 0.005) 50%, 
+    var(--color-bg) 100%
+  );
   color: var(--color-text);
   overflow-y: auto;
 }
@@ -205,3 +244,102 @@
 
 .app-sidebar { animation: slideInLeft 0.6s ease; }
 .app-main { animation: slideInRight 0.6s ease; }
+
+/* =========================
+   MODO OSCURO - APPLAYOUT
+   ========================= */
+
+/* Fondo principal en modo oscuro */
+.dark-mode .app-layout {
+  background: linear-gradient(135deg, 
+    var(--color-bg) 0%, 
+    rgba(137, 13, 15, 0.05) 25%, 
+    rgba(160, 26, 28, 0.05) 50%, 
+    rgba(137, 13, 15, 0.05) 75%, 
+    var(--color-bg) 100%
+  );
+}
+
+/* Sidebar en modo oscuro */
+.dark-mode .app-sidebar::before {
+  background: linear-gradient(180deg, 
+    rgba(255,255,255,0.02) 0%, 
+    rgba(137, 13, 15, 0.05) 25%, 
+    rgba(160, 26, 28, 0.05) 50%, 
+    rgba(137, 13, 15, 0.05) 75%, 
+    rgba(255,255,255,0.01) 100%
+  );
+}
+
+/* Logo en modo oscuro */
+.dark-mode .app-logo {
+  background: linear-gradient(135deg, 
+    transparent 0%, 
+    rgba(137, 13, 15, 0.08) 50%, 
+    transparent 100%
+  );
+}
+
+/* Navegación en modo oscuro */
+.dark-mode .nav-item::before {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(137, 13, 15, 0.15), 
+    rgba(160, 26, 28, 0.15), 
+    transparent
+  );
+}
+
+/* Área principal en modo oscuro */
+.dark-mode .app-main {
+  background: linear-gradient(135deg, 
+    var(--color-bg-secondary) 0%, 
+    rgba(137, 13, 15, 0.02) 50%, 
+    var(--color-bg-secondary) 100%
+  );
+}
+
+/* Header en modo oscuro */
+.dark-mode .app-header::before {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(137, 13, 15, 0.4), 
+    rgba(160, 26, 28, 0.4), 
+    transparent
+  );
+}
+
+/* Botón logout en modo oscuro */
+.dark-mode .logout-btn::before {
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255,255,255,0.15), 
+    rgba(137, 13, 15, 0.15), 
+    transparent
+  );
+}
+
+/* Área de contenido en modo oscuro */
+.dark-mode .app-content {
+  background: linear-gradient(135deg, 
+    var(--color-bg) 0%, 
+    rgba(137, 13, 15, 0.01) 50%, 
+    var(--color-bg) 100%
+  );
+}
+
+/* Forzar sidebar negro en modo oscuro */
+.dark-mode .app-sidebar {
+  background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+}
+
+/* Forzar fondo principal negro en modo oscuro */
+.dark-mode .app-layout {
+  background: linear-gradient(135deg, 
+    #1a1a1a 0%, 
+    rgba(137, 13, 15, 0.05) 25%, 
+    rgba(160, 26, 28, 0.05) 50%, 
+    rgba(137, 13, 15, 0.05) 75%, 
+    #1a1a1a 100%
+  ) !important;
+}

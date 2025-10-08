@@ -316,27 +316,39 @@ export default function Expedientes() {
 
       {/* 🔹 MOSTRAR CONTROLES SOLO CUANDO NO ESTÉ EN MODO FORMULARIO */}
       {!mostrarFormulario && (
-        <div className="flex justify-between items-start mb-3">
-          {/* Columna izquierda: búsqueda arriba, ordenamiento abajo */}
-          <div className="flex flex-col gap-2 w-full max-w-xl">
-            <input
-              type="text"
-              placeholder="Buscar por nombre, correo o teléfono..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="input-busqueda"
-            />
+        <div className="expedientes-table-actions">
+          <button
+            onClick={() => setMostrarFormulario(true)}
+            className="expedientes-btn-agregar"
+          >
+            ➕ Crear Expediente
+          </button>
 
-            {/* Ordenamiento (debajo de la barra de búsqueda, alineado a la izquierda) */}
+          <input
+            type="text"
+            placeholder="🔍 Buscar..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="expedientes-search-box"
+            data-tooltip="Filtra por nombre, correo o teléfono"
+          />
+
+          <div className="expedientes-sort-container">
+            <label htmlFor="expedientesSortSelect" className="expedientes-sort-label">
+              Ordenar por:
+            </label>
             <select
+              id="expedientesSortSelect"
               value={sortField + "-" + sortDirection}
               onChange={(e) => {
                 const [field, direction] = e.target.value.split("-");
                 setSortField(field);
                 setSortDirection(direction);
               }}
-              className="ordenamiento-select"
+              className="expedientes-sort-combobox"
+              data-tooltip="Selecciona una ordenación"
             >
+              <option value="" disabled>Seleccione</option>
               <option value="id-asc">ID - Más antiguo</option>
               <option value="id-desc">ID - Más reciente</option>
               <option value="fecha_registro-asc">Fecha - Más antiguo</option>
@@ -344,16 +356,6 @@ export default function Expedientes() {
               <option value="nombre-asc">Nombre A-Z</option>
               <option value="nombre-desc">Nombre Z-A</option>
             </select>
-          </div>
-
-          {/* Columna derecha: botón crear */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMostrarFormulario(true)}
-              className="btn-success"
-            >
-              ➕ Crear expediente
-            </button>
           </div>
         </div>
       )}

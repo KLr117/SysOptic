@@ -19,7 +19,7 @@ export default function AppLayout() {
     <div className="app-layout">
       <aside className="app-sidebar">
         <div className="app-logo">
-          <h1>SysOptic</h1>
+          <img src="/src/assets/logo.jpg" alt="Fundación Visual Óptica" className="logo-image" />
         </div>
         <nav className="app-nav">
           <Item to="/dashboard" label="Dashboard" />

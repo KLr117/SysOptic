@@ -1,12 +1,198 @@
 /* Login Moderno y Elegante */
 
+/* ================== ICONOS FLOTANTES DECORATIVOS ================== */
+
+/* Círculos decorativos flotantes */
+.decoration-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.1;
+  animation: float 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.circle-1 {
+  width: 80px;
+  height: 80px;
+  background: var(--color-primary);
+  top: 20px;
+  right: 20px;
+  animation-delay: 0s;
+}
+
+.circle-2 {
+  width: 60px;
+  height: 60px;
+  background: var(--color-accent);
+  top: 60px;
+  right: 80px;
+  animation-delay: 2s;
+}
+
+.circle-3 {
+  width: 40px;
+  height: 40px;
+  background: var(--color-primary);
+  top: 100px;
+  right: 40px;
+  animation-delay: 4s;
+}
+
+.circle-4 {
+  width: 50px;
+  height: 50px;
+  background: var(--color-accent);
+  bottom: 20px;
+  left: 20px;
+  animation-delay: 1s;
+}
+
+.circle-5 {
+  width: 70px;
+  height: 70px;
+  background: var(--color-primary);
+  bottom: 80px;
+  left: 80px;
+  animation-delay: 3s;
+}
+
+/* Anteojos decorativos - Temática óptica */
+.decoration-glasses {
+  position: absolute;
+  font-size: 1.5rem;
+  animation: glassesFloat 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--color-primary);
+  opacity: 0.3;
+}
+
+.glasses-1 {
+  top: 30px;
+  right: 100px;
+  animation-delay: 0s;
+}
+
+.glasses-2 {
+  top: 80px;
+  right: 150px;
+  animation-delay: 1s;
+}
+
+.glasses-3 {
+  top: 120px;
+  right: 80px;
+  animation-delay: 2s;
+}
+
+.glasses-4 {
+  bottom: 30px;
+  left: 100px;
+  animation-delay: 1.5s;
+}
+
+.glasses-5 {
+  bottom: 80px;
+  left: 150px;
+  animation-delay: 2.5s;
+}
+
+/* Iconos de herramientas flotantes */
+.decoration-tools {
+  position: absolute;
+  font-size: 1.2rem;
+  animation: toolsFloat 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+  color: var(--color-accent);
+  opacity: 0.2;
+}
+
+.tool-1 {
+  top: 50px;
+  left: 50px;
+  animation-delay: 0s;
+}
+
+.tool-2 {
+  top: 150px;
+  left: 30px;
+  animation-delay: 2s;
+}
+
+.tool-3 {
+  bottom: 50px;
+  right: 50px;
+  animation-delay: 1s;
+}
+
+.tool-4 {
+  bottom: 150px;
+  right: 30px;
+  animation-delay: 3s;
+}
+
+/* Animaciones */
+@keyframes glassesFloat {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1) rotate(0deg) translateY(0px);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1) rotate(10deg) translateY(-10px);
+  }
+}
+
+@keyframes toolsFloat {
+  0%, 100% {
+    opacity: 0.2;
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translateY(-15px) rotate(5deg);
+  }
+}
+
+/* Mejorar visibilidad en tema claro */
+body:not(.dark-mode) .decoration-circle {
+  opacity: 0.15;
+}
+
+body:not(.dark-mode) .decoration-glasses {
+  opacity: 0.6;
+}
+
+body:not(.dark-mode) .decoration-tools {
+  opacity: 0.4;
+}
+
 .login-container {
   min-height: 100vh;
   display: flex;
   font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #ecedf2 0%, #7C1216 100%);
+  background: linear-gradient(135deg, 
+    var(--color-bg) 0%, 
+    rgba(137, 13, 15, 0.1) 25%, 
+    rgba(160, 26, 28, 0.1) 50%, 
+    rgba(137, 13, 15, 0.1) 75%, 
+    var(--color-bg) 100%
+  );
   position: relative;
   overflow: hidden;
+}
+
+/* Modo oscuro para el contenedor del login */
+.dark-mode .login-container {
+  background: linear-gradient(135deg, 
+    var(--color-bg) 0%, 
+    rgba(137, 13, 15, 0.15) 25%, 
+    rgba(160, 26, 28, 0.15) 50%, 
+    rgba(137, 13, 15, 0.15) 75%, 
+    var(--color-bg) 100%
+  );
 }
 
 /* Efectos de fondo decorativos */
@@ -43,12 +229,17 @@
 /* Panel izquierdo con logo */
 .login-left {
   width: 50%;
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  background: linear-gradient(135deg, #3d3838 0%, #A01A1C 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
+}
+
+/* Modo oscuro para el panel izquierdo */
+.dark-mode .login-left {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
 }
 
 .login-left::before {
@@ -58,21 +249,37 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.02) 100%
+  );
   pointer-events: none;
 }
 
 .login-logo {
-  width: 200px;
+  width: 350px;
   height: auto;
-  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
-  transition: transform 0.3s ease;
+  filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.4));
+  transition: all 0.3s ease;
   z-index: 1;
   position: relative;
+  border-radius: 20px;
+  padding: 25px;
+  background: rgba(137, 13, 15, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(160, 26, 28, 0.3);
+}
+
+/* Modo oscuro para el logotipo */
+.dark-mode .login-logo {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
 }
 
 .login-logo:hover {
   transform: scale(1.05);
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.5));
 }
 
 /* Panel derecho con formulario */
@@ -87,18 +294,29 @@
 
 /* Formulario de login */
 .login-form {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(20px);
-  border-radius: 16px;
-  padding: 2rem;
+  border-radius: 20px;
+  padding: 2.5rem;
   width: 100%;
-  max-width: 380px;
+  max-width: 400px;
   box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+    0 25px 50px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
   overflow: hidden;
+}
+
+/* Modo oscuro para el formulario */
+.dark-mode .login-form {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .login-form::before {
@@ -108,20 +326,28 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+  background: linear-gradient(90deg, #890D0F, #A01A1C, #890D0F);
 }
 
 /* Título del login */
 .login-title {
   font-size: 2rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+  background: linear-gradient(135deg, #890D0F 0%, #A01A1C 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-align: center;
   margin-bottom: 2rem;
   position: relative;
+}
+
+/* Modo oscuro para el título */
+.dark-mode .login-title {
+  background: linear-gradient(135deg, #ffffff 0%, #e5e5e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .login-title::after {
@@ -132,7 +358,7 @@
   transform: translateX(-50%);
   width: 60px;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(90deg, #890D0F, #A01A1C);
   border-radius: 2px;
 }
 
@@ -154,7 +380,7 @@
 
 /* Botón de login */
 .login-button {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, #890D0F 0%, #A01A1C 100%);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -186,7 +412,7 @@
 
 .login-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 10px 25px rgba(137, 13, 15, 0.4);
 }
 
 .login-button:active {
@@ -225,14 +451,23 @@
   .login-form {
     padding: 2rem;
     max-width: 100%;
+    margin: 0 auto;
   }
   
   .login-logo {
-    width: 150px;
+    width: 250px;
+    padding: 20px;
   }
   
   .login-title {
     font-size: 1.75rem;
+  }
+  
+  /* Ajustar iconos flotantes en móvil */
+  .decoration-circle,
+  .decoration-glasses,
+  .decoration-tools {
+    display: none;
   }
 }
 
@@ -240,6 +475,7 @@
   .login-form {
     padding: 1.5rem;
     border-radius: 16px;
+    margin: 0 1rem;
   }
   
   .login-title {
@@ -249,6 +485,28 @@
   .login-button {
     padding: 0.75rem 1.25rem;
     font-size: 0.8rem;
+  }
+  
+  .login-logo {
+    width: 200px;
+    padding: 15px;
+  }
+  
+  .login-left {
+    height: 30vh;
+    min-height: 150px;
+  }
+}
+
+/* Mejoras para tablets */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .login-form {
+    max-width: 350px;
+  }
+  
+  .login-logo {
+    width: 300px;
+    padding: 25px;
   }
 }
 
@@ -264,15 +522,98 @@
   }
 }
 
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .login-form {
-  animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-form::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 50%, 
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  border-radius: 20px;
+  pointer-events: none;
 }
 
 /* Efectos de focus mejorados */
 .login-form input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #890D0F;
+  box-shadow: 0 0 0 3px rgba(137, 13, 15, 0.1);
+}
+
+/* Animaciones adicionales */
+.login-logo {
+  animation: logoFloat 4s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.02);
+  }
+}
+
+.login-title {
+  animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+  from {
+    text-shadow: 0 0 10px rgba(137, 13, 15, 0.3);
+  }
+  to {
+    text-shadow: 0 0 20px rgba(137, 13, 15, 0.5);
+  }
+}
+
+/* Efecto de partículas flotantes */
+.login-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, rgba(137, 13, 15, 0.1), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(160, 26, 28, 0.1), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(137, 13, 15, 0.1), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(160, 26, 28, 0.1), transparent);
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  animation: particleFloat 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(-200px);
+  }
 }
 
 /* Mejoras en los inputs */
@@ -290,23 +631,42 @@
   font-size: 0.875rem;
 }
 
+/* Modo oscuro para las etiquetas */
+.dark-mode .login-form .label-field {
+  color: #ffffff;
+}
+
 .login-form .input-field {
   width: 100% !important;
   padding: 0.875rem 1rem !important;
-  border: 2px solid #e5e7eb !important;
-  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 12px !important;
   font-size: 0.875rem !important;
   transition: all 0.3s ease !important;
-  background: #fef2f2 !important;
-  height: 44px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  height: 48px !important;
   box-sizing: border-box !important;
   margin: 0 !important;
   outline: none !important;
+  color: var(--color-text) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Modo oscuro para los inputs */
+.dark-mode .login-form .input-field {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 
 .login-form .input-field:focus {
-  border-color: #dc2626 !important;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
-  transform: translateY(-1px) !important;
-  background: #ffffff !important;
+  border-color: #890D0F !important;
+  box-shadow: 
+    0 0 0 3px rgba(137, 13, 15, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  backdrop-filter: blur(15px) !important;
 }
