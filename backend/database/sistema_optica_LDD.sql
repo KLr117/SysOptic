@@ -230,16 +230,17 @@ CREATE TABLE tbl_imagenes_ordenes (
   FOREIGN KEY (orden_id) REFERENCES tbl_ordenes(pk_id_orden) ON DELETE CASCADE
 );
 
-
-ALTER TABLE tbl_expedientes  
-ADD COLUMN imagenes BOOLEAN DEFAULT FALSE AFTER fecha_registro;
+-- ==============================================================
+--  TABLA para imágenes asociadas a expedientes + Alter a tbl_expedientes
+-- ==============================================================
+ALTER TABLE tbl_expedientes 
+ADD COLUMN fotos  TEXT AFTER fecha_registro; -- agrege fotos y no imagenes
 CREATE TABLE tbl_imagenes_expedientes (
   id INT PRIMARY KEY AUTO_INCREMENT,
   expediente_id INT NOT NULL,
-  nombre_expediente VARCHAR(255) NOT NULL,
+  nombre_archivo VARCHAR(255) NOT NULL,
   ruta_archivo VARCHAR(500) NOT NULL,
   fecha_subida DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (expediente_id) REFERENCES tbl_expedientes(pk_id_expediente) ON DELETE CASCADE
 );
-
 
