@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import ConfirmModal from "../components/ConfirmModal";
 import "../styles/vista-expedientes.css";
 import "../styles/popup.css";
+//import { obtenerTodasLasImagenes } from"../services/expedientesService";
 import Titulo from "../components/Titulo";
 import Button from "../components/Button";
 import {
@@ -72,9 +73,18 @@ export default function Expedientes() {
       try {
         setLoading(true);
         const data = await getExpedientes();
-        setExpedientes(data);
+        // Validar que data sea un array antes de establecerlo
+        if (Array.isArray(data)) {
+          setExpedientes(data);
+        } else {
+          console.warn("getExpedientes no retornó un array:", data);
+          setExpedientes([]);
+          setError("Error: Los datos recibidos no tienen el formato correcto");
+          mostrarPopup("Error al cargar expedientes: formato de datos incorrecto", "error");
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Error al cargar expedientes:", err);
+        setExpedientes([]); // Asegurar que siempre sea un array
         setError("Error al cargar expedientes");
         mostrarPopup("Error al cargar expedientes", "error");
       } finally {
@@ -204,7 +214,8 @@ export default function Expedientes() {
 
   // 🔹 Filtrado y ordenamiento
   const filtro = search.trim().toLowerCase();
-  const expedientesFiltrados = [...expedientes]
+  // Validar que expedientes sea un array antes de usar spread operator
+  const expedientesFiltrados = Array.isArray(expedientes) ? [...expedientes] : []
     .filter(
       (exp) =>
         !filtro ||
@@ -214,23 +225,66 @@ export default function Expedientes() {
         (exp.correlativo || "").toLowerCase().includes(filtro)
     )
     .sort((a, b) => {
+      // Ordenamiento por ID (pk_id_expediente)
       if (sortField === "id") {
-        return sortDirection === "asc"
-          ? (a.pk_id_expediente || 0) - (b.pk_id_expediente || 0)
-          : (b.pk_id_expediente || 0) - (a.pk_id_expediente || 0);
+        const idA = parseInt(a.pk_id_expediente) || 0;
+        const idB = parseInt(b.pk_id_expediente) || 0;
+        return sortDirection === "asc" ? idA - idB : idB - idA;
       }
+      
+      // Ordenamiento por Nombre
       if (sortField === "nombre") {
-        return sortDirection === "asc"
-          ? (a.nombre || "").localeCompare(b.nombre || "")
-          : (b.nombre || "").localeCompare(a.nombre || "");
+        const nombreA = (a.nombre || "").toLowerCase().trim();
+        const nombreB = (b.nombre || "").toLowerCase().trim();
+        if (sortDirection === "asc") {
+          return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' });
+        } else {
+          return nombreB.localeCompare(nombreA, 'es', { sensitivity: 'base' });
+        }
       }
+      
+      // Ordenamiento por Fecha
       if (sortField === "fecha_registro") {
-        return sortDirection === "asc"
-          ? new Date(a.fecha_registro) - new Date(b.fecha_registro)
-          : new Date(b.fecha_registro) - new Date(a.fecha_registro);
+        // Manejar fechas vacías o inválidas
+        const fechaA = a.fecha_registro ? new Date(a.fecha_registro) : new Date('1900-01-01');
+        const fechaB = b.fecha_registro ? new Date(b.fecha_registro) : new Date('1900-01-01');
+        
+        // Verificar que las fechas sean válidas
+        const fechaAValida = !isNaN(fechaA.getTime());
+        const fechaBValida = !isNaN(fechaB.getTime());
+        
+        if (!fechaAValida && !fechaBValida) return 0;
+        if (!fechaAValida) return sortDirection === "asc" ? 1 : -1;
+        if (!fechaBValida) return sortDirection === "asc" ? -1 : 1;
+        
+        return sortDirection === "asc" ? fechaA - fechaB : fechaB - fechaA;
       }
+      
       return 0;
     });
+
+  // Debug temporal - remover después
+  console.log("🔍 ORDENAMIENTO DEBUG:");
+  console.log("Campo:", sortField, "Dirección:", sortDirection);
+  console.log("Total de expedientes:", expedientesFiltrados.length);
+  console.log("Todos los expedientes ordenados:", expedientesFiltrados.map(exp => ({
+    id: exp.pk_id_expediente,
+    nombre: exp.nombre,
+    fecha: exp.fecha_registro,
+    correlativo: exp.correlativo
+  })));
+  
+  // Mostrar también los IDs en orden para verificar
+  console.log("IDs en orden:", expedientesFiltrados.map(exp => exp.pk_id_expediente));
+  
+  // Mostrar información específica según el tipo de ordenamiento
+  if (sortField === "id") {
+    console.log("IDs ordenados:", expedientesFiltrados.map(exp => exp.pk_id_expediente));
+  } else if (sortField === "nombre") {
+    console.log("Nombres ordenados:", expedientesFiltrados.map(exp => exp.nombre));
+  } else if (sortField === "fecha_registro") {
+    console.log("Fechas ordenadas:", expedientesFiltrados.map(exp => exp.fecha_registro));
+  }
 
   // 🔹 Paginación
   const totalPages = Math.ceil(expedientesFiltrados.length / pageSize);
@@ -337,24 +391,33 @@ export default function Expedientes() {
             <label htmlFor="expedientesSortSelect" className="expedientes-sort-label">
               Ordenar por:
             </label>
+            {sortField && (
+              <span className="sort-indicator">
+                {sortField === "id" && (sortDirection === "asc" ? "ID ↑" : "ID ↓")}
+                {sortField === "nombre" && (sortDirection === "asc" ? "Nombre A-Z" : "Nombre Z-A")}
+                {sortField === "fecha_registro" && (sortDirection === "asc" ? "Fecha ↑" : "Fecha ↓")}
+              </span>
+            )}
+            
+           
             <select
               id="expedientesSortSelect"
               value={sortField + "-" + sortDirection}
               onChange={(e) => {
                 const [field, direction] = e.target.value.split("-");
+                console.log(`Ordenando por: ${field} - ${direction}`);
                 setSortField(field);
                 setSortDirection(direction);
               }}
               className="expedientes-sort-combobox"
               data-tooltip="Selecciona una ordenación"
             >
-              <option value="" disabled>Seleccione</option>
-              <option value="id-asc">ID - Más antiguo</option>
+              <option value="fecha_registro-desc">Fecha - Más reciente  </option>
+              <option value="id-asc">ID - Más antiguo </option>
               <option value="id-desc">ID - Más reciente</option>
-              <option value="fecha_registro-asc">Fecha - Más antiguo</option>
-              <option value="fecha_registro-desc">Fecha - Más reciente</option>
-              <option value="nombre-asc">Nombre A-Z</option>
-              <option value="nombre-desc">Nombre Z-A</option>
+              <option value="fecha_registro-asc">Fecha - Más antiguo </option>
+              <option value="nombre-asc">Nombre A-Z </option>
+              <option value="nombre-desc">Nombre Z-A </option>
             </select>
           </div>
         </div>
