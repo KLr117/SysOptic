@@ -363,7 +363,7 @@ body:not(.dark-mode) .welcome-message {
 /* Grid de cards */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   margin-top: 1.5rem;
   position: relative;
@@ -593,6 +593,13 @@ body:not(.dark-mode) .welcome-message {
 }
 
 /* Responsive design */
+@media (max-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
 @media (max-width: 768px) {
   .dashboard-container {
     padding: 1rem;
@@ -603,7 +610,7 @@ body:not(.dark-mode) .welcome-message {
   }
   
   .dashboard-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
   
@@ -617,6 +624,13 @@ body:not(.dark-mode) .welcome-message {
   
   .card-icon {
     font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }
 
