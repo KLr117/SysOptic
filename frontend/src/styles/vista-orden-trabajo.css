@@ -210,6 +210,103 @@
   outline: none !important;
 }
 
+/* Estilos para sugerencias de correlativo */
+.sugerencias-correlativo {
+  margin-top: 0.25rem;
+  padding: 0.25rem;
+  background: linear-gradient(135deg, rgba(137, 13, 15, 0.05), rgba(160, 26, 28, 0.08));
+  border: 1px solid rgba(137, 13, 15, 0.2);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(137, 13, 15, 0.1);
+}
+
+.sugerencias-header {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  margin-bottom: 0.125rem;
+}
+
+.sugerencias-icon {
+  font-size: 0.6rem;
+}
+
+.sugerencias-title {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #890D0F;
+}
+
+.sugerencias-list {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.125rem;
+}
+
+.sugerencia-item {
+  background: linear-gradient(135deg, #890D0F, #A01A1C);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 0.125rem 0.25rem;
+  font-size: 0.6rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(137, 13, 15, 0.2);
+}
+
+.sugerencia-item:hover {
+  background: linear-gradient(135deg, #A01A1C, #890D0F);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(137, 13, 15, 0.3);
+}
+
+.sugerencia-item:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(137, 13, 15, 0.2);
+}
+
+.sugerencias-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  margin-top: 0.25rem;
+  padding: 0.125rem;
+  color: #890D0F;
+  font-size: 0.6rem;
+  font-style: italic;
+}
+
+.loading-spinner {
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(137, 13, 15, 0.3);
+  border-top: 1px solid #890D0F;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Modo oscuro para sugerencias */
+.dark-mode .sugerencias-correlativo {
+  background: linear-gradient(135deg, rgba(137, 13, 15, 0.1), rgba(160, 26, 28, 0.15));
+  border-color: rgba(137, 13, 15, 0.3);
+}
+
+.dark-mode .sugerencias-title {
+  color: #A01A1C;
+}
+
+.dark-mode .sugerencias-loading {
+  color: #A01A1C;
+}
+
 /* Tooltip para campos obligatorios */
 .tooltip {
   position: relative;
@@ -323,9 +420,14 @@
 .titulo {
   font-size: 32px;
   font-weight: bold;
-  color: var(--color-text);
+  color: #890D0F;
   margin-bottom: 1rem;
   text-align: center;
+  text-shadow: 0 2px 4px rgba(137, 13, 15, 0.3);
+  border-bottom: 3px solid #890D0F;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+  width: 100%;
 }
 
 /* =========================

@@ -149,14 +149,6 @@ export default function Dashboard() {
       </div>
       <div className="dashboard-header">
         <Titulo text="Panel de Control" className="titulo" />
-        <div className="dashboard-decoration">
-          <div className="decoration-circle circle-1"></div>
-          <div className="decoration-circle circle-2"></div>
-          <div className="decoration-circle circle-3"></div>
-          <div className="decoration-glasses glasses-1">👓</div>
-          <div className="decoration-glasses glasses-2">🥽</div>
-          <div className="decoration-glasses glasses-3">🔍</div>
-        </div>
         <div className="welcome-message">
           <span className="welcome-emoji">👋</span>
           <span className="welcome-text">¡Bienvenido a la Fundación Visual Óptica!</span>
@@ -284,6 +276,10 @@ function TablaOrdenes({ ordenes, loading, sortField, sortDirection, onSort, rend
         valorA = parseInt(a.pk_id_orden) || 0;
         valorB = parseInt(b.pk_id_orden) || 0;
         break;
+      case 'correlativo':
+        valorA = (a.correlativo || '').toLowerCase();
+        valorB = (b.correlativo || '').toLowerCase();
+        break;
       case 'paciente':
         valorA = (a.paciente || '').toLowerCase();
         valorB = (b.paciente || '').toLowerCase();
@@ -325,10 +321,10 @@ function TablaOrdenes({ ordenes, loading, sortField, sortDirection, onSort, rend
       <table className="table">
         <thead>
           <tr>
-            <th onClick={() => onSort('pk_id_orden')} className="sortable-header">
+            <th onClick={() => onSort('correlativo')} className="sortable-header">
               <div className="header-text">
                 <div>No.</div>
-                <div>orden {renderSortArrow('pk_id_orden')}</div>
+                <div>orden {renderSortArrow('correlativo')}</div>
               </div>
             </th>
             <th>Paciente</th>
@@ -345,7 +341,7 @@ function TablaOrdenes({ ordenes, loading, sortField, sortDirection, onSort, rend
         <tbody>
           {ordenesOrdenadas.map((orden) => (
             <tr key={orden.pk_id_orden}>
-              <td>#{orden.pk_id_orden}</td>
+              <td>#{orden.correlativo || orden.pk_id_orden}</td>
               <td>{orden.paciente || 'N/A'}</td>
               <td>{orden.direccion || 'N/A'}</td>
               <td>{orden.correo || 'N/A'}</td>

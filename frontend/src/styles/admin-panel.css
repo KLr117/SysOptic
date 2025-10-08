@@ -33,6 +33,25 @@
   color: #ffffff !important;
 }
 
+/* Estilo para el componente Titulo en admin panel */
+.usuarios-container .usuarios-header .titulo {
+  color: #890D0F !important;
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(137, 13, 15, 0.3);
+  border-bottom: 3px solid #890D0F;
+  padding-bottom: 0.5rem;
+  display: inline-block;
+  width: 100%;
+}
+
+/* Modo oscuro para el componente Titulo */
+.dark-mode .usuarios-container .usuarios-header .titulo {
+  color: #890D0F !important;
+}
+
 .usuarios-container .btn-bitacora {
   background: linear-gradient(135deg, #890D0F, #A01A1C);
   color: white;
