@@ -134,19 +134,22 @@ export const cambiarEstadoNotificacion = async (req, res) => {
 export const procesarPromocionesActivas = async (req, res) => {
   try {
     const hoyISO = new Date().toISOString().slice(0, 10);
-
     const promos = await notificacionesModel.getPromosActivasHoy(hoyISO);
 
     let totalInsertados = 0;
     const detalle = [];
 
+    console.log(`📅 [PROMOS] Procesando promociones activas (${promos.length}) en ${hoyISO}`);
+
     for (const p of promos) {
       const pendientes = await notificacionesModel.getPendingEmailsForPromo(
         p.pk_id_notificacion,
-        p.fk_id_modulo_notificacion
+        p.fk_id_modulo_notificacion,
+        console.log(p)
       );
 
-      if (pendientes.length === 0) {
+      if (!pendientes || pendientes.length === 0) {
+        console.log(`⚪ Sin correos pendientes para promoción: ${p.titulo}`);
         detalle.push({
           id_notificacion: p.pk_id_notificacion,
           modulo: p.fk_id_modulo_notificacion,
@@ -156,36 +159,48 @@ export const procesarPromocionesActivas = async (req, res) => {
         continue;
       }
 
-      // (En el futuro aquí irá el envío real de emails)
+      // Registrar envíos nuevos
       const insertados = await notificacionesEnviadasModel.insertEnviosBatch(
         p.pk_id_notificacion,
         pendientes
       );
-      
+      totalInsertados += insertados;
+
+      console.log(
+        `📩 Promoción "${p.titulo}" — ${insertados}/${pendientes.length} correos registrados`
+      );
+
       // ✅ Enviar correos reales si está activo enviar_email
-      if (p.enviar_email) {
-        for (const cliente of pendientes) {
-          if (!cliente.correo) continue;
-
-          const html = buildEmailTemplate({
-            titulo: p.titulo,
-            cuerpo: p.cuerpo_email || "Te compartimos nuestra promoción vigente.",
-          });
-
+      if (Number(p.enviar_email) === 1) {
+        for (const correo of pendientes) {
           try {
+            const html = buildEmailTemplate({
+              titulo: p.titulo,
+              cuerpo:
+                p.cuerpo_email ||
+                "Te compartimos nuestras promociones vigentes 🎉",
+            });
+
             await sendEmail({
-              to: cliente.correo,
-              subject: p.asunto_email || p.titulo || "Promoción - Fundación Visual Óptica",
+              to: correo, // 🔹 ahora correo es directamente el string
+              subject:
+                p.asunto_email ||
+                p.titulo ||
+                "Promoción - Fundación Visual Óptica",
               html,
               fromName: "Fundación Visual Óptica",
             });
+
+            console.log(`✅ Correo enviado a: ${correo}`);
           } catch (err) {
-            console.error("⚠️ Error al enviar correo promo:", cliente.correo, err.message);
+            console.error(
+              `⚠️ Error al enviar correo de promoción a ${correo}:`,
+              err.message
+            );
           }
         }
       }
 
-      totalInsertados += insertados;
       detalle.push({
         id_notificacion: p.pk_id_notificacion,
         modulo: p.fk_id_modulo_notificacion,
@@ -194,114 +209,87 @@ export const procesarPromocionesActivas = async (req, res) => {
       });
     }
 
-    return res.json({
+    const resultado = {
       success: true,
       message: "Promociones procesadas correctamente.",
       total_enviadas_registradas: totalInsertados,
       promociones: detalle,
-    });
+    };
+
+    if (req) res.json(resultado);
+    else return resultado;
   } catch (err) {
-    console.error("Error al procesar promociones:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Ocurrió un error al procesar promociones.",
-      error: err?.message || String(err),
-    });
+    console.error("❌ Error al procesar promociones:", err);
+    if (res)
+      res.status(500).json({
+        success: false,
+        message: "Ocurrió un error al procesar promociones.",
+        error: err.message,
+      });
   }
 };
+
+
 
 // 🧠 Procesar recordatorios automáticos (Expedientes y Órdenes)
 export const procesarRecordatoriosActivos = async (req, res) => {
   try {
     const notificaciones = await notificacionesModel.getRecordatoriosActivos();
-    const expedientes = await notificacionesModel.getExpedientes();
-    const ordenes = await notificacionesModel.getOrdenes();
+    const hoy = new Date().toISOString().slice(0, 10);
 
-    const hoy = new Date();
     let totalInsertados = 0;
     const resumen = [];
 
+    console.log("📅 [CRON] Procesando recordatorios activos — Fecha:", hoy);
+
     for (const noti of notificaciones) {
-      let candidatos = [];
+      console.log("🔍 Analizando notificación:", noti.pk_id_notificacion, "| módulo:", noti.fk_id_modulo_notificacion);
 
-      // 🩺 Si el módulo es EXPEDIENTES
-      if (noti.fk_id_modulo_notificacion === 1) {
-        candidatos = expedientes.filter((exp) => {
-          const fechaBase = new Date(exp.fecha_registro);
-          const fechaEnvio = new Date(
-            fechaBase.getTime() + noti.intervalo_dias * 24 * 60 * 60 * 1000
-          );
+      // 🔹 Obtener correos candidatos según módulo / intervalo
+      const candidatos = await notificacionesModel.getCorreosRecordatorioPorNotificacion(noti);
 
-          const fechaCreacionNoti = new Date(noti.fecha_creacion);
-
-          // 💡 Prospectivo inteligente:
-          // Si el expediente es anterior a la notificación,
-          // solo se omite si su fecha objetivo ya pasó.
-          if (fechaBase < fechaCreacionNoti && fechaEnvio < hoy) {
-            return false; // ya vencido → no aplica
-          }
-
-          // ✅ Coincide la fecha de envío con hoy
-          return (
-            fechaEnvio.toISOString().slice(0, 10) === hoy.toISOString().slice(0, 10)
-          );
+      if (!candidatos || candidatos.length === 0) {
+        console.log("⚪ Sin candidatos para:", noti.titulo);
+        resumen.push({
+          id_notificacion: noti.pk_id_notificacion,
+          modulo: noti.fk_id_modulo_notificacion,
+          pendientes: 0,
+          insertados: 0,
         });
+        continue;
       }
 
+      // 🧾 Registrar envíos (evita duplicados con INSERT IGNORE)
+      const insertados = await notificacionesEnviadasModel.insertEnviosBatch(
+        noti.pk_id_notificacion,
+        candidatos
+      );
+      totalInsertados += insertados;
 
-      // 📦 Si el módulo es ÓRDENES
-      if (noti.fk_id_modulo_notificacion === 2) {
-        candidatos = ordenes.filter((ord) => {
-          const { fecha_recepcion, fecha_entrega } = ord;
-          if (!fecha_recepcion && !fecha_entrega) return false;
+      console.log(`✅ Registrados ${insertados}/${candidatos.length} correos para ${noti.titulo}`);
 
-          let fechaEnvio = null;
-          let fechaBase = null;
-
-          if (noti.tipo_intervalo === "despues_recepcion" && fecha_recepcion) {
-            fechaBase = new Date(fecha_recepcion);
-            fechaEnvio = new Date(
-              fechaBase.getTime() + noti.intervalo_dias * 24 * 60 * 60 * 1000
-            );
-          } else if (noti.tipo_intervalo === "antes_entrega" && fecha_entrega) {
-            fechaBase = new Date(fecha_entrega);
-            fechaEnvio = new Date(
-              fechaBase.getTime() - noti.intervalo_dias * 24 * 60 * 60 * 1000
-            );
-          }
-
-          const fechaCreacionNoti = new Date(noti.fecha_creacion);
-          // 💡 Prospectivo inteligente
-          if (fechaBase < fechaCreacionNoti && fechaEnvio < hoy) return false;
-
-          return (
-            fechaEnvio &&
-            fechaEnvio.toISOString().slice(0, 10) === hoy.toISOString().slice(0, 10)
-          );
-        });
-      }
-
-      // 📤 Registrar los correos pendientes sin duplicar
-      for (const c of candidatos) {
-        await notificacionesModel.registrarEnvio(noti.pk_id_notificacion, c.correo);
-        totalInsertados++;
-
-        // ✅ Envío real del correo si está habilitado
-        if (noti.enviar_email && c.correo) {
-          const html = buildEmailTemplate({
-            titulo: noti.titulo,
-            cuerpo: noti.cuerpo_email,
-          });
-
+      // 📧 Enviar correos reales si está activo
+      if (noti.enviar_email) {
+        for (const correo of candidatos) {
           try {
+            const html = buildEmailTemplate({
+              titulo: noti.titulo,
+              cuerpo: noti.cuerpo_email || "Te recordamos tu cita o entrega pendiente.",
+            });
+
             await sendEmail({
-              to: c.correo,
-              subject: noti.asunto_email || noti.titulo || "Recordatorio - Fundación Visual Óptica",
+              to: correo,
+              subject:
+                noti.asunto_email ||
+                noti.titulo ||
+                "Recordatorio - Fundación Visual Óptica",
               html,
               fromName: "Fundación Visual Óptica",
             });
+
+            console.log("📤 Correo enviado a:", correo);
           } catch (err) {
-            console.error("⚠️ Error al enviar correo recordatorio:", c.correo, err.message);
+            console.error("⚠️ Error al enviar correo a:", correo, err.message);
           }
         }
       }
@@ -310,7 +298,7 @@ export const procesarRecordatoriosActivos = async (req, res) => {
         id_notificacion: noti.pk_id_notificacion,
         modulo: noti.fk_id_modulo_notificacion,
         pendientes: candidatos.length,
-        insertados: totalInsertados,
+        insertados,
       });
     }
 
@@ -321,15 +309,21 @@ export const procesarRecordatoriosActivos = async (req, res) => {
       notificaciones: resumen,
     };
 
-    // Si viene de cron → no se necesita respuesta HTTP
+    // Si viene desde el cron no devuelve respuesta HTTP
     if (!req) return resultado;
 
     res.json(resultado);
   } catch (error) {
-    console.error("Error al procesar recordatorios:", error);
-    if (res)
-      res.status(500).json({ success: false, message: "Error en recordatorios", error: error.message });
+    console.error("❌ Error al procesar recordatorios:", error);
+    if (res) {
+      res.status(500).json({
+        success: false,
+        message: "Error en recordatorios",
+        error: error.message,
+      });
+    }
   }
 };
+
 
 // Controlador de Notificaciones
