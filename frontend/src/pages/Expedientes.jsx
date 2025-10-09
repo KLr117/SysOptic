@@ -53,6 +53,12 @@ export default function Expedientes() {
   const [fotoIndex, setFotoIndex] = useState(0);
   const [fotoMensaje, setFotoMensaje] = useState(false);
   const [showConfirmSubirOtra, setShowConfirmSubirOtra] = useState(false);
+  const [showConfirmEliminarFoto, setShowConfirmEliminarFoto] = useState(false);
+  const [fotoIndexToDelete, setFotoIndexToDelete] = useState(null);
+  const [showConfirmEliminarFotoTabla, setShowConfirmEliminarFotoTabla] = useState(false);
+  const [expedienteFotoToDelete, setExpedienteFotoToDelete] = useState(null);
+  const [showConfirmEliminarExpediente, setShowConfirmEliminarExpediente] = useState(false);
+  const [expedienteToDelete, setExpedienteToDelete] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [popupType, setPopupType] = useState("success"); // "success", "error", "warning", "info"
@@ -65,15 +71,15 @@ export default function Expedientes() {
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [modalImage, setModalImage] = useState(null);
 
-   // 🔹 Mostrar popup
-   const mostrarPopup = (mensaje, tipo = "success") => {
-     setPopupMessage(mensaje);
-     setPopupType(tipo);
-     setShowPopup(true);
-     setTimeout(() => {
-       setShowPopup(false);
-     }, 3000);
-   };
+  // 🔹 Mostrar popup
+  const mostrarPopup = (mensaje, tipo = "success") => {
+    setPopupMessage(mensaje);
+    setPopupType(tipo);
+    setShowPopup(true);
+    setTimeout(() => {
+      setShowPopup(false);
+    }, 3000);
+  };
 
    // 🔹 Funciones para modal de imágenes
    const openImageModal = (imagen, expedienteId) => {
@@ -87,7 +93,7 @@ export default function Expedientes() {
    const closeImageModal = () => {
      setIsModalOpen(false);
      setModalImage(null);
-   };
+  };
 
   // 🔹 Cargar expedientes
   useEffect(() => {
@@ -97,7 +103,7 @@ export default function Expedientes() {
         const data = await getExpedientes();
         // Validar que data sea un array antes de establecerlo
         if (Array.isArray(data)) {
-          setExpedientes(data);
+        setExpedientes(data);
         } else {
           console.warn("getExpedientes no retornó un array:", data);
           setExpedientes([]);
@@ -223,7 +229,106 @@ export default function Expedientes() {
      });
    };
 
-   // 🔹 Manejo de formulario
+  // 🔹 Manejo de formulario
+  // Función para eliminar una foto específica
+  const eliminarFoto = (index) => {
+    // Guardar el índice de la foto a eliminar
+    setFotoIndexToDelete(index);
+    // Mostrar modal de confirmación
+    setShowConfirmEliminarFoto(true);
+  };
+
+  // Función para confirmar eliminación de foto
+  const confirmarEliminarFoto = () => {
+    if (fotoIndexToDelete !== null) {
+      setFormData(prev => ({
+        ...prev,
+        foto: prev.foto.filter((_, i) => i !== fotoIndexToDelete)
+      }));
+      mostrarPopup("Foto eliminada correctamente", "success");
+      // Desactivar el mensaje de subir otra foto
+      setFotoMensaje(false);
+    }
+    setShowConfirmEliminarFoto(false);
+    setFotoIndexToDelete(null);
+  };
+
+  // Función para eliminar foto desde la tabla
+  const eliminarFotoTabla = (expedienteId, fotoIndex) => {
+    setExpedienteFotoToDelete({ expedienteId, fotoIndex });
+    setShowConfirmEliminarFotoTabla(true);
+  };
+
+  // Función para confirmar eliminación de foto desde tabla
+  const confirmarEliminarFotoTabla = async () => {
+    if (expedienteFotoToDelete) {
+      const { expedienteId, fotoIndex } = expedienteFotoToDelete;
+      
+      try {
+        // Obtener el expediente actual
+        const expediente = expedientes.find(exp => exp.pk_id_expediente === expedienteId);
+        if (expediente && expediente.foto) {
+          // Crear nuevo array sin la foto eliminada
+          const nuevasFotos = expediente.foto.filter((_, i) => i !== fotoIndex);
+          
+          // Actualizar el expediente en el backend
+          await updateExpediente(expedienteId, {
+            ...expediente,
+            foto: nuevasFotos
+          });
+          
+          // Actualizar el estado local
+          setExpedientes(prev => prev.map(exp => 
+            exp.pk_id_expediente === expedienteId 
+              ? { ...exp, foto: nuevasFotos }
+              : exp
+          ));
+          
+          mostrarPopup("Foto eliminada correctamente", "success");
+        }
+      } catch (error) {
+        console.error('Error al eliminar foto:', error);
+        mostrarPopup("Error al eliminar la foto", "error");
+      }
+    }
+    
+    setShowConfirmEliminarFotoTabla(false);
+    setExpedienteFotoToDelete(null);
+  };
+
+  // Función para manejar la carga de fotos
+  const handleFileUpload = (e) => {
+    const files = e.target.files;
+    if (!files || !files[0]) return;
+
+      if (formData.foto.length >= 2) {
+        mostrarPopup("Solo se permiten máximo 2 fotos", "warning");
+        return;
+      }
+    
+    const file = files[0];
+    
+    // Verificar tamaño original
+    if (file.size > 2 * 1024 * 1024) { // 2MB
+      mostrarPopup("La imagen es muy grande. Se redimensionará automáticamente.", "info");
+    }
+    
+    // Redimensionar antes de convertir
+    resizeImage(file, 1200, 900).then(base64 => {
+      setFormData(prev => ({
+          ...prev,
+        foto: [...prev.foto, base64]
+        }));
+        setFotoMensaje(true);
+    }).catch(error => {
+      console.error('Error al redimensionar imagen:', error);
+      mostrarPopup("Error al procesar la imagen", "error");
+    });
+
+    // Limpiar el input para permitir cargar la misma imagen otra vez
+    e.target.value = '';
+  };
+
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
     console.log('handleInputChange llamado:', { name, value, files: !!files });
@@ -246,43 +351,17 @@ export default function Expedientes() {
        return;
      }
      
-     // Validación especial para el campo teléfono - solo números
+     // Validación especial para el campo teléfono - formato internacional
      if (name === "telefono") {
-       // Permitir solo números
-       const soloNumeros = value.replace(/[^0-9]/g, '');
-       console.log('Campo teléfono:', { original: value, filtrado: soloNumeros });
-       setFormData({ ...formData, [name]: soloNumeros });
+       // Permitir números, +, (), espacios y guiones
+       const telefonoFiltrado = value.replace(/[^0-9+\-() ]/g, '');
+       console.log('Campo teléfono:', { original: value, filtrado: telefonoFiltrado });
+       setFormData({ ...formData, [name]: telefonoFiltrado });
        return;
      }
     
-     if (name === "foto" && files && files[0]) {
-       if (formData.foto.length >= 2) {
-         mostrarPopup("Solo se permiten máximo 2 fotos", "warning");
-         return;
-       }
-       
-       const file = files[0];
-       
-       // Verificar tamaño original
-       if (file.size > 2 * 1024 * 1024) { // 2MB
-         mostrarPopup("La imagen es muy grande. Se redimensionará automáticamente.", "info");
-       }
-       
-       // Redimensionar antes de convertir
-       resizeImage(file, 1200, 900).then(base64 => {
-         setFormData(prev => ({
-           ...prev,
-           foto: [...prev.foto, base64]
-         }));
-         setFotoMensaje(true);
-       }).catch(error => {
-         console.error('Error al redimensionar imagen:', error);
-         mostrarPopup("Error al procesar la imagen", "error");
-       });
-     } else {
-      console.log('Actualizando campo:', { name, value });
-      setFormData({ ...formData, [name]: value });
-    }
+     console.log('Actualizando campo:', { name, value });
+     setFormData({ ...formData, [name]: value });
   };
 
   useEffect(() => {
@@ -343,16 +422,25 @@ export default function Expedientes() {
     setMostrarFormulario(true);
   };
 
-  const handleEliminar = async (id) => {
-    if (!window.confirm("¿Eliminar este expediente?")) return;
-    try {
-      await deleteExpediente(id);
-      setExpedientes(expedientes.filter((exp) => exp.pk_id_expediente !== id));
-      mostrarPopup("Expediente eliminado correctamente", "success");
-    } catch (err) {
-      console.error(err);
-      mostrarPopup("Error al eliminar expediente", "error");
+  const handleEliminar = (id) => {
+    setExpedienteToDelete(id);
+    setShowConfirmEliminarExpediente(true);
+  };
+
+  // Función para confirmar eliminación de expediente
+  const confirmarEliminarExpediente = async () => {
+    if (expedienteToDelete) {
+      try {
+        await deleteExpediente(expedienteToDelete);
+        setExpedientes(expedientes.filter((exp) => exp.pk_id_expediente !== expedienteToDelete));
+        mostrarPopup("Expediente eliminado correctamente", "success");
+      } catch (err) {
+        console.error(err);
+        mostrarPopup("Error al eliminar expediente", "error");
+      }
     }
+    setShowConfirmEliminarExpediente(false);
+    setExpedienteToDelete(null);
   };
 
   const handleCancelar = () => {
@@ -381,8 +469,8 @@ export default function Expedientes() {
       type: 'success'
     });
 
-   // 🔹 Filtrado y ordenamiento
-   const filtro = search.trim().toLowerCase();
+  // 🔹 Filtrado y ordenamiento
+  const filtro = search.trim().toLowerCase();
    
    // Validar que expedientes sea un array antes de usar spread operator
    const expedientesFiltrados = Array.isArray(expedientes) ? [...expedientes] : []
@@ -430,8 +518,8 @@ export default function Expedientes() {
         return sortDirection === "asc" ? fechaA - fechaB : fechaB - fechaA;
       }
       
-       return 0;
-     });
+      return 0;
+    });
 
   // 🔹 Paginación
   const totalPages = Math.ceil(expedientesFiltrados.length / pageSize);
@@ -525,38 +613,39 @@ export default function Expedientes() {
             ➕ Crear Expediente
           </button>
 
-           <input
-             type="text"
-             placeholder="🔍 Buscar..."
-             value={search}
-             onChange={(e) => setSearch(e.target.value)}
-             className="expedientes-search-box"
-             data-tooltip="Filtra por nombre, correo o teléfono"
-           />
+          <input
+            type="text"
+            placeholder="🔍 Buscar..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="expedientes-search-box"
+            data-tooltip="Filtra por nombre, correo o teléfono"
+          />
 
-           <div className="expedientes-sort-container">
-             <label htmlFor="expedientesSortSelect" className="expedientes-sort-label">
-               Ordenar por:
-             </label>
+          <div className="expedientes-sort-container">
+            <label htmlFor="expedientesSortSelect" className="expedientes-sort-label">
+              Ordenar por:
+            </label>
             
            
             <select
               id="expedientesSortSelect"
               value={sortField + "-" + sortDirection}
-               onChange={(e) => {
-                 const [field, direction] = e.target.value.split("-");
-                 setSortField(field);
-                 setSortDirection(direction);
-               }}
+              onChange={(e) => {
+                const [field, direction] = e.target.value.split("-");
+                 console.log('Cambiando ordenamiento:', field, direction);
+                setSortField(field);
+                setSortDirection(direction);
+              }}
               className="expedientes-sort-combobox"
               data-tooltip="Selecciona una ordenación"
             >
-              <option value="fecha_registro-desc">ID - Más reciente  </option>
-              <option value="id-asc">ID - Más antiguo </option>
-              <option value="id-desc">Fecha - Más reciente</option>
-              <option value="fecha_registro-asc">Fecha - Más antiguo </option>
-              <option value="nombre-asc">Nombre A-Z </option>
-              <option value="nombre-desc">Nombre Z-A </option>
+              <option value="fecha_registro-desc">Fecha - Más reciente</option>
+              <option value="fecha_registro-asc">Fecha - Más antiguo</option>
+              <option value="id-asc">ID - Más antiguo</option>
+              <option value="id-desc">ID - Más reciente</option>
+              <option value="nombre-asc">Nombre A-Z</option>
+              <option value="nombre-desc">Nombre Z-A</option>
             </select>
           </div>
         </div>
@@ -603,29 +692,41 @@ export default function Expedientes() {
                             console.log(`Fotos para expediente ${exp.pk_id_expediente}:`, fotosExpediente);
                             return fotosExpediente && fotosExpediente.length > 0 ? (
                               fotosExpediente.map((foto, index) => (
-                                <img 
-                                  key={index}
-                                  src={foto} 
-                                  alt={`Foto ${index + 1}`}
-                                  title={`Foto ${index + 1} - ${exp.nombre}`}
-                                  className="imagen-miniatura"
-                                  onClick={() => openImageModal({
-                                    url: foto,
-                                    preview: foto,
-                                    nombre: `Foto ${index + 1}`,
-                                    id: `${exp.pk_id_expediente}_${index}`
-                                  }, exp.pk_id_expediente)}
-                                  style={{ cursor: 'pointer' }}
-                                  onError={(e) => {
-                                    console.error('Error cargando miniatura:', e);
-                                    e.target.style.display = 'none';
-                                    const errorSpan = document.createElement('span');
-                                    errorSpan.textContent = '❌';
-                                    errorSpan.title = 'Imagen no disponible';
-                                    errorSpan.style.cssText = 'color: #999; font-size: 12px; margin: 2px;';
-                                    e.target.parentNode.appendChild(errorSpan);
-                                  }}
-                                />
+                                <div key={index} className="foto-tabla-container">
+                                  <img 
+                                    src={foto} 
+                                    alt={`Foto ${index + 1}`}
+                                    title={`Foto ${index + 1} - ${exp.nombre}`}
+                                    className="imagen-miniatura"
+                                    onClick={() => openImageModal({
+                                      url: foto,
+                                      preview: foto,
+                                      nombre: `Foto ${index + 1}`,
+                                      id: `${exp.pk_id_expediente}_${index}`
+                                    }, exp.pk_id_expediente)}
+                                    style={{ cursor: 'pointer' }}
+                                    onError={(e) => {
+                                      console.error('Error cargando miniatura:', e);
+                                      e.target.style.display = 'none';
+                                      const errorSpan = document.createElement('span');
+                                      errorSpan.textContent = '❌';
+                                      errorSpan.title = 'Imagen no disponible';
+                                      errorSpan.style.cssText = 'color: #999; font-size: 12px; margin: 2px;';
+                                      e.target.parentNode.appendChild(errorSpan);
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="btn-eliminar-foto-tabla"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      eliminarFotoTabla(exp.pk_id_expediente, index);
+                                    }}
+                                    title="Eliminar foto"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
                               ))
                             ) : (
                               <span className="sin-imagenes">Sin fotos</span>
@@ -761,7 +862,7 @@ export default function Expedientes() {
             </div>
             <div className="campo-formulario campo-correlativo">
               {/* Sugerencias de correlativo */}
-              {sugerenciasCorrelativo.length > 0 && (
+              {!editando && sugerenciasCorrelativo.length > 0 && (
                 <div className="sugerencias-correlativo">
                   <div className="sugerencias-header">
                     <span className="sugerencias-icon">💡</span>
@@ -800,7 +901,7 @@ export default function Expedientes() {
                 </div>
               )}
               
-              {loadingSugerencias && (
+              {!editando && loadingSugerencias && (
                 <div className="sugerencias-loading">
                   <span className="loading-spinner"></span>
                   <span>Cargando sugerencias...</span>
@@ -819,6 +920,7 @@ export default function Expedientes() {
                 inputMode="numeric"
                 pattern="[0-9]*"
                 title="Ingrese solo números"
+                disabled={!!editando}
               />
             </div>
           </div>
@@ -843,47 +945,81 @@ export default function Expedientes() {
                 name="telefono"
                 value={formData.telefono}
                 onChange={handleInputChange}
-                placeholder="Ej: 1234567890"
+                placeholder="Ej: +(502) 9900-9999"
+                pattern="^\+?[0-9\s\-\(\)]+$"
+                title="Formato: +(502) 9900-9999"
                 required
               />
             </div>
           </div>
 
-           <div className="campo-formulario">
+          <div className="campo-formulario">
              <label>Correo</label>
-             <input
-               type="email"
-               name="email"
-               value={formData.email}
-               onChange={handleInputChange}
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
                placeholder="Ej: usuario@email.com"
-             />
-           </div>
+            />
+          </div>
 
-           <div className="campo-formulario">
+          <div className="campo-formulario">
              <label>Dirección</label>
-             <input
-               type="text"
-               name="direccion"
-               value={formData.direccion}
-               onChange={handleInputChange}
+            <input
+              type="text"
+              name="direccion"
+              value={formData.direccion}
+              onChange={handleInputChange}
                placeholder="Ej: Calle Principal #123"
-             />
-           </div>
+            />
+          </div>
 
           <div className="campo-formulario">
             <label>Fotos *</label>
-            <input type="file" name="foto" accept="image/*" onChange={handleInputChange} />
-            <div className="vista-previa-fotos">
+            
+            {/* Botón para subir fotos */}
+            <div className="upload-photos-container">
+              <input 
+                type="file" 
+                id="photo-upload" 
+                accept="image/*" 
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
+              <button 
+                type="button"
+                className="btn-subir-foto"
+                onClick={() => document.getElementById('photo-upload').click()}
+                disabled={formData.foto.length >= 2}
+              >
+                📷 Subir Foto ({formData.foto.length}/2)
+              </button>
+            </div>
+
+            {/* Vista previa de fotos en horizontal */}
+            {formData.foto.length > 0 && (
+              <div className="vista-previa-fotos-horizontal">
               {formData.foto.map((img, i) => (
+                  <div key={i} className="foto-miniatura-container">
                 <img
-                  key={i}
                   src={img}
                   alt={`Foto ${i + 1}`}
+                      className="foto-miniatura"
                   onClick={() => setFotoAmpliada(img)}
                 />
+                    <button
+                      type="button"
+                      className="btn-eliminar-foto"
+                      onClick={() => eliminarFoto(i)}
+                      title="Eliminar foto"
+                    >
+                      ✕
+                    </button>
+                  </div>
               ))}
             </div>
+            )}
           </div>
 
           <div className="botones-formulario">
@@ -910,6 +1046,42 @@ export default function Expedientes() {
           // Cancelar intención y cerrar el modal
           setShowConfirmSubirOtra(false);
           setFotoMensaje(false);
+        }}
+      />
+
+      {/* Modal de confirmación para eliminar foto */}
+      <ConfirmModal
+        isOpen={showConfirmEliminarFoto}
+        title="Eliminar foto"
+        message="¿Está de acuerdo con borrar la foto?"
+        onConfirm={confirmarEliminarFoto}
+        onCancel={() => {
+          setShowConfirmEliminarFoto(false);
+          setFotoIndexToDelete(null);
+        }}
+      />
+
+      {/* Modal de confirmación para eliminar foto desde tabla */}
+      <ConfirmModal
+        isOpen={showConfirmEliminarFotoTabla}
+        title="Eliminar foto"
+        message="¿Está de acuerdo con eliminar la foto?"
+        onConfirm={confirmarEliminarFotoTabla}
+        onCancel={() => {
+          setShowConfirmEliminarFotoTabla(false);
+          setExpedienteFotoToDelete(null);
+        }}
+      />
+
+      {/* Modal de confirmación para eliminar expediente */}
+      <ConfirmModal
+        isOpen={showConfirmEliminarExpediente}
+        title="Eliminar expediente"
+        message="¿Está de acuerdo con eliminar este expediente?"
+        onConfirm={confirmarEliminarExpediente}
+        onCancel={() => {
+          setShowConfirmEliminarExpediente(false);
+          setExpedienteToDelete(null);
         }}
       />
 
@@ -950,16 +1122,16 @@ export default function Expedientes() {
                     <div className="info-content">
                       <label>Fecha de Registro</label>
                       <span className="info-value fecha">{formatearFecha(expedienteVisualizar.fecha_registro)}</span>
-                    </div>
-                  </div>
+                </div>
+                </div>
                   
                   <div className="info-card">
                     <div className="info-icon">🔢</div>
                     <div className="info-content">
                       <label>No. Correlativo</label>
                       <span className="info-value correlativo">{expedienteVisualizar.correlativo}</span>
-                    </div>
-                  </div>
+                </div>
+                </div>
                 </div>
               </div>
 
@@ -974,18 +1146,18 @@ export default function Expedientes() {
                     <div className="info-content">
                       <label>Nombre del Paciente</label>
                       <span className="info-value nombre">{expedienteVisualizar.nombre}</span>
-                    </div>
-                  </div>
-                  
+                </div>
+              </div>
+
                   <div className="info-card">
                     <div className="info-icon">📞</div>
                     <div className="info-content">
                       <label>Teléfono</label>
                       <span className="info-value telefono">{expedienteVisualizar.telefono}</span>
-                    </div>
                   </div>
                 </div>
-              </div>
+                </div>
+            </div>
 
               {/* Tercera fila: Correo (ancho completo) */}
               <div className="info-section terciaria">
@@ -1050,13 +1222,13 @@ export default function Expedientes() {
                 <span className="footer-text">Visual Optics - Sistema de Expedientes</span>
               </div>
               <div className="footer-actions">
-                <button 
-                  onClick={() => setExpedienteVisualizar(null)} 
+              <button 
+                onClick={() => setExpedienteVisualizar(null)} 
                   className="btn-cerrar-profesional"
-                >
+              >
                   <span className="btn-icon">✓</span>
-                  Cerrar
-                </button>
+                Cerrar
+              </button>
               </div>
             </div>
           </div>

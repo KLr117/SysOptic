@@ -1129,16 +1129,16 @@
 
 /* Estilos para sugerencias de correlativo - Estilo de la imagen */
 .sugerencias-correlativo {
-  margin-top: 0.125rem;
-  padding: 0.125rem 0.75rem; /* Más padding horizontal */
+  margin-top: 0.5rem; /* Más espacio superior */
+  padding: 0.75rem 1rem; /* Padding más cómodo */
   background: #FEE; /* Rosa claro como en la imagen */
   border-top: 1px solid #890D0F; /* Borde superior rojo */
-  border-radius: 3px;
-  box-shadow: 0 1px 2px rgba(137, 13, 15, 0.1);
+  border-radius: 8px; /* Esquinas más redondeadas */
+  box-shadow: 0 2px 4px rgba(137, 13, 15, 0.15); /* Sombra más visible */
   width: fit-content; /* Ancho ajustado al contenido */
   margin-left: auto;
   margin-right: auto;
-  min-width: 200px; /* Ancho mínimo más grande */
+  min-width: 250px; /* Ancho mínimo más grande */
   position: relative;
   z-index: 14; /* Asegurar que esté por encima de otros elementos */
 }
@@ -1146,18 +1146,18 @@
 .sugerencias-header {
   display: flex;
   align-items: center;
-  gap: 0.125rem;
-  margin-bottom: 0.125rem; /* Menos espacio vertical */
+  gap: 0.5rem; /* Más espacio entre ícono y texto */
+  margin-bottom: 0.5rem; /* Más espacio vertical */
 }
 
 .sugerencias-icon {
-  font-size: 0.4rem;
+  font-size: 1rem; /* Ícono más grande */
   color: #FFD700; /* Amarillo como en la imagen */
 }
 
 .sugerencias-title {
-  font-size: 0.375rem;
-  font-weight: 500;
+  font-size: 0.875rem; /* Texto más legible */
+  font-weight: 600; /* Más peso */
   color: #8B4513; /* Marrón rojizo como en la imagen */
 }
 
@@ -1165,29 +1165,30 @@
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 0.125rem;
+  gap: 0.5rem; /* Más espacio entre botones */
 }
 
 .sugerencia-item {
   background: #8B0000; /* Rojo oscuro como en la imagen */
   color: white;
   border: none;
-  border-radius: 6px; /* Esquinas muy redondeadas como en la imagen */
-  padding: 0.375rem 1.25rem; /* Más padding vertical */
-  font-size: 0.4rem;
+  border-radius: 8px; /* Esquinas redondeadas */
+  padding: 0.5rem 1rem; /* Padding equilibrado */
+  font-size: 0.875rem; /* Tamaño de fuente legible */
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 1px 2px rgba(139, 0, 0, 0.3);
-  min-width: 120px; /* Más ancho */
+  box-shadow: 0 2px 4px rgba(139, 0, 0, 0.3);
+  min-width: 100px; /* Ancho apropiado */
   text-align: center;
-  min-height: 28px; /* Altura mínima para mejor apariencia */
+  min-height: 36px; /* Altura cómoda */
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 15; /* Asegurar que esté por encima de otros elementos */
   pointer-events: auto; /* Asegurar que sea clickeable */
+  margin: 0.25rem; /* Espaciado entre botones */
 }
 
 .sugerencia-item:hover {
@@ -1603,6 +1604,188 @@
     gap: 1rem;
     text-align: center;
   }
+}
+
+/* ===== ESTILOS PARA SISTEMA DE FOTOS MEJORADO ===== */
+
+/* Contenedor del botón de subir fotos */
+.upload-photos-container {
+  margin-bottom: 1rem;
+}
+
+/* Botón para subir fotos */
+.btn-subir-foto {
+  background: linear-gradient(135deg, #890D0F, #B71C1C);
+  color: white;
+  border: 2px solid #890D0F;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 2px 4px rgba(137, 13, 15, 0.3);
+}
+
+.btn-subir-foto:hover:not(:disabled) {
+  background: linear-gradient(135deg, #B71C1C, #D32F2F);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(137, 13, 15, 0.4);
+}
+
+.btn-subir-foto:disabled {
+  background: #666;
+  border-color: #666;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Contenedor horizontal de fotos */
+.vista-previa-fotos-horizontal {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+/* Contenedor de cada miniatura */
+.foto-miniatura-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Miniatura de foto */
+.foto-miniatura {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border: 2px solid #890D0F;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.foto-miniatura:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Botón de eliminar foto */
+.btn-eliminar-foto {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: #D32F2F;
+  color: white;
+  border: 2px solid white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btn-eliminar-foto:hover {
+  background: #B71C1C;
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Modo oscuro */
+.dark-mode .btn-subir-foto {
+  background: linear-gradient(135deg, #890D0F, #B71C1C);
+  border-color: #890D0F;
+}
+
+.dark-mode .btn-subir-foto:hover:not(:disabled) {
+  background: linear-gradient(135deg, #B71C1C, #D32F2F);
+}
+
+.dark-mode .foto-miniatura {
+  border-color: #890D0F;
+}
+
+.dark-mode .btn-eliminar-foto {
+  background: #D32F2F;
+  border-color: var(--color-bg-primary);
+}
+
+.dark-mode .btn-eliminar-foto:hover {
+  background: #B71C1C;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .vista-previa-fotos-horizontal {
+    gap: 0.5rem;
+  }
+  
+  .foto-miniatura {
+    width: 100px;
+    height: 75px;
+  }
+  
+  .btn-subir-foto {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* ===== ESTILOS PARA BOTÓN ELIMINAR EN TABLA ===== */
+
+/* Contenedor de foto en tabla */
+.foto-tabla-container {
+  position: relative;
+  display: inline-block;
+  margin: 2px;
+}
+
+/* Botón de eliminar foto en tabla */
+.btn-eliminar-foto-tabla {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  background: #D32F2F;
+  color: white;
+  border: 2px solid white;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.btn-eliminar-foto-tabla:hover {
+  background: #B71C1C;
+  transform: scale(1.15);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Modo oscuro */
+.dark-mode .btn-eliminar-foto-tabla {
+  background: #D32F2F;
+  border-color: var(--color-bg-secondary);
+}
+
+.dark-mode .btn-eliminar-foto-tabla:hover {
+  background: #B71C1C;
 }
 
 
