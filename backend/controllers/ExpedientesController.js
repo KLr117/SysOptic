@@ -44,7 +44,8 @@ export const createExpedienteController = async (req, res) => {
       telefono: req.body.telefono,
       direccion: req.body.direccion,
       email: req.body.email,
-      fecha_registro: req.body.fecha_registro
+      fecha_registro: req.body.fecha_registro,
+      foto: req.body.foto
     };
 
     // Validaciones básicas

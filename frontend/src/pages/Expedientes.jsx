@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import ConfirmModal from "../components/ConfirmModal";
 import "../styles/vista-expedientes.css";
 import "../styles/popup.css";
-//import { obtenerTodasLasImagenes } from"../services/expedientesService";
 import Titulo from "../components/Titulo";
 import Button from "../components/Button";
 import {
@@ -16,6 +15,7 @@ import {
 
 export default function Expedientes() {
   const columns = [
+    "#",
     "No. Correlativo",
     "Nombre",
     "Teléfono",
@@ -56,16 +56,38 @@ export default function Expedientes() {
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [popupType, setPopupType] = useState("success"); // "success", "error", "warning", "info"
+  
+   // Estados para sugerencias de correlativo
+   const [sugerenciasCorrelativo, setSugerenciasCorrelativo] = useState([]);
+   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
+   
+   // Estados para modal de imágenes
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [modalImage, setModalImage] = useState(null);
 
-  // 🔹 Mostrar popup
-  const mostrarPopup = (mensaje, tipo = "success") => {
-    setPopupMessage(mensaje);
-    setPopupType(tipo);
-    setShowPopup(true);
-    setTimeout(() => {
-      setShowPopup(false);
-    }, 3000);
-  };
+   // 🔹 Mostrar popup
+   const mostrarPopup = (mensaje, tipo = "success") => {
+     setPopupMessage(mensaje);
+     setPopupType(tipo);
+     setShowPopup(true);
+     setTimeout(() => {
+       setShowPopup(false);
+     }, 3000);
+   };
+
+   // 🔹 Funciones para modal de imágenes
+   const openImageModal = (imagen, expedienteId) => {
+     setModalImage({
+       ...imagen,
+       expedienteId: expedienteId
+     });
+     setIsModalOpen(true);
+   };
+
+   const closeImageModal = () => {
+     setIsModalOpen(false);
+     setModalImage(null);
+   };
 
   // 🔹 Cargar expedientes
   useEffect(() => {
@@ -94,24 +116,171 @@ export default function Expedientes() {
     cargarExpedientes();
   }, []);
 
-  // 🔹 Manejo de formulario
+  // 🔹 Cargar sugerencias de correlativo
+  useEffect(() => {
+    const cargarSugerenciasCorrelativo = async () => {
+      try {
+        setLoadingSugerencias(true);
+        const data = await getExpedientes();
+         if (Array.isArray(data)) {
+           // Obtener todos los correlativos numéricos para encontrar el siguiente consecutivo
+           const correlativosNumericos = data
+             .map(exp => exp.correlativo)
+             .filter(correlativo => correlativo)
+             .map(correlativo => {
+               // Extraer solo números del correlativo
+               const numeros = correlativo.replace(/\D/g, '');
+               return numeros ? parseInt(numeros) : 0;
+             })
+             .filter(num => num > 0) // Solo números válidos
+             .sort((a, b) => b - a); // Ordenar de mayor a menor
+           
+           console.log('Correlativos numéricos encontrados:', correlativosNumericos);
+           
+           if (correlativosNumericos.length > 0) {
+             // Encontrar el siguiente número consecutivo
+             let siguienteNumero = correlativosNumericos[0] + 1;
+             
+             // Verificar si el siguiente número ya existe
+             while (correlativosNumericos.includes(siguienteNumero)) {
+               siguienteNumero++;
+             }
+             
+             console.log('Siguiente correlativo consecutivo:', siguienteNumero);
+             setSugerenciasCorrelativo([siguienteNumero.toString()]);
+           } else {
+             // Si no hay correlativos, empezar con 1
+             console.log('No hay correlativos existentes, empezando con 1');
+             setSugerenciasCorrelativo(['1']);
+           }
+         }
+       } catch (error) {
+         console.error('Error cargando sugerencias de correlativo:', error);
+         // En caso de error, sugerir 1
+         setSugerenciasCorrelativo(['1']);
+       } finally {
+        setLoadingSugerencias(false);
+      }
+    };
+    
+     cargarSugerenciasCorrelativo();
+   }, []);
+
+   // 🔹 Función para formatear fecha
+   const formatearFecha = (fecha) => {
+     if (!fecha) return '';
+     
+     try {
+       // Si viene en formato ISO completo
+       if (fecha.includes('T')) {
+         const fechaObj = new Date(fecha);
+         const dia = fechaObj.getDate().toString().padStart(2, '0');
+         const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
+         const año = fechaObj.getFullYear();
+         return `${dia}/${mes}/${año}`;
+       }
+       
+       // Si viene en formato YYYY-MM-DD
+       if (fecha.includes('-')) {
+         const [año, mes, dia] = fecha.split('-');
+         return `${dia}/${mes}/${año}`;
+       }
+       
+       // Si ya está en formato DD/MM/YYYY, devolverlo tal como está
+       return fecha;
+     } catch (error) {
+       console.error('Error al formatear fecha:', error);
+       return fecha; // Devolver fecha original si hay error
+     }
+   };
+
+   // 🔹 Función de redimensionamiento de imágenes
+   const resizeImage = (file, maxWidth = 1200, maxHeight = 900) => {
+     return new Promise((resolve) => {
+       const canvas = document.createElement('canvas');
+       const ctx = canvas.getContext('2d');
+       const img = new Image();
+       
+       img.onload = () => {
+         // Calcular nuevas dimensiones manteniendo proporción
+         let { width, height } = img;
+         if (width > maxWidth || height > maxHeight) {
+           const ratio = Math.min(maxWidth / width, maxHeight / height);
+           width *= ratio;
+           height *= ratio;
+         }
+         
+         canvas.width = width;
+         canvas.height = height;
+         ctx.drawImage(img, 0, 0, width, height);
+         
+         // Convertir a Base64 con calidad 0.8 (80%)
+         const base64 = canvas.toDataURL('image/jpeg', 0.8);
+         resolve(base64);
+       };
+       
+       img.src = URL.createObjectURL(file);
+     });
+   };
+
+   // 🔹 Manejo de formulario
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === "foto" && files && files[0]) {
-      if (formData.foto.length >= 2) {
-        mostrarPopup("Solo se permiten máximo 2 fotos", "warning");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          foto: [...prev.foto, reader.result],
-        }));
-        setFotoMensaje(true);
-      };
-      reader.readAsDataURL(files[0]);
-    } else {
+    console.log('handleInputChange llamado:', { name, value, files: !!files });
+    
+     // Validación especial para el campo correlativo - solo números
+     if (name === "correlativo") {
+       // Permitir solo números
+       const soloNumeros = value.replace(/[^0-9]/g, '');
+       console.log('Campo correlativo:', { original: value, filtrado: soloNumeros });
+       setFormData({ ...formData, [name]: soloNumeros });
+       return;
+     }
+     
+     // Validación especial para el campo nombre - solo letras y espacios
+     if (name === "nombre") {
+       // Permitir solo letras, espacios y acentos
+       const soloLetras = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+       console.log('Campo nombre:', { original: value, filtrado: soloLetras });
+       setFormData({ ...formData, [name]: soloLetras });
+       return;
+     }
+     
+     // Validación especial para el campo teléfono - solo números
+     if (name === "telefono") {
+       // Permitir solo números
+       const soloNumeros = value.replace(/[^0-9]/g, '');
+       console.log('Campo teléfono:', { original: value, filtrado: soloNumeros });
+       setFormData({ ...formData, [name]: soloNumeros });
+       return;
+     }
+    
+     if (name === "foto" && files && files[0]) {
+       if (formData.foto.length >= 2) {
+         mostrarPopup("Solo se permiten máximo 2 fotos", "warning");
+         return;
+       }
+       
+       const file = files[0];
+       
+       // Verificar tamaño original
+       if (file.size > 2 * 1024 * 1024) { // 2MB
+         mostrarPopup("La imagen es muy grande. Se redimensionará automáticamente.", "info");
+       }
+       
+       // Redimensionar antes de convertir
+       resizeImage(file, 1200, 900).then(base64 => {
+         setFormData(prev => ({
+           ...prev,
+           foto: [...prev.foto, base64]
+         }));
+         setFotoMensaje(true);
+       }).catch(error => {
+         console.error('Error al redimensionar imagen:', error);
+         mostrarPopup("Error al procesar la imagen", "error");
+       });
+     } else {
+      console.log('Actualizando campo:', { name, value });
       setFormData({ ...formData, [name]: value });
     }
   };
@@ -212,10 +381,11 @@ export default function Expedientes() {
       type: 'success'
     });
 
-  // 🔹 Filtrado y ordenamiento
-  const filtro = search.trim().toLowerCase();
-  // Validar que expedientes sea un array antes de usar spread operator
-  const expedientesFiltrados = Array.isArray(expedientes) ? [...expedientes] : []
+   // 🔹 Filtrado y ordenamiento
+   const filtro = search.trim().toLowerCase();
+   
+   // Validar que expedientes sea un array antes de usar spread operator
+   const expedientesFiltrados = Array.isArray(expedientes) ? [...expedientes] : []
     .filter(
       (exp) =>
         !filtro ||
@@ -260,31 +430,8 @@ export default function Expedientes() {
         return sortDirection === "asc" ? fechaA - fechaB : fechaB - fechaA;
       }
       
-      return 0;
-    });
-
-  // Debug temporal - remover después
-  console.log("🔍 ORDENAMIENTO DEBUG:");
-  console.log("Campo:", sortField, "Dirección:", sortDirection);
-  console.log("Total de expedientes:", expedientesFiltrados.length);
-  console.log("Todos los expedientes ordenados:", expedientesFiltrados.map(exp => ({
-    id: exp.pk_id_expediente,
-    nombre: exp.nombre,
-    fecha: exp.fecha_registro,
-    correlativo: exp.correlativo
-  })));
-  
-  // Mostrar también los IDs en orden para verificar
-  console.log("IDs en orden:", expedientesFiltrados.map(exp => exp.pk_id_expediente));
-  
-  // Mostrar información específica según el tipo de ordenamiento
-  if (sortField === "id") {
-    console.log("IDs ordenados:", expedientesFiltrados.map(exp => exp.pk_id_expediente));
-  } else if (sortField === "nombre") {
-    console.log("Nombres ordenados:", expedientesFiltrados.map(exp => exp.nombre));
-  } else if (sortField === "fecha_registro") {
-    console.log("Fechas ordenadas:", expedientesFiltrados.map(exp => exp.fecha_registro));
-  }
+       return 0;
+     });
 
   // 🔹 Paginación
   const totalPages = Math.ceil(expedientesFiltrados.length / pageSize);
@@ -378,43 +525,35 @@ export default function Expedientes() {
             ➕ Crear Expediente
           </button>
 
-          <input
-            type="text"
-            placeholder="🔍 Buscar..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="expedientes-search-box"
-            data-tooltip="Filtra por nombre, correo o teléfono"
-          />
+           <input
+             type="text"
+             placeholder="🔍 Buscar..."
+             value={search}
+             onChange={(e) => setSearch(e.target.value)}
+             className="expedientes-search-box"
+             data-tooltip="Filtra por nombre, correo o teléfono"
+           />
 
-          <div className="expedientes-sort-container">
-            <label htmlFor="expedientesSortSelect" className="expedientes-sort-label">
-              Ordenar por:
-            </label>
-            {sortField && (
-              <span className="sort-indicator">
-                {sortField === "id" && (sortDirection === "asc" ? "ID ↑" : "ID ↓")}
-                {sortField === "nombre" && (sortDirection === "asc" ? "Nombre A-Z" : "Nombre Z-A")}
-                {sortField === "fecha_registro" && (sortDirection === "asc" ? "Fecha ↑" : "Fecha ↓")}
-              </span>
-            )}
+           <div className="expedientes-sort-container">
+             <label htmlFor="expedientesSortSelect" className="expedientes-sort-label">
+               Ordenar por:
+             </label>
             
            
             <select
               id="expedientesSortSelect"
               value={sortField + "-" + sortDirection}
-              onChange={(e) => {
-                const [field, direction] = e.target.value.split("-");
-                console.log(`Ordenando por: ${field} - ${direction}`);
-                setSortField(field);
-                setSortDirection(direction);
-              }}
+               onChange={(e) => {
+                 const [field, direction] = e.target.value.split("-");
+                 setSortField(field);
+                 setSortDirection(direction);
+               }}
               className="expedientes-sort-combobox"
               data-tooltip="Selecciona una ordenación"
             >
-              <option value="fecha_registro-desc">Fecha - Más reciente  </option>
+              <option value="fecha_registro-desc">ID - Más reciente  </option>
               <option value="id-asc">ID - Más antiguo </option>
-              <option value="id-desc">ID - Más reciente</option>
+              <option value="id-desc">Fecha - Más reciente</option>
               <option value="fecha_registro-asc">Fecha - Más antiguo </option>
               <option value="nombre-asc">Nombre A-Z </option>
               <option value="nombre-desc">Nombre Z-A </option>
@@ -431,43 +570,68 @@ export default function Expedientes() {
               <thead>
                 <tr>
                   {columns.map((col, i) => (
-                    <th key={i}>{col}</th>
+                    <th key={i} className={i === 0 ? "columna-numero" : ""}>
+                      {i === 0 ? (
+                        <div className="header-numero">
+                          <span className="simbolo-numero">#</span>
+                          <span className="indicador-orden">
+                            {sortField === "id" && (sortDirection === "asc" ? "↑" : "↓")}
+                          </span>
+                        </div>
+                      ) : (
+                        col
+                      )}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {expedientesPaginados.length > 0 ? (
-                  expedientesPaginados.map((exp) => (
+                  expedientesPaginados.map((exp, index) => (
                     <tr key={exp.pk_id_expediente}>
+                      <td className="celda-numero">{startIndex + index + 1}</td>
                       <td>{exp.correlativo}</td>
                       <td>{exp.nombre}</td>
                       <td>{exp.telefono}</td>
                       <td>{exp.direccion}</td>
                       <td>{exp.email}</td>
-                      <td>{exp.fecha_registro}</td>
+                      <td>{formatearFecha(exp.fecha_registro)}</td>
                       <td>
-                        {exp.foto && exp.foto.length > 0 ? (
-                          <img
-                            src={Array.isArray(exp.foto) ? exp.foto[0] : exp.foto}
-                            alt="Foto del expediente"
-                            style={{
-                              width: "50px",
-                              height: "50px",
-                              borderRadius: "6px",
-                              cursor: "pointer",
-                              objectFit: "cover",
-                            }}
-                            onClick={() => {
-                              // Abrir solo la foto sin mostrar la información del expediente
-                              const primeraFoto = Array.isArray(exp.foto) ? exp.foto[0] : exp.foto;
-                              setFotoAmpliada(primeraFoto);
-                              setExpedienteVisualizar(null);
-                              setFotoIndex(0);
-                            }}
-                          />
-                        ) : (
-                          <span>Sin foto</span>
-                        )}
+                        <div className="imagenes-preview">
+                          {(() => {
+                            const fotosExpediente = exp.foto;
+                            console.log(`Fotos para expediente ${exp.pk_id_expediente}:`, fotosExpediente);
+                            return fotosExpediente && fotosExpediente.length > 0 ? (
+                              fotosExpediente.map((foto, index) => (
+                                <img 
+                                  key={index}
+                                  src={foto} 
+                                  alt={`Foto ${index + 1}`}
+                                  title={`Foto ${index + 1} - ${exp.nombre}`}
+                                  className="imagen-miniatura"
+                                  onClick={() => openImageModal({
+                                    url: foto,
+                                    preview: foto,
+                                    nombre: `Foto ${index + 1}`,
+                                    id: `${exp.pk_id_expediente}_${index}`
+                                  }, exp.pk_id_expediente)}
+                                  style={{ cursor: 'pointer' }}
+                                  onError={(e) => {
+                                    console.error('Error cargando miniatura:', e);
+                                    e.target.style.display = 'none';
+                                    const errorSpan = document.createElement('span');
+                                    errorSpan.textContent = '❌';
+                                    errorSpan.title = 'Imagen no disponible';
+                                    errorSpan.style.cssText = 'color: #999; font-size: 12px; margin: 2px;';
+                                    e.target.parentNode.appendChild(errorSpan);
+                                  }}
+                                />
+                              ))
+                            ) : (
+                              <span className="sin-imagenes">Sin fotos</span>
+                            );
+                          })()}
+                        </div>
                       </td>
                       <td>
                         <select
@@ -491,7 +655,8 @@ export default function Expedientes() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={columns.length} style={{ textAlign: "center" }}>
+                    <td className="celda-numero">-</td>
+                    <td colSpan={columns.length - 1} style={{ textAlign: "center" }}>
                       No se encontraron expedientes
                     </td>
                   </tr>
@@ -595,13 +760,65 @@ export default function Expedientes() {
               />
             </div>
             <div className="campo-formulario campo-correlativo">
+              {/* Sugerencias de correlativo */}
+              {sugerenciasCorrelativo.length > 0 && (
+                <div className="sugerencias-correlativo">
+                  <div className="sugerencias-header">
+                    <span className="sugerencias-icon">💡</span>
+                    <span className="sugerencias-title">Sugerencia: Ingrese el correlativo</span>
+                  </div>
+                  <div className="sugerencias-list">
+                    {sugerenciasCorrelativo.map((correlativo, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className="sugerencia-item"
+                        onClick={() => {
+                          console.log('Clic en sugerencia:', correlativo);
+                          setFormData(prev => {
+                            console.log('Estado anterior:', prev);
+                            const nuevoEstado = { ...prev, correlativo: correlativo };
+                            console.log('Nuevo estado:', nuevoEstado);
+                            return nuevoEstado;
+                          });
+                          // Scroll al campo No. Correlativo
+                          const correlativoInput = document.querySelector('input[name="correlativo"]');
+                          if (correlativoInput) {
+                            console.log('Campo encontrado, haciendo scroll...');
+                            correlativoInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            correlativoInput.focus();
+                          } else {
+                            console.log('Campo correlativo no encontrado');
+                          }
+                        }}
+                        title={`Usar correlativo sugerido: ${correlativo}`}
+                      >
+                        #{correlativo}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {loadingSugerencias && (
+                <div className="sugerencias-loading">
+                  <span className="loading-spinner"></span>
+                  <span>Cargando sugerencias...</span>
+                </div>
+              )}
+              
               <label>No. Correlativo *</label>
               <input
                 type="text"
                 name="correlativo"
                 value={formData.correlativo}
                 onChange={handleInputChange}
+                placeholder="Ej: 003"
                 required
+                autoComplete="off"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                title="Ingrese solo números"
               />
             </div>
           </div>
@@ -614,6 +831,7 @@ export default function Expedientes() {
                 name="nombre"
                 value={formData.nombre}
                 onChange={handleInputChange}
+                placeholder="Ej: Juan Pérez"
                 required
               />
             </div>
@@ -625,32 +843,33 @@ export default function Expedientes() {
                 name="telefono"
                 value={formData.telefono}
                 onChange={handleInputChange}
+                placeholder="Ej: 1234567890"
                 required
               />
             </div>
           </div>
 
-          <div className="campo-formulario">
-            <label>Correo *</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
+           <div className="campo-formulario">
+             <label>Correo</label>
+             <input
+               type="email"
+               name="email"
+               value={formData.email}
+               onChange={handleInputChange}
+               placeholder="Ej: usuario@email.com"
+             />
+           </div>
 
-          <div className="campo-formulario">
-            <label>Dirección *</label>
-            <input
-              type="text"
-              name="direccion"
-              value={formData.direccion}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
+           <div className="campo-formulario">
+             <label>Dirección</label>
+             <input
+               type="text"
+               name="direccion"
+               value={formData.direccion}
+               onChange={handleInputChange}
+               placeholder="Ej: Calle Principal #123"
+             />
+           </div>
 
           <div className="campo-formulario">
             <label>Fotos *</label>
@@ -726,7 +945,7 @@ export default function Expedientes() {
                 </div>
                 <div className="info-item">
                   <label>Fecha de Registro:</label>
-                  <span>{expedienteVisualizar.fecha_registro}</span>
+                  <span>{formatearFecha(expedienteVisualizar.fecha_registro)}</span>
                 </div>
                 <div className="info-item">
                   <label>Estado:</label>
@@ -734,26 +953,13 @@ export default function Expedientes() {
                 </div>
               </div>
 
-              {/* Fotos del expediente */}
-              {expedienteVisualizar.foto && expedienteVisualizar.foto.length > 0 && (
-                <div className="fotos-expediente">
-                  <label>Fotos:</label>
-                  <div className="galeria-fotos">
-                    {expedienteVisualizar.foto.map((foto, index) => (
-                      <img
-                        key={index}
-                        src={foto}
-                        alt={`Foto ${index + 1}`}
-                        className="foto-miniatura"
-                        onClick={() => {
-                          setFotoAmpliada(foto);
-                          setFotoIndex(index);
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+               {/* Información adicional sin fotos */}
+               <div className="info-adicional">
+                 <div className="info-item">
+                   <label>Total de Fotos:</label>
+                   <span>{expedienteVisualizar.foto ? expedienteVisualizar.foto.length : 0}</span>
+                 </div>
+               </div>
             </div>
 
             <div className="modal-footer">
@@ -788,6 +994,50 @@ export default function Expedientes() {
           >
             ×
           </button>
+        </div>
+      )}
+
+      {/* 🔹 Modal para visualizar imágenes */}
+      {isModalOpen && modalImage && (
+        <div className="modal-overlay">
+          <div className="modal-content modal-imagen">
+            <div className="modal-header">
+              <h3>Imagen del Expediente</h3>
+              <button 
+                className="modal-close"
+                onClick={closeImageModal}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <img
+                src={modalImage.url || modalImage.preview}
+                alt={modalImage.nombre || "Imagen"}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "80vh",
+                  objectFit: "contain",
+                  borderRadius: "8px"
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  const errorDiv = document.createElement('div');
+                  errorDiv.innerHTML = '<p>❌ Error al cargar la imagen</p>';
+                  errorDiv.style.cssText = 'text-align: center; color: #999; padding: 20px;';
+                  e.target.parentNode.appendChild(errorDiv);
+                }}
+              />
+            </div>
+            <div className="modal-footer">
+              <button 
+                onClick={closeImageModal} 
+                className="btn-cancel"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

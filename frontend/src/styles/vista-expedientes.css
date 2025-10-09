@@ -1,4 +1,21 @@
 /* ===============   WENDYs    ================
+/* ===== FONDO DE AGUA CON LOGOTIPO ===== */
+
+/* Marca de agua con logotipo */
+.container-expedientes::before {
+  content: "";
+  background: url("../assets/logo.jpg") no-repeat center;
+  background-size: 50%;
+  opacity: 0.08;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+}
+
 /* ===== MODAL VISUALIZAR SIN MARCO ===== */
 /* CONTENEDORES GENERALES */
 .expedientes-container {
@@ -20,6 +37,8 @@
   border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 1rem;
+  position: relative;
+  z-index: 10;
 }
 
 .tabla-expedientes {
@@ -51,18 +70,56 @@
 .input-formulario {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.375rem;
+  border: 1px solid #890D0F !important;
+  border-radius: 6px !important;
   font-size: 1rem;
   margin-top: 0.25rem;
-  background: var(--color-bg);
-  color: var(--color-text);
-  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+  background: #2D2D2D !important;
+  color: #E0E0E0 !important;
+  box-shadow: none !important;
+  position: relative;
+  z-index: 11;
+  font-weight: 500 !important;
+  text-align: center !important;
 }
+
+.input-formulario::placeholder {
+  text-align: center !important;
+  color: #999 !important;
+}
+
 .input-formulario:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: #A01A1C !important;
+  background: #333333 !important;
+  color: #FFFFFF !important;
+}
+
+/* Estilos para las etiquetas - color normal */
+.campo-formulario label {
+  color: var(--color-text);
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+/* Campo de correlativo con marco destacado */
+.campo-correlativo input {
+  border: 1px solid #890D0F !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  background: #2D2D2D !important;
+  color: #E0E0E0 !important;
+  font-weight: 500 !important;
+  text-align: center !important;
+  position: relative !important;
+  z-index: 12 !important;
+}
+
+.campo-correlativo input:focus {
+  border-color: #A01A1C !important;
+  background: #333333 !important;
+  color: #FFFFFF !important;
+  outline: none !important;
 }
 
 .botones-formulario {
@@ -1017,6 +1074,112 @@
     padding: 6px;
     font-size: 0.8rem;
   }
+}
+
+/* ===== SUGERENCIAS DE CORRELATIVO - ESTILO DE LA IMAGEN ===== */
+
+/* Estilos para sugerencias de correlativo - Estilo de la imagen */
+.sugerencias-correlativo {
+  margin-top: 0.125rem;
+  padding: 0.125rem 0.75rem; /* Más padding horizontal */
+  background: #FEE; /* Rosa claro como en la imagen */
+  border-top: 1px solid #890D0F; /* Borde superior rojo */
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(137, 13, 15, 0.1);
+  width: fit-content; /* Ancho ajustado al contenido */
+  margin-left: auto;
+  margin-right: auto;
+  min-width: 200px; /* Ancho mínimo más grande */
+}
+
+.sugerencias-header {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  margin-bottom: 0.125rem; /* Menos espacio vertical */
+}
+
+.sugerencias-icon {
+  font-size: 0.4rem;
+  color: #FFD700; /* Amarillo como en la imagen */
+}
+
+.sugerencias-title {
+  font-size: 0.375rem;
+  font-weight: 500;
+  color: #8B4513; /* Marrón rojizo como en la imagen */
+}
+
+.sugerencias-list {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.125rem;
+}
+
+.sugerencia-item {
+  background: #8B0000; /* Rojo oscuro como en la imagen */
+  color: white;
+  border: none;
+  border-radius: 6px; /* Esquinas muy redondeadas como en la imagen */
+  padding: 0.125rem 1.25rem; /* Más padding horizontal */
+  font-size: 0.4rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 2px rgba(139, 0, 0, 0.3);
+  min-width: 120px; /* Más ancho */
+  text-align: center;
+}
+
+.sugerencia-item:hover {
+  background: #A52A2A; /* Rojo más claro al hover */
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(139, 0, 0, 0.4);
+}
+
+.sugerencia-item:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(139, 0, 0, 0.3);
+}
+
+.sugerencias-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  margin-top: 0.25rem;
+  padding: 0.125rem;
+  color: #890D0F;
+  font-size: 0.6rem;
+  font-style: italic;
+}
+
+.loading-spinner {
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(137, 13, 15, 0.3);
+  border-top: 1px solid #890D0F;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Modo oscuro para sugerencias */
+.dark-mode .sugerencias-correlativo {
+  background: #2D1B1B; /* Rosa oscuro para modo oscuro */
+  border-color: #A01A1C;
+}
+
+.dark-mode .sugerencias-title {
+  color: #D2691E;
+}
+
+.dark-mode .sugerencias-loading {
+  color: #A01A1C;
 }
 
 
