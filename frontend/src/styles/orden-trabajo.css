@@ -154,6 +154,51 @@
   padding: 8px 12px;
 }
 
+/* Estilos específicos para el header de edición de orden */
+.orden-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px 0;
+}
+
+.orden-logo img {
+  height: 60px;
+  width: auto;
+}
+
+.orden-no {
+  text-align: left;
+  margin-left: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.orden-no label {
+  display: inline;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.orden-no p {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+  background: linear-gradient(135deg, #890D0F, #A01A1C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(137, 13, 15, 0.2);
+  display: inline;
+}
+
 /* Estilo específico para el header de "No Orden" con dos líneas */
 .orden-table thead th:nth-child(2) div {
   display: flex;
@@ -1550,4 +1595,235 @@ h2::after {
   opacity: 1 !important;
   visibility: visible !important;
   display: inline-block !important;
+}
+
+/* ====== ESTILOS PARA SECCIÓN DE IMÁGENES EN EDICIÓN ====== */
+.orden-imagenes {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg-secondary);
+}
+
+.orden-imagenes h3 {
+  color: var(--color-text);
+  font-size: 18px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 10px;
+}
+
+.orden-imagenes h4 {
+  color: var(--color-text);
+  font-size: 16px;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.orden-imagenes h5 {
+  color: var(--color-text);
+  font-size: 14px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+/* Grid de imágenes */
+.imagenes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.imagen-item {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--color-bg);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.imagen-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.imagen-preview {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+}
+
+/* Botón eliminar imagen */
+.btn-eliminar-imagen {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+  z-index: 10;
+}
+
+.btn-eliminar-imagen:hover {
+  background: rgba(220, 38, 38, 0.9);
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* Área de upload */
+.upload-area {
+  border: 2px dashed var(--color-border);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  background: var(--color-bg);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  z-index: 5;
+}
+
+.upload-area.drag-over {
+  border-color: var(--color-primary);
+  background: rgba(137, 13, 15, 0.1);
+  transform: scale(1.02);
+}
+
+.upload-label {
+  cursor: pointer;
+  display: block;
+  position: relative;
+  z-index: 8;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-icon {
+  font-size: 24px;
+  color: var(--color-primary);
+}
+
+.upload-hint {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+/* Botón para seleccionar imágenes */
+.btn-seleccionar-imagenes {
+  background: linear-gradient(135deg, #890D0F, #A01A1C);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(137, 13, 15, 0.3);
+  margin: 8px 0;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.btn-seleccionar-imagenes:hover {
+  background: linear-gradient(135deg, #A01A1C, #890D0F);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(137, 13, 15, 0.4);
+}
+
+.btn-seleccionar-imagenes:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(137, 13, 15, 0.3);
+}
+
+.btn-seleccionar-imagenes:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Modo oscuro para imágenes */
+.dark-mode .orden-imagenes {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+}
+
+.dark-mode .orden-imagenes h3 {
+  color: var(--color-text);
+  border-bottom-color: var(--color-primary);
+}
+
+.dark-mode .orden-imagenes h4,
+.dark-mode .orden-imagenes h5 {
+  color: var(--color-text);
+}
+
+.dark-mode .imagen-item {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+}
+
+.dark-mode .upload-area {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+}
+
+.dark-mode .upload-area.drag-over {
+  background: rgba(137, 13, 15, 0.2);
+  border-color: var(--color-primary);
+}
+
+.dark-mode .upload-icon {
+  color: var(--color-primary);
+}
+
+.dark-mode .upload-hint {
+  color: var(--color-text-muted);
+}
+
+/* Modo oscuro para header de orden */
+.dark-mode .orden-no label {
+  color: var(--color-text);
+}
+
+.dark-mode .orden-no p {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
+}
+
+/* Modo oscuro para botón de seleccionar imágenes */
+.dark-mode .btn-seleccionar-imagenes {
+  background: linear-gradient(135deg, #A01A1C, #890D0F);
+  box-shadow: 0 2px 8px rgba(137, 13, 15, 0.4);
+}
+
+.dark-mode .btn-seleccionar-imagenes:hover {
+  background: linear-gradient(135deg, #890D0F, #A01A1C);
+  box-shadow: 0 4px 12px rgba(137, 13, 15, 0.5);
 }

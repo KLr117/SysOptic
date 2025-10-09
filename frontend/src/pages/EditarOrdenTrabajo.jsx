@@ -7,6 +7,7 @@ import logo from "../assets/logo.jpg";
 import Titulo from "../components/Titulo";
 import PopUp from "../components/PopUp";
 import { getOrdenById, updateOrden } from "../services/ordenTrabajoService";
+import { obtenerImagenesPorOrden, eliminarImagen, subirImagen } from "../services/imagenesOrdenesService";
 
 const EditarOrdenTrabajo = () => {
   const { id } = useParams(); // Capturar el ID de la orden
@@ -14,6 +15,7 @@ const EditarOrdenTrabajo = () => {
 
   // Estados del formulario
   const [formData, setFormData] = useState({
+    correlativo: '',
     paciente: '',
     direccion: '',
     correo: '',
@@ -28,6 +30,11 @@ const EditarOrdenTrabajo = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+  
+  // Estados para imágenes
+  const [imagenesOrden, setImagenesOrden] = useState([]); // Imágenes existentes
+  const [nuevasImagenes, setNuevasImagenes] = useState([]); // Nuevas imágenes a subir
+  const [isDragOver, setIsDragOver] = useState(false);
   
   
 
@@ -58,6 +65,7 @@ const EditarOrdenTrabajo = () => {
           };
           
           setFormData({
+            correlativo: orden.correlativo || '',
             paciente: orden.paciente || '',
             direccion: orden.direccion || '',
             correo: orden.correo || '',
@@ -68,6 +76,9 @@ const EditarOrdenTrabajo = () => {
             adelanto: orden.adelanto || '',
             saldo: orden.saldo || ''
           });
+
+          // Cargar imágenes existentes
+          await cargarImagenesExistentes();
         } else {
           setError("Error al cargar la orden");
         }
@@ -76,6 +87,25 @@ const EditarOrdenTrabajo = () => {
         setError("Error al cargar la orden");
       } finally {
         setLoading(false);
+      }
+    };
+
+    const cargarImagenesExistentes = async () => {
+      try {
+        const response = await obtenerImagenesPorOrden(id);
+        if (response.success && response.imagenes) {
+          const imagenesConPreview = response.imagenes.map(imagen => ({
+            id: imagen.id,
+            nombre: imagen.nombre_archivo,
+            preview: imagen.url,
+            url: imagen.url,
+            esExistente: true
+          }));
+          setImagenesOrden(imagenesConPreview);
+          console.log('Imágenes existentes cargadas:', imagenesConPreview);
+        }
+      } catch (error) {
+        console.error('Error cargando imágenes existentes:', error);
       }
     };
 
@@ -182,8 +212,43 @@ const EditarOrdenTrabajo = () => {
   };
 
   // Función para eliminar imagen existente
-  const removeImagenExistente = (index) => {
-    setImagenesOrden(prev => prev.filter((_, i) => i !== index));
+  const removeImagenExistente = async (imagenId) => {
+    try {
+      const response = await eliminarImagen(imagenId);
+      if (response.success) {
+        setImagenesOrden(prev => prev.filter(img => img.id !== imagenId));
+        setPopup({
+          isOpen: true,
+          title: 'Imagen Eliminada',
+          message: 'La imagen ha sido eliminada correctamente.',
+          type: 'success',
+          showButtons: true,
+          confirmText: 'Aceptar',
+          onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        });
+      } else {
+        setPopup({
+          isOpen: true,
+          title: 'Error',
+          message: 'Error al eliminar la imagen.',
+          type: 'error',
+          showButtons: true,
+          confirmText: 'Aceptar',
+          onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        });
+      }
+    } catch (error) {
+      console.error('Error eliminando imagen:', error);
+      setPopup({
+        isOpen: true,
+        title: 'Error',
+        message: 'Error al eliminar la imagen.',
+        type: 'error',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      });
+    }
   };
 
   // Función para eliminar nueva imagen
@@ -268,6 +333,19 @@ const EditarOrdenTrabajo = () => {
       const response = await updateOrden(id, orderData);
       
       if (response.ok) {
+        // Subir nuevas imágenes si las hay
+        if (nuevasImagenes.length > 0) {
+          try {
+            for (const imagen of nuevasImagenes) {
+              await subirImagen(id, imagen.file);
+            }
+            console.log('Nuevas imágenes subidas correctamente');
+          } catch (error) {
+            console.error('Error subiendo nuevas imágenes:', error);
+            // No mostrar error aquí, ya que la orden se actualizó correctamente
+          }
+        }
+
         setPopup({
           isOpen: true,
           title: 'Registro Actualizado',
@@ -344,7 +422,7 @@ const EditarOrdenTrabajo = () => {
         </div>
         <div className="orden-no">
           <label>No Orden</label>
-          <p>{formData.paciente ? `Editando orden ${id}` : 'Cargando...'}</p>
+          <p>{formData.correlativo || 'Cargando...'}</p>
         </div>
       </div>
 
@@ -465,6 +543,101 @@ const EditarOrdenTrabajo = () => {
         </div>
       </div>
 
+      {/* Sección de Imágenes */}
+      <div className="orden-imagenes">
+        <h3>Imágenes de la Orden</h3>
+        
+        {/* Imágenes existentes */}
+        {imagenesOrden.length > 0 && (
+          <div className="imagenes-existentes">
+            <h4>Imágenes Actuales:</h4>
+            <div className="imagenes-grid">
+              {imagenesOrden.map((imagen, index) => (
+                <div key={imagen.id || index} className="imagen-item">
+                  <img 
+                    src={imagen.preview} 
+                    alt={`Imagen ${index + 1}`}
+                    className="imagen-preview"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      const errorSpan = document.createElement('span');
+                      errorSpan.textContent = '❌ Imagen no disponible';
+                      errorSpan.style.cssText = 'color: #999; font-size: 12px;';
+                      e.target.parentNode.appendChild(errorSpan);
+                    }}
+                  />
+                  <button 
+                    className="btn-eliminar-imagen"
+                    onClick={() => removeImagenExistente(imagen.id)}
+                    title="Eliminar imagen"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Área para subir nuevas imágenes */}
+        <div className="nuevas-imagenes">
+          <h4>Agregar Nuevas Imágenes:</h4>
+          <div 
+            className={`upload-area ${isDragOver ? 'drag-over' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <input
+              type="file"
+              id="imagenes-input"
+              multiple
+              accept="image/*"
+              onChange={handleFileInput}
+              style={{ display: 'none' }}
+            />
+            <label htmlFor="imagenes-input" className="upload-label">
+              <div className="upload-content">
+                <span className="upload-icon">📷</span>
+                <p>Arrastra imágenes aquí o</p>
+                <button 
+                  type="button" 
+                  className="btn-seleccionar-imagenes"
+                  onClick={() => document.getElementById('imagenes-input').click()}
+                >
+                  Seleccionar Imágenes
+                </button>
+                <p className="upload-hint">Máximo 3 imágenes adicionales</p>
+              </div>
+            </label>
+          </div>
+
+          {/* Preview de nuevas imágenes */}
+          {nuevasImagenes.length > 0 && (
+            <div className="nuevas-imagenes-preview">
+              <h5>Nuevas Imágenes a Subir:</h5>
+              <div className="imagenes-grid">
+                {nuevasImagenes.map((imagen) => (
+                  <div key={imagen.id} className="imagen-item">
+                    <img 
+                      src={imagen.preview} 
+                      alt="Nueva imagen"
+                      className="imagen-preview"
+                    />
+                    <button 
+                      className="btn-eliminar-imagen"
+                      onClick={() => removeNuevaImagen(imagen.id)}
+                      title="Eliminar imagen"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Botones */}
       <div className="agregarorden-actions">

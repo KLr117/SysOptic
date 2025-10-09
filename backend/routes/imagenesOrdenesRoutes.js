@@ -11,7 +11,7 @@ const router = express.Router();
 router.post('/subir', upload.single('imagen'), ImagenesOrdenesController.subirImagen);
 
 // Obtener imágenes de una orden específica
-// router.get('/orden/:ordenId', ImagenesOrdenesController.obtenerImagenesPorOrden);
+router.get('/orden/:ordenId', ImagenesOrdenesController.obtenerImagenesPorOrden);
 
 // Obtener todas las imágenes
 router.get('/todas', ImagenesOrdenesController.obtenerTodasLasImagenes);
