@@ -913,62 +913,151 @@ export default function Expedientes() {
         }}
       />
 
-      {/* 🔹 Modal para visualizar expediente COMPLETO */}
+      {/* 🔹 Modal para visualizar expediente MEJORADO */}
       {expedienteVisualizar && (
-        <div className="modal-overlay">
-          <div className="modal-content modal-expediente">
-            <div className="modal-header">
-              <h3>Información del Expediente</h3>
+        <div className="modal-overlay modal-expediente-overlay">
+          <div className="modal-content modal-expediente-profesional">
+            {/* Header con gradiente y icono */}
+            <div className="modal-header-profesional">
+              <div className="modal-header-content">
+                <div className="modal-icon">
+                  <span className="icon-expediente">📋</span>
+                </div>
+                <div className="modal-title-section">
+                  <h3>Expediente Médico</h3>
+                  <p>Información detallada del paciente</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setExpedienteVisualizar(null)} 
+                className="btn-close-profesional"
+                title="Cerrar"
+              >
+                ✕
+              </button>
             </div>
             
-            <div className="modal-body">
-              <div className="expediente-info-grid">
-                <div className="info-item">
-                  <label>No. Correlativo:</label>
-                  <span>{expedienteVisualizar.correlativo}</span>
+            {/* Body con diseño mejorado - Orden igual al formulario */}
+            <div className="modal-body-profesional">
+              {/* Primera fila: Fecha y Correlativo */}
+              <div className="info-section principal">
+                <div className="section-header">
+                  <h4>📅 Información Principal</h4>
                 </div>
-                <div className="info-item">
-                  <label>Nombre:</label>
-                  <span>{expedienteVisualizar.nombre}</span>
-                </div>
-                <div className="info-item">
-                  <label>Teléfono:</label>
-                  <span>{expedienteVisualizar.telefono}</span>
-                </div>
-                <div className="info-item">
-                  <label>Email:</label>
-                  <span>{expedienteVisualizar.email}</span>
-                </div>
-                <div className="info-item full-width">
-                  <label>Dirección:</label>
-                  <span>{expedienteVisualizar.direccion}</span>
-                </div>
-                <div className="info-item">
-                  <label>Fecha de Registro:</label>
-                  <span>{formatearFecha(expedienteVisualizar.fecha_registro)}</span>
-                </div>
-                <div className="info-item">
-                  <label>Estado:</label>
-                  <span className="estado-activo">Activo</span>
+                <div className="expediente-info-grid-profesional">
+                  <div className="info-card">
+                    <div className="info-icon">📅</div>
+                    <div className="info-content">
+                      <label>Fecha de Registro</label>
+                      <span className="info-value fecha">{formatearFecha(expedienteVisualizar.fecha_registro)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="info-card">
+                    <div className="info-icon">🔢</div>
+                    <div className="info-content">
+                      <label>No. Correlativo</label>
+                      <span className="info-value correlativo">{expedienteVisualizar.correlativo}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-               {/* Información adicional sin fotos */}
-               <div className="info-adicional">
-                 <div className="info-item">
-                   <label>Total de Fotos:</label>
-                   <span>{expedienteVisualizar.foto ? expedienteVisualizar.foto.length : 0}</span>
-                 </div>
-               </div>
+              {/* Segunda fila: Nombre y Teléfono */}
+              <div className="info-section secundaria">
+                <div className="section-header">
+                  <h4>👤 Datos del Paciente</h4>
+                </div>
+                <div className="expediente-info-grid-profesional">
+                  <div className="info-card">
+                    <div className="info-icon">👤</div>
+                    <div className="info-content">
+                      <label>Nombre del Paciente</label>
+                      <span className="info-value nombre">{expedienteVisualizar.nombre}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="info-card">
+                    <div className="info-icon">📞</div>
+                    <div className="info-content">
+                      <label>Teléfono</label>
+                      <span className="info-value telefono">{expedienteVisualizar.telefono}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tercera fila: Correo (ancho completo) */}
+              <div className="info-section terciaria">
+                <div className="section-header">
+                  <h4>📧 Información de Contacto</h4>
+                </div>
+                <div className="expediente-info-grid-profesional">
+                  <div className="info-card full-width">
+                    <div className="info-icon">📧</div>
+                    <div className="info-content">
+                      <label>Correo Electrónico</label>
+                      <span className="info-value email">{expedienteVisualizar.email || 'No especificado'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cuarta fila: Dirección (ancho completo) */}
+              <div className="info-section cuaternaria">
+                <div className="section-header">
+                  <h4>📍 Ubicación</h4>
+                </div>
+                <div className="expediente-info-grid-profesional">
+                  <div className="info-card full-width">
+                    <div className="info-icon">📍</div>
+                    <div className="info-content">
+                      <label>Dirección</label>
+                      <span className="info-value direccion">{expedienteVisualizar.direccion || 'No especificada'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quinta fila: Fotos y Estado */}
+              <div className="info-section quinta">
+                <div className="section-header">
+                  <h4>📸 Información Adicional</h4>
+                </div>
+                <div className="expediente-info-grid-profesional">
+                  <div className="info-card">
+                    <div className="info-icon">📸</div>
+                    <div className="info-content">
+                      <label>Total de Fotos</label>
+                      <span className="info-value fotos">{expedienteVisualizar.foto ? expedienteVisualizar.foto.length : 0}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="info-card">
+                    <div className="info-icon">✅</div>
+                    <div className="info-content">
+                      <label>Estado</label>
+                      <span className="estado-badge-profesional activo">Activo</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="modal-footer">
-              <button 
-                onClick={() => setExpedienteVisualizar(null)} 
-                className="btn-cancel"
-              >
-                Cerrar
-              </button>
+            {/* Footer mejorado */}
+            <div className="modal-footer-profesional">
+              <div className="footer-info">
+                <span className="footer-text">Visual Optics - Sistema de Expedientes</span>
+              </div>
+              <div className="footer-actions">
+                <button 
+                  onClick={() => setExpedienteVisualizar(null)} 
+                  className="btn-cerrar-profesional"
+                >
+                  <span className="btn-icon">✓</span>
+                  Cerrar
+                </button>
+              </div>
             </div>
           </div>
         </div>
