@@ -341,7 +341,7 @@ function TablaOrdenes({ ordenes, loading, sortField, sortDirection, onSort, rend
         <tbody>
           {ordenesOrdenadas.map((orden) => (
             <tr key={orden.pk_id_orden}>
-              <td>#{orden.correlativo || orden.pk_id_orden}</td>
+              <td>{orden.correlativo || orden.pk_id_orden}</td>
               <td>{orden.paciente || 'N/A'}</td>
               <td>{orden.direccion || 'N/A'}</td>
               <td>{orden.correo || 'N/A'}</td>

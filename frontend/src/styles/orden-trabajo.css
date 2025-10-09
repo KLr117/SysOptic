@@ -36,7 +36,7 @@
 }
 
 .orden-table {
-  min-width: 1200px; /* ancho mínimo específico para esta tabla */
+  min-width: 1300px; /* ancho mínimo específico para esta tabla */
   width: 100%;
   border-collapse: collapse;
   background: var(--color-bg-secondary);
@@ -105,6 +105,17 @@
   box-shadow: 0 4px 12px rgba(137, 13, 15, 0.15);
 }
 
+.orden-table tbody tr:hover td {
+  color: #890D0F !important;
+  font-weight: 500;
+}
+
+/* Asegurar que el color vino tinto se aplique en hover */
+.orden-table tbody tr:hover td,
+.orden-table tbody tr:hover td * {
+  color: #890D0F !important;
+}
+
 /* Quitar efecto azul del hover en headers */
 .orden-table thead th:hover {
   background: linear-gradient(135deg, #890D0F, #A01A1C) !important;
@@ -134,8 +145,8 @@
 
 /* Ajustar columna "No Orden" */
 .orden-table thead th:nth-child(2) {
-  min-width: 120px;
-  max-width: 150px;
+  min-width: 150px;
+  max-width: 200px;
   text-align: center;
   font-weight: 600;
   white-space: normal;
@@ -172,13 +183,13 @@
 }
 
 .orden-table tbody td:nth-child(2) {
-  min-width: 120px;
-  max-width: 150px;
+  min-width: 150px;
+  max-width: 200px;
   text-align: center;
   font-weight: 600;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: unset;
 }
 
 /* Estilo específico para el contenido de la columna "No Orden" */
@@ -709,12 +720,12 @@ h2::after {
   border: none;
   border-radius: 8px;
   padding: 8px 12px;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(137, 13, 15, 0.3);
-  min-width: 180px;
+  min-width: 200px;
   text-align: left;
   appearance: none;
   -webkit-appearance: none;
@@ -1274,6 +1285,24 @@ h2::after {
   gap: 8px;
 }
 
+/* Botón para recargar sugerencias */
+.btn-recargar-sugerencias {
+  background: linear-gradient(135deg, #890D0F, #A01A1C);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.btn-recargar-sugerencias:hover {
+  background: linear-gradient(135deg, #A01A1C, #890D0F);
+  transform: scale(1.1);
+}
+
 .sugerencia-orden {
   padding: 6px 10px;
   background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
@@ -1352,6 +1381,49 @@ h2::after {
   }
 }
 
+/* Estilos para la nueva sugerencia de correlativo */
+.sugerencia-correlativo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+  border: 1px solid #f1aeb5;
+  border-radius: 4px;
+  margin-top: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.sugerencia-texto {
+  font-size: 11px;
+  color: #721c24;
+  font-weight: 500;
+}
+
+.btn-aplicar-sugerencia {
+  background: linear-gradient(135deg, #890D0F, #A01A1C);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(137, 13, 15, 0.3);
+}
+
+.btn-aplicar-sugerencia:hover {
+  background: linear-gradient(135deg, #A01A1C, #890D0F);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(137, 13, 15, 0.4);
+}
+
+.btn-aplicar-sugerencia:active {
+  transform: translateY(0);
+}
+
 /* Dark mode para sugerencia */
 .dark-mode .sugerencia-orden {
   background: linear-gradient(135deg, #1e3a8a, #1e40af);
@@ -1377,6 +1449,30 @@ h2::after {
 .dark-mode .btn-usar-sugerencia:hover {
   background: linear-gradient(135deg, #890D0F, #A01A1C);
   box-shadow: 0 4px 8px rgba(137, 13, 15, 0.5);
+}
+
+/* Dark mode para nueva sugerencia de correlativo */
+.dark-mode .sugerencia-correlativo {
+  background: linear-gradient(135deg, #4a1a1a, #5a2a2a);
+  border-color: #6b2c2c;
+  color: #f8d7da;
+}
+
+.dark-mode .sugerencia-texto {
+  color: #f8d7da;
+  font-size: 11px;
+}
+
+.dark-mode .btn-aplicar-sugerencia {
+  background: linear-gradient(135deg, #A01A1C, #890D0F);
+  box-shadow: 0 1px 2px rgba(137, 13, 15, 0.4);
+  font-size: 10px;
+  padding: 3px 8px;
+}
+
+.dark-mode .btn-aplicar-sugerencia:hover {
+  background: linear-gradient(135deg, #890D0F, #A01A1C);
+  box-shadow: 0 2px 4px rgba(137, 13, 15, 0.5);
 }
 
 /* ====== RESPONSIVE PARA TÍTULO ====== */

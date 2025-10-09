@@ -4,13 +4,17 @@ import {
   getOrder, 
   createOrderController, 
   updateOrderController, 
-  deleteOrderController 
+  deleteOrderController,
+  getLastCorrelativoController
 } from "../controllers/OrdenTrabajoController.js";
 
 const router = express.Router();
 
 // GET /api/ordenes - Listar todas las órdenes
 router.get("/", listOrders);
+
+// GET /api/ordenes/ultimo-correlativo - Obtener último correlativo para sugerencia
+router.get("/ultimo-correlativo", getLastCorrelativoController);
 
 // GET /api/ordenes/:id - Obtener una orden específica
 router.get("/:id", getOrder);

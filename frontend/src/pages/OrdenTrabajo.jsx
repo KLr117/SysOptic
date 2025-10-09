@@ -447,16 +447,16 @@ const OrdenTrabajo = () => {
             value={sortOption}
             onChange={(e) => handleSortChange(e.target.value)}
             className="sort-combobox"
-            style={{ width: '180px', fontSize: '14px' }}
+            style={{ width: '200px', fontSize: '12px' }}
             data-tooltip="Selecciona una ordenación rápida"
           >
             <option value="" disabled>Seleccione</option>
             <option value="id"># Ascendente</option>
             <option value="idDesc"># Descendente</option>
-            <option value="fechaRecepcion">Recepción (antigua)</option>
-            <option value="fechaRecepcionDesc">Recepción (reciente)</option>
-            <option value="fechaEntrega">Entrega (antigua)</option>
-            <option value="fechaEntregaDesc">Entrega (reciente)</option>
+            <option value="fechaRecepcion">Fecha Recepción (antigua)</option>
+            <option value="fechaRecepcionDesc">Fecha Recepción (reciente)</option>
+            <option value="fechaEntrega">Fecha Entrega (antigua)</option>
+            <option value="fechaEntregaDesc">Fecha Entrega (reciente)</option>
             <option value="paciente">Paciente A-Z</option>
             <option value="pacienteDesc">Paciente Z-A</option>
           </select>
@@ -513,7 +513,7 @@ const OrdenTrabajo = () => {
               ordenesPaginadas.map((orden) => (
                 <tr key={orden.pk_id_orden}>
                   <td>{orden.pk_id_orden}</td>
-                  <td>#{orden.correlativo}</td>
+                  <td>{orden.correlativo}</td>
                   <td>{orden.paciente}</td>
                   <td>{orden.direccion}</td>
                   <td>{orden.correo}</td>
