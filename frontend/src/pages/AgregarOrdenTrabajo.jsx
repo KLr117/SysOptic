@@ -6,7 +6,7 @@ import "../styles/popup.css";
 import logo from "../assets/logo.jpg"; // Importamos el logo desde src
 import Titulo from "../components/Titulo"; // Importamos el nuevo componente Titulo
 import PopUp from "../components/PopUp";
-import { createOrden, getOrdenes } from "../services/ordenTrabajoService";
+import { createOrden, getOrdenes, getLastCorrelativo } from "../services/ordenTrabajoService";
 import { subirImagen, comprimirImagen } from "../services/imagenesOrdenesService";
 
 
@@ -39,66 +39,35 @@ const AgregarOrdenTrabajo = () => {
   const [imagenes, setImagenes] = useState([]);
   const [isDragOver, setIsDragOver] = useState(false);
   
-  // Estados para sugerencias de correlativos
-  const [sugerenciasCorrelativo, setSugerenciasCorrelativo] = useState([]);
-  const [loadingSugerencias, setLoadingSugerencias] = useState(false);
-  
-  // Cargar sugerencias de correlativos al montar el componente
-  useEffect(() => {
-    const cargarSugerenciasCorrelativo = async () => {
-      try {
-        setLoadingSugerencias(true);
-        const response = await getOrdenes();
-        if (response.ok && response.orders) {
-          // Obtener el último correlativo para sugerir el siguiente
-          const correlativos = response.orders
-            .map(orden => orden.correlativo)
-            .filter(correlativo => correlativo)
-            .sort((a, b) => {
-              // Ordenar numéricamente por el valor del correlativo
-              const numA = parseInt(a.replace(/\D/g, '')) || 0;
-              const numB = parseInt(b.replace(/\D/g, '')) || 0;
-              return numB - numA; // Mayor a menor para obtener el más reciente
-            });
-          
-          if (correlativos.length > 0) {
-            const ultimoCorrelativo = correlativos[0];
-            console.log('Correlativos encontrados:', correlativos);
-            console.log('Último correlativo:', ultimoCorrelativo);
-            
-            // Extraer solo números del correlativo
-            const numeros = ultimoCorrelativo.replace(/\D/g, '');
-            if (numeros) {
-              const numeroSiguiente = parseInt(numeros) + 1;
-              
-              // Determinar el número de ceros a la izquierda basado en el formato original
-              const cerosIniciales = ultimoCorrelativo.match(/^0+/);
-              const numCeros = cerosIniciales ? Math.max(0, cerosIniciales[0].length - 1) : 0;
-              
-              // Formatear con un cero menos que el original
-              const siguienteFormateado = numeroSiguiente.toString().padStart(numCeros + numeros.length, '0');
-              console.log('Siguiente correlativo sugerido:', siguienteFormateado);
-              setSugerenciasCorrelativo([siguienteFormateado]);
-            } else {
-              // Si no tiene números, sugerir 001
-              setSugerenciasCorrelativo(['001']);
-            }
-          } else {
-            // Si no hay correlativos, sugerir empezar con 001
-            setSugerenciasCorrelativo(['001']);
-          }
-        }
-      } catch (error) {
-        console.error('Error cargando sugerencias de correlativo:', error);
-        // En caso de error, sugerir 001
-        setSugerenciasCorrelativo(['001']);
-      } finally {
-        setLoadingSugerencias(false);
+  // Estado para sugerencia de correlativo
+  const [sugerenciaCorrelativo, setSugerenciaCorrelativo] = useState('');
+
+  // Función para obtener la sugerencia de correlativo
+  const obtenerSugerenciaCorrelativo = async () => {
+    try {
+      const response = await getLastCorrelativo();
+      if (response.ok) {
+        setSugerenciaCorrelativo(response.sugerencia);
       }
-    };
-    
-    cargarSugerenciasCorrelativo();
+    } catch (error) {
+      console.error('Error al obtener sugerencia de correlativo:', error);
+    }
+  };
+
+  // Efecto para cargar la sugerencia al montar el componente
+  useEffect(() => {
+    obtenerSugerenciaCorrelativo();
   }, []);
+
+  // Función para aplicar la sugerencia de correlativo
+  const aplicarSugerencia = () => {
+    if (sugerenciaCorrelativo) {
+      setFormData(prev => ({
+        ...prev,
+        numero_orden: sugerenciaCorrelativo
+      }));
+    }
+  };
 
   // Función para comprimir imagen
   const compressImage = (file, maxWidth = 800, quality = 0.8) => {
@@ -421,6 +390,12 @@ const AgregarOrdenTrabajo = () => {
           preview: img.preview
         }))
       };
+      
+      console.log('=== DATOS A ENVIAR ===');
+      console.log('Correlativo a enviar:', orderData.correlativo);
+      console.log('Tipo:', typeof orderData.correlativo);
+      console.log('Longitud:', orderData.correlativo.length);
+      console.log('========================');
 
       const response = await createOrden(orderData);
       
@@ -521,33 +496,20 @@ const AgregarOrdenTrabajo = () => {
             </div>
           </div>
           
-          {/* Sugerencias de correlativo */}
-          {sugerenciasCorrelativo.length > 0 && (
-            <div className="sugerencias-correlativo">
-              <div className="sugerencias-header">
-                <span className="sugerencias-icon">💡</span>
-                <span className="sugerencias-title">Sugerencia: Ingrese el correlativo</span>
-              </div>
-              <div className="sugerencias-list">
-                {sugerenciasCorrelativo.map((correlativo, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    className="sugerencia-item"
-                    onClick={() => setFormData(prev => ({ ...prev, numero_orden: correlativo }))}
-                    title={`Usar correlativo sugerido: ${correlativo}`}
-                  >
-                    #{correlativo}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {loadingSugerencias && (
-            <div className="sugerencias-loading">
-              <span className="loading-spinner"></span>
-              <span>Cargando sugerencias...</span>
+          {/* Sugerencia de correlativo */}
+          {sugerenciaCorrelativo && (
+            <div className="sugerencia-correlativo">
+              <span className="sugerencia-texto">
+                💡 Sugerencia: {sugerenciaCorrelativo}
+              </span>
+              <button 
+                type="button"
+                onClick={aplicarSugerencia}
+                className="btn-aplicar-sugerencia"
+                title="Hacer clic para usar esta sugerencia"
+              >
+                Usar
+              </button>
             </div>
           )}
         </div>

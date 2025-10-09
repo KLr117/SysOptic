@@ -814,10 +814,7 @@ body:not(.dark-mode) .welcome-message {
   z-index: 1000;
 }
 
-.dashboard-scroll-container:hover::before,
-.dashboard-scroll-container:hover::after {
-  opacity: 1;
-}
+/* Efecto hover eliminado */
 
 
 
@@ -923,8 +920,8 @@ body:not(.dark-mode) .welcome-message {
 }
 
 .sortable-header:hover {
-  background-color: var(--color-hover);
-  color: var(--color-primary);
+  background-color: var(--color-tablas-header-bg);
+  color: var(--color-tablas-header-text);
   transform: translateY(-1px);
 }
 
@@ -964,8 +961,8 @@ body:not(.dark-mode) .welcome-message {
 
 /* Mejorar visibilidad en tema claro */
 body:not(.dark-mode) .sortable-header:hover {
-  background-color: rgba(59, 130, 246, 0.1);
-  color: #1e40af;
+  background-color: var(--color-tablas-header-bg);
+  color: var(--color-tablas-header-text);
 }
 
 /* Responsive para headers ordenables */

@@ -31,3 +31,9 @@ export const deleteOrden = async (id) => {
   const res = await axios.delete(`${API_URL}/${id}`);
   return res.data;
 };
+
+// Obtener último correlativo para sugerencia
+export const getLastCorrelativo = async () => {
+  const res = await axios.get(`${API_URL}/ultimo-correlativo`);
+  return res.data;
+};

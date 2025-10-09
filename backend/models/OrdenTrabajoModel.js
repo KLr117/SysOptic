@@ -57,9 +57,21 @@ export const createOrder = async (orderData) => {
     imagenes
   } = orderData;
 
+  console.log('=== DATOS EN MODELO ===');
+  console.log('Correlativo:', correlativo);
+  console.log('Paciente:', paciente);
+  console.log('Teléfono:', telefono);
+  console.log('Total:', total);
+  console.log('Adelanto:', adelanto);
+  console.log('Saldo:', saldo);
+  console.log('Imágenes:', imagenes);
+  console.log('=====================');
+
   // Determinar si tiene imágenes
   const tieneImagenes = imagenes && imagenes.length > 0;
+  console.log('Tiene imágenes:', tieneImagenes);
 
+  console.log('🚀 Ejecutando query INSERT...');
   const [result] = await pool.query(`
     INSERT INTO tbl_ordenes 
     (correlativo, paciente, direccion, correo, telefono, fecha_recepcion, fecha_entrega, total, adelanto, saldo, imagenes)
@@ -69,6 +81,7 @@ export const createOrder = async (orderData) => {
     total, adelanto, saldo, tieneImagenes
   ]);
 
+  console.log('✅ Query ejecutada exitosamente. ID insertado:', result.insertId);
   return result.insertId;
 };
 
@@ -117,4 +130,16 @@ export const deleteOrder = async (id) => {
   `, [id]);
 
   return result.affectedRows > 0;
+};
+
+// Obtener el último correlativo para sugerir el siguiente
+export const getLastCorrelativo = async () => {
+  const [rows] = await pool.query(`
+    SELECT correlativo 
+    FROM tbl_ordenes 
+    ORDER BY pk_id_orden DESC 
+    LIMIT 1
+  `);
+  
+  return rows.length > 0 ? rows[0].correlativo : null;
 };
