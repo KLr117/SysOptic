@@ -148,7 +148,8 @@ export const getPromosActivasHoy = async (hoyISO /* 'YYYY-MM-DD' */) => {
       cuerpo_email,
       fk_id_modulo_notificacion,
       fecha_objetivo,  -- inicio promo
-      fecha_fin
+      fecha_fin,
+      enviar_email
     FROM tbl_notificaciones
     WHERE fk_id_categoria_notificacion = 2         -- Promoción
       AND fk_id_estado_notificacion = 1            -- Activa
@@ -242,3 +243,43 @@ export const registrarEnvio = async (idNotificacion, correo) => {
   `;
   await pool.query(query, [idNotificacion, correo]);
 };
+
+// 📅 Obtener correos de recordatorios según módulo y tipo_intervalo
+export const getCorreosRecordatorioPorNotificacion = async (noti) => {
+  if (noti.fk_id_modulo_notificacion === 1) {
+    // 🩺 EXPEDIENTES → después de registro
+    const sql = `
+      SELECT LOWER(TRIM(email)) AS correo
+      FROM tbl_expedientes
+      WHERE email IS NOT NULL AND email <> ''
+        AND DATE_ADD(fecha_registro, INTERVAL ? DAY) = CURDATE()
+    `;
+    const [rows] = await pool.query(sql, [noti.intervalo_dias]);
+    return rows.map((r) => r.correo);
+  }
+
+  if (noti.fk_id_modulo_notificacion === 2) {
+    // 📦 ÓRDENES → después de recepción o antes de entrega
+    let sql = "";
+    if (noti.tipo_intervalo === "despues_recepcion") {
+      sql = `
+        SELECT LOWER(TRIM(correo)) AS correo
+        FROM tbl_ordenes
+        WHERE correo IS NOT NULL AND correo <> ''
+          AND DATE_ADD(fecha_recepcion, INTERVAL ? DAY) = CURDATE()
+      `;
+    } else if (noti.tipo_intervalo === "antes_entrega") {
+      sql = `
+        SELECT LOWER(TRIM(correo)) AS correo
+        FROM tbl_ordenes
+        WHERE correo IS NOT NULL AND correo <> ''
+          AND DATE_SUB(fecha_entrega, INTERVAL ? DAY) = CURDATE()
+      `;
+    }
+    const [rows] = await pool.query(sql, [noti.intervalo_dias]);
+    return rows.map((r) => r.correo);
+  }
+
+  return [];
+};
+
