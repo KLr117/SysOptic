@@ -1,36 +1,4 @@
-import { API_URL } from "./api.js";
-import axios from 'axios';
-
-// Crear instancia de axios con configuración base
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// Interceptor para agregar token si está disponible
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // config.headers.Authorization = `Bearer ${token}`; // Temporalmente deshabilitado
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor para manejar respuestas
-apiClient.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    console.error('Error en la petición:', error);
-    throw error;
-  }
-);
+import { apiClient, API_URL } from './api.js';
 
 // ===== FUNCIONES GENERALES PARA MANEJO DE IMÁGENES =====
 /*** Subir imagen genérica
@@ -42,10 +10,10 @@ export const subirImagenGenerica = async (formData, endpoint) => {
   try {
     const response = await apiClient.post(endpoint, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     });
-    return response;
+    return response.data;
   } catch (error) {
     console.error('Error subiendo imagen:', error);
     throw new Error(`Error al subir imagen: ${error.message}`);
@@ -60,17 +28,18 @@ export const subirImagenGenerica = async (formData, endpoint) => {
 export const obtenerImagenesPorEntidad = async (entityType, entityId) => {
   try {
     const response = await apiClient.get(`/api/imagenes-${entityType}/entidad/${entityId}`);
-    
+    const data = response.data;
+
     // Agregar URL completa para cada imagen
-    if (response.success && response.imagenes) {
-      response.imagenes = response.imagenes.map(imagen => ({
+    if (data.success && data.imagenes) {
+      data.imagenes = data.imagenes.map((imagen) => ({
         ...imagen,
         url: `${API_URL}/api/imagenes-${entityType}/servir/${imagen.id}`,
-        urlPorRuta: `${API_URL}/api/imagenes-${entityType}/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`
+        urlPorRuta: `${API_URL}/api/imagenes-${entityType}/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`,
       }));
     }
-    
-    return response;
+
+    return data;
   } catch (error) {
     console.error(`Error obteniendo imágenes por ${entityType}:`, error);
     throw new Error(`Error al obtener imágenes: ${error.message}`);
@@ -84,17 +53,18 @@ export const obtenerImagenesPorEntidad = async (entityType, entityId) => {
 export const obtenerTodasLasImagenesPorTipo = async (entityType) => {
   try {
     const response = await apiClient.get(`/api/imagenes-${entityType}/todas`);
-    
+    const data = response.data;
+
     // Agregar URL completa para cada imagen
-    if (response.success && response.imagenes) {
-      response.imagenes = response.imagenes.map(imagen => ({
+    if (data.success && data.imagenes) {
+      data.imagenes = data.imagenes.map((imagen) => ({
         ...imagen,
         url: `${API_URL}/api/imagenes-${entityType}/servir/${imagen.id}`,
-        urlPorRuta: `${API_URL}/api/imagenes-${entityType}/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`
+        urlPorRuta: `${API_URL}/api/imagenes-${entityType}/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`,
       }));
     }
-    
-    return response;
+
+    return data;
   } catch (error) {
     console.error(`Error obteniendo todas las imágenes de ${entityType}:`, error);
     throw new Error(`Error al obtener imágenes: ${error.message}`);
@@ -109,7 +79,7 @@ export const obtenerTodasLasImagenesPorTipo = async (entityType) => {
 export const eliminarImagenGenerica = async (entityType, imagenId) => {
   try {
     const response = await apiClient.delete(`/api/imagenes-${entityType}/${imagenId}`);
-    return response;
+    return response.data;
   } catch (error) {
     console.error(`Error eliminando imagen de ${entityType}:`, error);
     throw new Error(`Error al eliminar imagen: ${error.message}`);
@@ -124,7 +94,7 @@ export const eliminarImagenGenerica = async (entityType, imagenId) => {
 export const contarImagenesPorEntidad = async (entityType, entityId) => {
   try {
     const response = await apiClient.get(`/api/imagenes-${entityType}/contar/${entityId}`);
-    return response;
+    return response.data;
   } catch (error) {
     console.error(`Error contando imágenes por ${entityType}:`, error);
     throw new Error(`Error al contar imágenes: ${error.message}`);
@@ -236,14 +206,14 @@ export const validarImagen = (file, maxSizeMB = 5) => {
   if (!tiposPermitidos.includes(file.type)) {
     return {
       isValid: false,
-      error: `Tipo de archivo no permitido. Use: ${tiposPermitidos.join(', ')}`
+      error: `Tipo de archivo no permitido. Use: ${tiposPermitidos.join(', ')}`,
     };
   }
 
   if (file.size > maxSizeBytes) {
     return {
       isValid: false,
-      error: `El archivo es demasiado grande. Máximo: ${maxSizeMB}MB`
+      error: `El archivo es demasiado grande. Máximo: ${maxSizeMB}MB`,
     };
   }
 
@@ -289,23 +259,23 @@ export default {
   obtenerTodasLasImagenesPorTipo,
   eliminarImagenGenerica,
   contarImagenesPorEntidad,
-  
+
   // Funciones específicas para órdenes
   subirImagenOrden,
   obtenerImagenesOrden,
   eliminarImagenOrden,
   contarImagenesOrden,
-  
+
   // Funciones específicas para expedientes
   subirImagenExpediente,
   obtenerImagenesExpediente,
   eliminarImagenExpediente,
   contarImagenesExpediente,
-  
+
   // Funciones de utilidad
   comprimirImagen,
   validarImagen,
   blobToFile,
   previsualizarImagen,
-  limpiarPrevisualizacion
+  limpiarPrevisualizacion,
 };
