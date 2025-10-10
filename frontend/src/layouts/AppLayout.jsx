@@ -1,18 +1,19 @@
-import React from "react";
-import { NavLink, Outlet } from "react-router-dom";
-import { logout, getUser } from "../utils/Auth";
-import { useTheme } from "../context/ThemeContext"; 
-import "../styles/applayout.css";
-import "../styles/theme.css"; // estilos de dark/light
-import "../styles/theme-switch.css"; // estilos del botón flotante
+import React from 'react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { logout, getUser } from '../utils/Auth';
+import { useTheme } from '../context/ThemeContext';
+import '../styles/applayout.css';
+import '../styles/theme.css';
+import '../styles/theme-switch.css';
 
 export default function AppLayout() {
   const user = getUser();
   const { isDarkMode, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    window.location.href = "/login";
+    navigate('/login');
   };
 
   return (
@@ -24,7 +25,7 @@ export default function AppLayout() {
         <nav className="app-nav">
           <Item to="/dashboard" label="Dashboard" />
           <Item to="/admin" label="Panel de Administracion" />
-          <Item to="/ordenes" label="Orden de Trabajo" />  
+          <Item to="/ordenes" label="Orden de Trabajo" />
           <Item to="/expedientes" label="Expedientes de Pacientes" />
           <Item to="/notificaciones" label="Notificaciones" />
         </nav>
@@ -34,11 +35,9 @@ export default function AppLayout() {
         <header className="app-header">
           <div className="user-info">
             <div className="user-avatar">
-              {user ? user.username.charAt(0).toUpperCase() : "U"}
+              {user ? `${user.firstName[0]}${user.lastName?.[0] || ''}`.toUpperCase() : 'U'}
             </div>
-            <span>
-              {user ? `Hola, ${user.username}` : "Panel"}
-            </span>
+            <span>{user ? `Hola, ${user.firstName} ${user.lastName}` : 'Panel'}</span>
           </div>
           <button onClick={handleLogout} className="logout-btn">
             Cerrar sesión
@@ -53,24 +52,17 @@ export default function AppLayout() {
       {/* Botón flotante de tema con etiqueta */}
       <div className="theme-switch-wrapper">
         <button onClick={toggleTheme} className="theme-switch">
-          {isDarkMode ? "☀️" : "🌙"}
-          <span className="theme-label">
-            {isDarkMode ? "Modo claro" : "Modo oscuro"}
-          </span>
+          {isDarkMode ? '☀️' : '🌙'}
+          <span className="theme-label">{isDarkMode ? 'Modo claro' : 'Modo oscuro'}</span>
         </button>
       </div>
-    </div>  
+    </div>
   );
 }
 
 function Item({ to, label }) {
   return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `nav-item ${isActive ? "active" : ""}`
-      }
-    >
+    <NavLink to={to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
       {label}
     </NavLink>
   );

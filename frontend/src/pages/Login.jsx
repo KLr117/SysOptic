@@ -1,54 +1,55 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import InputField from "../components/InputField";
-import "../styles/login.css";
-import logo from "../assets/logo.jpg";
-import axios from "axios";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import InputField from '../components/InputField';
+import '../styles/login.css';
+import logo from '../assets/logo.jpg';
+import axios from 'axios';
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Form submitted");
-    setError("");
+    setError('');
 
-   try {
-      // Llamada al backend para login
-      const res = await axios.post("http://localhost:4000/api/login", {
+    try {
+      const res = await axios.post('http://localhost:4000/api/login', {
         username,
         password,
       });
 
       if (res.data.ok) {
-        const user = res.data.user;
+        const { token, user } = res.data;
 
-        // Guardar token o información de sesión si es necesario
-        localStorage.setItem("user", JSON.stringify(user));
+        if (!token) {
+          setError('Token no recibido del servidor');
+          return;
+        }
 
-        // Redirección según rol
-        switch (user.fk_id_role) {
-          case 1: // Administrador
-            navigate("/dashboard");
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+
+        switch (user.roleId) {
+          case 1:
+            navigate('/dashboard');
             break;
-          case 2: // Optometrista
-            navigate("/expedientes");
+          case 2:
+            navigate('/expedientes');
             break;
-          case 3: // Atención Ordenes
-            navigate("/ordenes");
+          case 3:
+            navigate('/ordenes');
             break;
           default:
-            navigate("/dashboard");
+            navigate('/dashboard');
         }
       } else {
-        setError(res.data.message || "Usuario o contraseña incorrectos");
+        setError(res.data.message || 'Usuario o contraseña incorrectos');
       }
     } catch (err) {
-      console.error(err);
-      setError("Error al conectar con el servidor");
+      setError('Error al conectar con el servidor');
     }
   };
 
@@ -60,13 +61,13 @@ export default function Login() {
       <div className="decoration-circle circle-3"></div>
       <div className="decoration-circle circle-4"></div>
       <div className="decoration-circle circle-5"></div>
-      
+
       <div className="decoration-glasses glasses-1">👓</div>
       <div className="decoration-glasses glasses-2">🥽</div>
       <div className="decoration-glasses glasses-3">👓</div>
       <div className="decoration-glasses glasses-4">🥽</div>
       <div className="decoration-glasses glasses-5">👓</div>
-      
+
       <div className="decoration-tools tool-1">🔧</div>
       <div className="decoration-tools tool-2">⚙️</div>
       <div className="decoration-tools tool-3">🔨</div>
@@ -81,12 +82,8 @@ export default function Login() {
       <div className="login-right">
         <form onSubmit={handleLogin} className="login-form">
           <h2 className="login-title">Iniciar Sesión</h2>
-          
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+
+          {error && <div className="error-message">{error}</div>}
 
           <InputField
             label="Usuario"
@@ -116,5 +113,3 @@ export default function Login() {
     </div>
   );
 }
-
-
