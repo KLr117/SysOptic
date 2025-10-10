@@ -7,29 +7,26 @@ import {
   changePassword,
   deleteUser,
 } from "../controllers/UsersController.js";
-import { authMiddleware, authorizeRoles } from "../middlewares/Auth.js";
+import { authorizeModules } from "../middlewares/Auth.js";
 
 const router = express.Router();
 
-// 🧩 Todas las rutas requieren autenticación
-router.use(authMiddleware);
-
 // ✅ Listar todos los usuarios (solo Admin)
-router.get("/", authorizeRoles("Administrador"), getUsers);
+router.get("/", authorizeModules("control_admin"), getUsers);
 
 // ✅ Obtener un usuario específico (solo Admin)
-router.get("/:id", authorizeRoles("Administrador"), getUser);
+router.get("/:id", authorizeModules("control_admin"), getUser);
 
 // ✅ Crear nuevo usuario (solo Admin)
-router.post("/", authorizeRoles("Administrador"), createUser);
+router.post("/", authorizeModules("control_admin"), createUser);
 
 // ✅ Actualizar datos de usuario (solo Admin)
-router.put("/:id", authorizeRoles("Administrador"), updateUser);
+router.put("/:id", authorizeModules("control_admin"), updateUser);
 
 // ✅ Cambiar contraseña (solo Admin)
-router.put("/:id/password", authorizeRoles("Administrador"), changePassword);
+router.put("/:id/password", authorizeModules("control_admin"), changePassword);
 
 // ✅ Eliminar usuario (solo Admin)
-router.delete("/:id", authorizeRoles("Administrador"), deleteUser);
+router.delete("/:id", authorizeModules("control_admin"), deleteUser);
 
 export default router;

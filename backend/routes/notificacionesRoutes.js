@@ -7,19 +7,47 @@ import {
   deleteNotificacion,
   cambiarEstadoNotificacion,
   procesarPromocionesActivas,
-  procesarRecordatoriosActivos
+  procesarRecordatoriosActivos,
 } from "../controllers/notificacionesController.js";
+import { authorizeModules } from "../middlewares/Auth.js";
 
 const router = express.Router();
 
-router.post("/", createNotificacion);
-router.get("/", getNotificaciones);
-router.get("/:id", getNotificacionById);
-router.put("/:id", updateNotificacion);
-router.delete("/:id", deleteNotificacion);
-router.put("/estado/:id", cambiarEstadoNotificacion);
-router.post("/procesar-promociones", procesarPromocionesActivas);
-router.post("/procesar-recordatorios", procesarRecordatoriosActivos);
+router.post(
+  "/",
+  authorizeModules("control_notificaciones"),
+  createNotificacion
+);
+router.get("/", authorizeModules("control_notificaciones"), getNotificaciones);
+router.get(
+  "/:id",
+  authorizeModules("control_notificaciones"),
+  getNotificacionById
+);
+router.put(
+  "/:id",
+  authorizeModules("control_notificaciones"),
+  updateNotificacion
+);
+router.delete(
+  "/:id",
+  authorizeModules("control_notificaciones"),
+  deleteNotificacion
+);
+router.put(
+  "/estado/:id",
+  authorizeModules("control_notificaciones"),
+  cambiarEstadoNotificacion
+);
+router.post(
+  "/procesar-promociones",
+  authorizeModules("control_notificaciones"),
+  procesarPromocionesActivas
+);
+router.post(
+  "/procesar-recordatorios",
+  authorizeModules("control_notificaciones"),
+  procesarRecordatoriosActivos
+);
 
 export default router;
-// Rutas de Notificaciones

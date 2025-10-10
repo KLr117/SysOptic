@@ -1,31 +1,53 @@
-import express from 'express';
-import { ImagenesOrdenesController, upload } from '../controllers/imagenesOrdenesController.js';
-import { authMiddleware } from '../middlewares/Auth.js';
+import express from "express";
+import {
+  ImagenesOrdenesController,
+  upload,
+} from "../controllers/imagenesOrdenesController.js";
+import { authorizeModules } from "../middlewares/Auth.js";
 
 const router = express.Router();
 
-// Middleware de autenticación para todas las rutas
-// router.use(authMiddleware); // Temporalmente deshabilitado para pruebas
-
 // Subir imagen
-router.post('/subir', upload.single('imagen'), ImagenesOrdenesController.subirImagen);
+router.post(
+  "/subir",
+  authorizeModules("control_ordenes"),
+  upload.single("imagen"),
+  ImagenesOrdenesController.subirImagen
+);
 
 // Obtener imágenes de una orden específica
-router.get('/orden/:ordenId', ImagenesOrdenesController.obtenerImagenesPorOrden);
+router.get(
+  "/orden/:ordenId",
+  authorizeModules("control_ordenes"),
+  ImagenesOrdenesController.obtenerImagenesPorOrden
+);
 
 // Obtener todas las imágenes
-router.get('/todas', ImagenesOrdenesController.obtenerTodasLasImagenes);
+router.get(
+  "/todas",
+  authorizeModules("control_ordenes"),
+  ImagenesOrdenesController.obtenerTodasLasImagenes
+);
 
 // Contar imágenes por orden
-router.get('/contar/:ordenId', ImagenesOrdenesController.contarImagenesPorOrden);
+router.get(
+  "/contar/:ordenId",
+  authorizeModules("control_ordenes"),
+  ImagenesOrdenesController.contarImagenesPorOrden
+);
 
 // Servir imagen por ID
-router.get('/servir/:imagenId', ImagenesOrdenesController.servirImagen);
-
-// Servir imagen por ruta (para rutas codificadas) - Temporalmente deshabilitado
-// router.get('/servir-ruta/*', ImagenesOrdenesController.servirImagenPorRuta);
+router.get(
+  "/servir/:imagenId",
+  authorizeModules("control_ordenes"),
+  ImagenesOrdenesController.servirImagen
+);
 
 // Eliminar imagen (debe ir al final para evitar conflictos)
-router.delete('/:imagenId', ImagenesOrdenesController.eliminarImagen);
+router.delete(
+  "/:imagenId",
+  authorizeModules("control_ordenes"),
+  ImagenesOrdenesController.eliminarImagen
+);
 
 export default router;
