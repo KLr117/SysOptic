@@ -15,39 +15,34 @@ INSERT INTO tbl_roles (nombre_role) VALUES
 -- ==============================================
 INSERT INTO tbl_users (first_name, last_name, username, password, fk_id_role)
 VALUES 
-('Kevin', 'L', 'admin', '$2b$10$xHDvN6J5jlf12BvV2wNCJulgjxOCuZV9dwnY92k659d6y932j6Aou', 1),          -- Rol Administrador
-('Wendy', 'S', 'optometrista', '$2b$10$yyTcBQm9oj8l/hx2viaHie/qxwMpYVbi5qZZN29i5z0E/obQcDPQm', 2), 		-- Rol Optometrista
-('Kateryn', 'DL', 'ordenes', '$2b$10$9QoKox00HuFQDGIvJwQNZuADotcPqgjB8XUp0lcZgr7wTlJU5nPmy', 3);       -- Rol Atención Ordenes
+('Kevin', 'López', 'admin', '$2b$10$xHDvN6J5jlf12BvV2wNCJulgjxOCuZV9dwnY92k659d6y932j6Aou', 1);          -- Rol Administrador
 
 -- ==============================================
--- INSERTS DE PRUEBA: PERMISOS
+-- INSERTS DE PERMISOS
 -- ==============================================
 INSERT INTO tbl_permisos (nombre_permiso, descripcion) VALUES
-('ver_expedientes', 'Permite ver expedientes'),
-('crear_expedientes', 'Permite crear expedientes'),
-('ver_ordenes', 'Permite ver órdenes'),
-('crear_ordenes', 'Permite crear órdenes'),
-('ver_notificaciones', 'Permite ver notificaciones'),
-('crear_notificaciones', 'Permite crear notificaciones'),
-('administrar_usuarios', 'Permite administrar usuarios y roles');
+('control_expedientes', 'Acceso completo al módulo de expedientes'),
+('control_ordenes', 'Acceso completo al módulo de órdenes de trabajo'),
+('control_notificaciones', 'Acceso completo al módulo de notificaciones'),
+('control_admin', 'Acceso completo al panel administrativo y gestión de usuarios');
 
 -- ==============================================
--- INSERTS DE PRUEBA: ROLES_PERMISOS
+-- INSERTS DE: ROLES_PERMISOS
 -- ==============================================
 
--- Rol Administrador (todos los permisos)
+-- Rol 1: Administrador → todos los permisos
 INSERT INTO tbl_roles_permisos (fk_id_role, fk_id_permiso)
 SELECT 1, pk_id_permiso FROM tbl_permisos;
 
--- Rol Optometrista (expedientes + notificaciones)
+-- Rol 2: Optometrista → solo expedientes
 INSERT INTO tbl_roles_permisos (fk_id_role, fk_id_permiso)
 SELECT 2, pk_id_permiso FROM tbl_permisos
-WHERE nombre_permiso IN ('ver_expedientes','crear_expedientes','ver_notificaciones','crear_notificaciones');
+WHERE nombre_permiso IN ('control_expedientes');
 
--- Rol Atención Ordenes (órdenes + notificaciones)
+-- Rol 3: Atención Órdenes → solo órdenes
 INSERT INTO tbl_roles_permisos (fk_id_role, fk_id_permiso)
 SELECT 3, pk_id_permiso FROM tbl_permisos
-WHERE nombre_permiso IN ('ver_ordenes','crear_ordenes','ver_notificaciones','crear_notificaciones');
+WHERE nombre_permiso IN ('control_ordenes');
 
 -- ==============================================
 -- INSERTS: CATEGORIAS DE NOTIFICACION

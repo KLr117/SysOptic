@@ -10,6 +10,7 @@ import notificacionesRoutes from "../routes/notificacionesRoutes.js";
 import imagenesOrdenesRoutes from "../routes/imagenesOrdenesRoutes.js";
 import mailTestRoutes from "../routes/mailTestRoutes.js";
 import usersRoutes from "../routes/UsersRoutes.js";
+import { authMiddleware } from "../middlewares/Auth.js";
 
 import {
   procesarPromocionesActivas,
@@ -22,19 +23,33 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-// Registrar rutas
+// ======================
+// 🌐 Rutas públicas
+// ======================
 app.use("/api", authRoutes);
+app.use("/api/mail", mailTestRoutes);
+
+// ======================
+// 🔒 Middleware global de autenticación JWT
+// ======================
+app.use("/api", authMiddleware);
+
+// ======================
+// 🔐 Rutas protegidas
+// ======================
 app.use("/api/bitacora", bitacoraRoutes);
 app.use("/api", systemRoutes);
 app.use("/api/ordenes", ordenTrabajoRoutes);
 app.use("/api/expedientes", expedientesRoutes);
 app.use("/api/notificaciones", notificacionesRoutes);
 app.use("/api/imagenes-ordenes", imagenesOrdenesRoutes);
-// Servir archivos estáticos (imágenes)
+app.use("/api/users", usersRoutes);
+
+// ======================
+// 📁 Archivos estáticos
+// ======================
 app.use("/uploads", express.static("uploads"));
 app.use("/public", express.static("public"));
-app.use("/api/mail", mailTestRoutes);
-app.use("/api/users", usersRoutes);
 
 app.listen(PORT, () => {
   console.log(`✅ Backend corriendo en http://localhost:${PORT}`);

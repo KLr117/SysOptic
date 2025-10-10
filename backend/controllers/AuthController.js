@@ -5,6 +5,7 @@ import {
   addBitacoraEntry,
   getUserById,
 } from "../models/UserModel.js";
+import { getPermisosPorUsuario } from "../models/PermisosModel.js";
 
 // POST /api/login
 export const login = async (req, res) => {
@@ -27,12 +28,16 @@ export const login = async (req, res) => {
         .status(401)
         .json({ ok: false, message: "Contraseña incorrecta" });
 
-    // ✅ Generar token JWT
+    // Obtener permisos del usuario
+    const permisos = await getPermisosPorUsuario(user.pk_id_user);
+
+    // ✅ Generar token JWT con permisos
     const token = signToken({
       id: user.pk_id_user,
       username: user.username,
       roleId: user.fk_id_role,
       roleName: user.nombre_role,
+      permisos,
     });
 
     await addBitacoraEntry(user.pk_id_user, "Inicio de sesión");
@@ -48,6 +53,7 @@ export const login = async (req, res) => {
         lastName: user.last_name,
         roleId: user.fk_id_role,
         roleName: user.nombre_role,
+        permisos,
       },
     });
   } catch (error) {
