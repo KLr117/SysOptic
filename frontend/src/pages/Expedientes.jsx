@@ -42,7 +42,7 @@ export default function Expedientes() {
     telefono: "",
     direccion: "",
     email: "",
-    fecha_registro: new Date().toISOString().split("T")[0],
+    fecha_registro: "", // ✅ Sin fecha sugerida - el cliente debe ingresarla
     foto: [],
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,8 +64,9 @@ export default function Expedientes() {
   const [popupType, setPopupType] = useState("success"); // "success", "error", "warning", "info"
   
    // Estados para sugerencias de correlativo
-   const [sugerenciasCorrelativo, setSugerenciasCorrelativo] = useState([]);
-   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
+  const [sugerenciasCorrelativo, setSugerenciasCorrelativo] = useState([]);
+  const [loadingSugerencias, setLoadingSugerencias] = useState(false);
+  const [ultimoCorrelativoIngresado, setUltimoCorrelativoIngresado] = useState(null);
    
    // Estados para modal de imágenes
    const [isModalOpen, setIsModalOpen] = useState(false);
@@ -127,6 +128,17 @@ export default function Expedientes() {
     const cargarSugerenciasCorrelativo = async () => {
       try {
         setLoadingSugerencias(true);
+        
+        // Si hay un último correlativo ingresado, usarlo como base
+        if (ultimoCorrelativoIngresado) {
+          const numeroIngresado = parseInt(ultimoCorrelativoIngresado);
+          const siguienteSugerencia = (numeroIngresado + 1).toString();
+          setSugerenciasCorrelativo([siguienteSugerencia]);
+          console.log('Sugerencia basada en último dato ingresado:', siguienteSugerencia);
+          return;
+        }
+        
+        // Si no hay último dato ingresado, usar la lógica original
         const data = await getExpedientes();
          if (Array.isArray(data)) {
            // Obtener todos los correlativos numéricos para encontrar el siguiente consecutivo
@@ -170,7 +182,48 @@ export default function Expedientes() {
     };
     
      cargarSugerenciasCorrelativo();
-   }, []);
+   }, [ultimoCorrelativoIngresado]);
+
+   // 🔹 Función para formatear fecha para input type="date" (YYYY-MM-DD)
+   const formatearFechaParaInput = (fecha) => {
+     if (!fecha) return '';
+     
+     try {
+       // Si viene en formato ISO completo
+       if (fecha.includes('T')) {
+         const fechaObj = new Date(fecha);
+         const año = fechaObj.getFullYear();
+         const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
+         const dia = fechaObj.getDate().toString().padStart(2, '0');
+         return `${año}-${mes}-${dia}`;
+       }
+       
+       // Si viene en formato DD/MM/YYYY
+       if (fecha.includes('/')) {
+         const [dia, mes, año] = fecha.split('/');
+         return `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+       }
+       
+       // Si viene en formato YYYY-MM-DD, devolverlo tal como está
+       if (fecha.includes('-')) {
+         return fecha;
+       }
+       
+       // Si es una fecha válida, convertirla
+       const fechaObj = new Date(fecha);
+       if (!isNaN(fechaObj.getTime())) {
+         const año = fechaObj.getFullYear();
+         const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
+         const dia = fechaObj.getDate().toString().padStart(2, '0');
+         return `${año}-${mes}-${dia}`;
+       }
+       
+       return fecha; // Devolver fecha original si no se puede convertir
+     } catch (error) {
+       console.error('Error al formatear fecha para input:', error);
+       return fecha; // Devolver fecha original si hay error
+     }
+   };
 
    // 🔹 Función para formatear fecha
    const formatearFecha = (fecha) => {
@@ -333,14 +386,25 @@ export default function Expedientes() {
     const { name, value, files } = e.target;
     console.log('handleInputChange llamado:', { name, value, files: !!files });
     
-     // Validación especial para el campo correlativo - solo números
-     if (name === "correlativo") {
-       // Permitir solo números
-       const soloNumeros = value.replace(/[^0-9]/g, '');
-       console.log('Campo correlativo:', { original: value, filtrado: soloNumeros });
-       setFormData({ ...formData, [name]: soloNumeros });
-       return;
-     }
+    // Validación especial para el campo correlativo - solo números
+    if (name === "correlativo") {
+      // Permitir solo números
+      const soloNumeros = value.replace(/[^0-9]/g, '');
+      console.log('Campo correlativo:', { original: value, filtrado: soloNumeros });
+      
+      // Actualizar el último correlativo ingresado
+      if (soloNumeros && soloNumeros.length > 0) {
+        setUltimoCorrelativoIngresado(soloNumeros);
+        // Generar sugerencia basada en el último dato ingresado
+        const numeroIngresado = parseInt(soloNumeros);
+        const siguienteSugerencia = (numeroIngresado + 1).toString();
+        setSugerenciasCorrelativo([siguienteSugerencia]);
+        console.log('Sugerencia actualizada basada en último dato:', siguienteSugerencia);
+      }
+      
+      setFormData({ ...formData, [name]: soloNumeros });
+      return;
+    }
      
      // Validación especial para el campo nombre - solo letras y espacios
      if (name === "nombre") {
@@ -398,7 +462,7 @@ export default function Expedientes() {
         telefono: "",
         direccion: "",
         email: "",
-        fecha_registro: new Date().toISOString().split("T")[0],
+        fecha_registro: "", // ✅ Sin fecha sugerida - el cliente debe ingresarla
         foto: [],
       });
       setMostrarFormulario(false);
@@ -409,13 +473,20 @@ export default function Expedientes() {
   };
 
   const handleEditar = (exp) => {
+    console.log('Datos del expediente a editar:', exp);
+    console.log('Fecha original:', exp.fecha_registro);
+    console.log('Tipo de fecha:', typeof exp.fecha_registro);
+    
+    const fechaFormateada = formatearFechaParaInput(exp.fecha_registro);
+    console.log('Fecha formateada para input:', fechaFormateada);
+    
     setFormData({
       correlativo: exp.correlativo,
       nombre: exp.nombre,
       telefono: exp.telefono,
       direccion: exp.direccion,
       email: exp.email,
-      fecha_registro: exp.fecha_registro,
+      fecha_registro: fechaFormateada,
       foto: exp.foto || [],
     });
     setEditando(exp.pk_id_expediente);
@@ -450,7 +521,7 @@ export default function Expedientes() {
       telefono: "",
       direccion: "",
       email: "",
-      fecha_registro: new Date().toISOString().split("T")[0],
+      fecha_registro: "", // ✅ Sin fecha sugerida - el cliente debe ingresarla
       foto: [],
     });
     setEditando(null);
@@ -471,16 +542,31 @@ export default function Expedientes() {
 
   // 🔹 Filtrado y ordenamiento
   const filtro = search.trim().toLowerCase();
+  console.log('🔍 Búsqueda activa:', filtro);
+  console.log('📊 Total expedientes:', expedientes.length);
    
    // Validar que expedientes sea un array antes de usar spread operator
    const expedientesFiltrados = Array.isArray(expedientes) ? [...expedientes] : []
     .filter(
-      (exp) =>
-        !filtro ||
-        (exp.nombre || "").toLowerCase().includes(filtro) ||
-        (exp.telefono || "").toLowerCase().includes(filtro) ||
-        (exp.email || "").toLowerCase().includes(filtro) ||
-        (exp.correlativo || "").toLowerCase().includes(filtro)
+      (exp) => {
+        const match = !filtro ||
+          (exp.nombre || "").toLowerCase().includes(filtro) ||
+          (exp.telefono || "").toLowerCase().includes(filtro) ||
+          (exp.email || "").toLowerCase().includes(filtro) ||
+          (exp.correlativo || "").toLowerCase().includes(filtro) ||
+          (exp.pk_id_expediente || "").toString().toLowerCase().includes(filtro); // ✅ Agregado búsqueda por ID
+        
+        if (filtro && match) {
+          console.log('✅ Expediente encontrado:', {
+            id: exp.pk_id_expediente,
+            nombre: exp.nombre,
+            email: exp.email,
+            telefono: exp.telefono,
+            correlativo: exp.correlativo
+          });
+        }
+        return match;
+      }
     )
     .sort((a, b) => {
       // Ordenamiento por ID (pk_id_expediente)
@@ -619,7 +705,7 @@ export default function Expedientes() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="expedientes-search-box"
-            data-tooltip="Filtra por nombre, correo o teléfono"
+            data-tooltip="Filtra por ID, nombre, correo, teléfono o correlativo"
           />
 
           <div className="expedientes-sort-container">
