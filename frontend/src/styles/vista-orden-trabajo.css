@@ -117,12 +117,29 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Sección del número de orden y sugerencias */
+.orden-no-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
 /* Número de orden */
+.orden-no {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
 .orden-no label {
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
   display: block;
   color: var(--color-text);
+  font-size: 14px;
+  text-align: right;
 }
 .orden-no input {
   padding: 0.5rem;
