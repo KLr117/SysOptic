@@ -244,3 +244,27 @@ CREATE TABLE tbl_imagenes_expedientes (
   FOREIGN KEY (expediente_id) REFERENCES tbl_expedientes(pk_id_expediente) ON DELETE CASCADE
 );
 
+-- ==============================================================
+--  CAMBIOS PARA BITACORA QUE IMPIDEN ELIMINACION DE USUARIOS EN SU CRUD
+-- ==============================================================
+ALTER TABLE tbl_bitacora 
+MODIFY COLUMN fk_id_user INT NULL;
+
+-- 1️⃣ Eliminar las restricciones antiguas
+ALTER TABLE tbl_bitacora DROP FOREIGN KEY tbl_bitacora_ibfk_1;
+ALTER TABLE tbl_bitacora DROP FOREIGN KEY tbl_bitacora_ibfk_2;
+
+-- 2️⃣ Volver a crearlas con ON DELETE SET NULL
+ALTER TABLE tbl_bitacora
+ADD CONSTRAINT fk_bitacora_user
+  FOREIGN KEY (fk_id_user)
+  REFERENCES tbl_users(pk_id_user)
+  ON DELETE SET NULL
+  ON UPDATE CASCADE;
+
+ALTER TABLE tbl_bitacora
+ADD CONSTRAINT fk_bitacora_user_objetivo
+  FOREIGN KEY (fk_id_user_objetivo)
+  REFERENCES tbl_users(pk_id_user)
+  ON DELETE SET NULL
+  ON UPDATE CASCADE;
