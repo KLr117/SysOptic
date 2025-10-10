@@ -9,8 +9,12 @@ import expedientesRoutes from "../routes/ExpedientesRoutes.js";
 import notificacionesRoutes from "../routes/notificacionesRoutes.js";
 import imagenesOrdenesRoutes from "../routes/imagenesOrdenesRoutes.js";
 import mailTestRoutes from "../routes/mailTestRoutes.js";
+import usersRoutes from "../routes/UsersRoutes.js";
 
-import { procesarPromocionesActivas, procesarRecordatoriosActivos } from "../controllers/notificacionesController.js";
+import {
+  procesarPromocionesActivas,
+  procesarRecordatoriosActivos,
+} from "../controllers/notificacionesController.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -27,11 +31,10 @@ app.use("/api/expedientes", expedientesRoutes);
 app.use("/api/notificaciones", notificacionesRoutes);
 app.use("/api/imagenes-ordenes", imagenesOrdenesRoutes);
 // Servir archivos estáticos (imágenes)
-app.use('/uploads', express.static('uploads'));
+app.use("/uploads", express.static("uploads"));
 app.use("/public", express.static("public"));
 app.use("/api/mail", mailTestRoutes);
-
-
+app.use("/api/users", usersRoutes);
 
 app.listen(PORT, () => {
   console.log(`✅ Backend corriendo en http://localhost:${PORT}`);
@@ -41,9 +44,10 @@ app.listen(PORT, () => {
   // ==========================
 
   // Cron configurado para ejecutarse a las 6:00am, 12:00pm y 6:00pm todos los días
-  cron.schedule("0 6,12,18 * * *", async () => {   //PARA PRUEBAS: "* * * * *" PARA EJECUTAR CADA MINUTO, LUEGO CAMBIAR A "0 6,12,18 * * *"
+  cron.schedule("0 6,12,18 * * *", async () => {
+    //PARA PRUEBAS: "* * * * *" PARA EJECUTAR CADA MINUTO, LUEGO CAMBIAR A "0 6,12,18 * * *"
     console.log("⏰ [CRON SYSOPTIC] Ejecutando cron de notificaciones...");
-  // === BLOQUE 1: Promociones ===
+    // === BLOQUE 1: Promociones ===
     try {
       const resultadoPromo = await procesarPromocionesActivas();
       console.log(
@@ -74,5 +78,5 @@ app.listen(PORT, () => {
     }
 
     console.log("🏁 [CRON SYSOPTIC] Ciclo de notificaciones completado.\n");
-    }); 
   });
+});
