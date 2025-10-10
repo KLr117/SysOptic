@@ -54,6 +54,7 @@ app.use("/public", express.static("public"));
 app.listen(PORT, () => {
   console.log(`✅ Backend corriendo en http://localhost:${PORT}`);
 
+  
   // ==========================
   // 🕒 CRON DE PROMOCIONES SYSOPTIC
   // ==========================
