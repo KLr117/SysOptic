@@ -470,33 +470,34 @@ const AgregarOrdenTrabajo = () => {
     <div className="orden-container">
        {/* Header con logo y número de orden */}
       <div className="orden-header">
-
         <div className="orden-logo">
-          <img src={logo} alt="Logo Empresa" /> {/* Usamos la variable importada */}
-
+          <img src={logo} alt="Logo Empresa" />
         </div>
-        <div className="orden-no">
-          <label>No Orden *</label>
-          <div className="orden-no-container">
-            <div className="tooltip">
-              <input 
-                type="text" 
-                name="numero_orden"
-                value={formData.numero_orden}
-                onChange={handleInputChange}
-                placeholder="Ej: 003"
-                className="numero-orden-input"
-                style={{
-                  backgroundColor: 'var(--color-bg)',
-                  color: 'var(--color-text)',
-                  cursor: 'text'
-                }}
-              />
-              <span className="tooltiptext">Este campo es obligatorio</span>
+        
+        <div className="orden-no-section">
+          <div className="orden-no">
+            <label>No. Orden</label>
+            <div className="orden-no-container">
+              <div className="tooltip">
+                <input 
+                  type="text" 
+                  name="numero_orden"
+                  value={formData.numero_orden}
+                  onChange={handleInputChange}
+                  placeholder="Ej: 003"
+                  className="numero-orden-input"
+                  style={{
+                    backgroundColor: 'var(--color-bg)',
+                    color: 'var(--color-text)',
+                    cursor: 'text'
+                  }}
+                />
+                <span className="tooltiptext">Este campo es obligatorio</span>
+              </div>
             </div>
           </div>
           
-          {/* Sugerencia de correlativo */}
+          {/* Sugerencia de correlativo - Ahora abajo del No de Orden */}
           {sugerenciaCorrelativo && (
             <div className="sugerencia-correlativo">
               <span className="sugerencia-texto">
