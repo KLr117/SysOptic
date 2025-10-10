@@ -1,62 +1,60 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL + "/api/imagenes-ordenes";
+import { apiClient, API_URL } from './api.js';
 
 // Subir imagen
 export const subirImagen = async (ordenId, imagenFile) => {
   const formData = new FormData();
   formData.append('imagen', imagenFile);
   formData.append('orden_id', ordenId);
-  
-  const res = await axios.post(`${API_URL}/subir`, formData, {
+
+  const res = await apiClient.post('/api/imagenes-ordenes/subir', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
-    }
+    },
   });
   return res.data;
 };
 
 // Obtener imágenes de una orden específica
 export const obtenerImagenesPorOrden = async (ordenId) => {
-  const res = await axios.get(`${API_URL}/orden/${ordenId}`);
-  
+  const res = await apiClient.get(`/api/imagenes-ordenes/orden/${ordenId}`);
+
   // Agregar URL completa para cada imagen
   if (res.data.success && res.data.imagenes) {
-    res.data.imagenes = res.data.imagenes.map(imagen => ({
+    res.data.imagenes = res.data.imagenes.map((imagen) => ({
       ...imagen,
-      url: `${import.meta.env.VITE_API_URL}/api/imagenes-ordenes/servir/${imagen.id}`,
-      urlPorRuta: `${import.meta.env.VITE_API_URL}/api/imagenes-ordenes/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`
+      url: `${API_URL}/api/imagenes-ordenes/servir/${imagen.id}`,
+      urlPorRuta: `${API_URL}/api/imagenes-ordenes/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`,
     }));
   }
-  
+
   return res.data;
 };
 
 // Obtener todas las imágenes
 export const obtenerTodasLasImagenes = async () => {
-  const res = await axios.get(`${API_URL}/todas`);
-  
+  const res = await apiClient.get('/api/imagenes-ordenes/todas');
+
   // Agregar URL completa para cada imagen
   if (res.data.success && res.data.imagenes) {
-    res.data.imagenes = res.data.imagenes.map(imagen => ({
+    res.data.imagenes = res.data.imagenes.map((imagen) => ({
       ...imagen,
-      url: `${import.meta.env.VITE_API_URL}/api/imagenes-ordenes/servir/${imagen.id}`,
-      urlPorRuta: `${import.meta.env.VITE_API_URL}/api/imagenes-ordenes/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`
+      url: `${API_URL}/api/imagenes-ordenes/servir/${imagen.id}`,
+      urlPorRuta: `${API_URL}/api/imagenes-ordenes/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`,
     }));
   }
-  
+
   return res.data;
 };
 
 // Eliminar imagen
 export const eliminarImagen = async (imagenId) => {
-  const res = await axios.delete(`${API_URL}/${imagenId}`);
+  const res = await apiClient.delete(`/api/imagenes-ordenes/${imagenId}`);
   return res.data;
 };
 
 // Contar imágenes por orden
 export const contarImagenesPorOrden = async (ordenId) => {
-  const res = await axios.get(`${API_URL}/contar/${ordenId}`);
+  const res = await apiClient.get(`/api/imagenes-ordenes/contar/${ordenId}`);
   return res.data;
 };
 
