@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/bitacora.css';
 import Titulo from '../components/Titulo';
+import { apiClient } from "../services/api";
 
 export default function Bitacora() {
   const [bitacora, setBitacora] = useState([]);
@@ -10,17 +11,22 @@ export default function Bitacora() {
     fetchBitacora();
   }, []);
 
-  const fetchBitacora = async () => {
-    try {
-      const res = await fetch('http://localhost:4000/api/bitacora');
-      const data = await res.json();
-      if (data.ok) setBitacora(data.bitacora);
-      else alert('Error al obtener la bitácora');
-    } catch (error) {
-      console.error(error);
-      alert('Error de conexión con el servidor');
+
+
+const fetchBitacora = async () => {
+  try {
+    const { data } = await apiClient.get("/api/bitacora");
+    if (data.ok && Array.isArray(data.bitacora)) {
+      setBitacora(data.bitacora);
+    } else {
+      alert("Error al obtener la bitácora");
     }
-  };
+  } catch (error) {
+    console.error("Error al obtener bitácora:", error);
+    alert("Error de conexión o permisos insuficientes");
+  }
+};
+
 
   const closeBitacora = () => {
     window.history.back(); // vuelve a la página anterior (AdminPanel)
