@@ -39,7 +39,6 @@ router.get(
 // Servir imagen por ID
 router.get(
   "/servir/:imagenId",
-  authorizeModules("control_ordenes"),
   ImagenesOrdenesController.servirImagen
 );
 

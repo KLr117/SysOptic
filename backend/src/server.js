@@ -30,9 +30,20 @@ app.use("/api", authRoutes);
 app.use("/api/mail", mailTestRoutes);
 
 // ======================
-// 🔒 Middleware global de autenticación JWT
+// 🔒 Middleware global de autenticación JWT (excepto imágenes-ordenes públicas)
 // ======================
-app.use("/api", authMiddleware);
+app.use((req, res, next) => {
+  // Permitir acceso público solo a imágenes servidas directamente
+  const publicImageRoutes = [
+    /^\/api\/imagenes-ordenes\/servir/,
+  ];
+
+  const isPublic = publicImageRoutes.some((pattern) => pattern.test(req.path));
+  if (isPublic) return next(); // ⚠️ No requiere token
+
+  // Para todo lo demás, aplicar autenticación normal
+  return authMiddleware(req, res, next);
+});
 
 // ======================
 // 🔐 Rutas protegidas
