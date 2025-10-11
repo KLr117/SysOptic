@@ -121,7 +121,7 @@
 .orden-no-section {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 10px;
 }
 
@@ -129,7 +129,7 @@
 .orden-no {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 8px;
 }
 
@@ -139,7 +139,7 @@
   display: block;
   color: var(--color-text);
   font-size: 14px;
-  text-align: right;
+  text-align: center;
 }
 .orden-no input {
   padding: 0.5rem;
@@ -571,7 +571,7 @@
 }
 
 .verorden-container .orden-logo img {
-  max-height: 60px;
+  max-height: 100px;
   filter: none;
 }
 
