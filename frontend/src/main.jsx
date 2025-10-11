@@ -66,6 +66,32 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                   element={<NotificacionForm mode="edit" />}
                 />
               </Route>
+
+              {/* Rutas de Notificaciones Específicas */}
+              <Route element={<ProtectedRoute permisosRequeridos={['control_expedientes']} />}>
+                <Route
+                  path="/notificaciones-especificas/expediente/:id"
+                  element={<NotificacionForm mode="createExpediente" />}
+                />
+              </Route>
+
+              <Route element={<ProtectedRoute permisosRequeridos={['control_ordenes']} />}>
+                <Route
+                  path="/notificaciones-especificas/orden/:id"
+                  element={<NotificacionForm mode="createOrden" />}
+                />
+              </Route>
+
+              <Route
+                element={
+                  <ProtectedRoute permisosRequeridos={['control_expedientes', 'control_ordenes']} />
+                }
+              >
+                <Route
+                  path="/notificaciones-especificas/editar/:id"
+                  element={<NotificacionForm mode="editEspecifica" />}
+                />
+              </Route>
             </Route>
           </Route>
 

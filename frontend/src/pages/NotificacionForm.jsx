@@ -1,77 +1,156 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
   createNotificacion,
   getNotificacionById,
-  updateNotificacion
-} from "../services/notificacionesService";
-import "../styles/vista-notificaciones.css";
-import "../styles/form-errors.css";
-import ConfirmModal from "../components/confirmModal";
+  updateNotificacion,
+  createNotificacionExpediente,
+  createNotificacionOrden,
+  updateNotificacionEspecifica,
+  getNotificacionExpediente,
+  getNotificacionOrden,
+  getNotificacionEspecificaById,
+} from '../services/notificacionesService';
+import '../styles/vista-notificaciones.css';
+import '../styles/form-errors.css';
+import ConfirmModal from '../components/ConfirmModal';
 
 // ID real de la categoría Promoción en tu catálogo (tu select ya usa "2")
-const PROMO_CATEGORY_ID = "2";
+const PROMO_CATEGORY_ID = '2';
 
 // Normaliza string/Date a "YYYY-MM-DD" para <input type="date">
 const toInputDate = (d) => {
-  if (!d) return "";
+  if (!d) return '';
   const dt = new Date(d);
-  if (Number.isNaN(dt.getTime())) return "";
+  if (Number.isNaN(dt.getTime())) return '';
   return dt.toISOString().slice(0, 10);
 };
 
-const NotificacionForm = ({ mode = "create" }) => {
+const NotificacionForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const location = useLocation(); // para saber si venimos a reactivar
+  const location = useLocation();
+  const isSpecific =
+    mode === 'createExpediente' || mode === 'createOrden' || mode === 'editEspecifica';
 
   const [formData, setFormData] = useState({
-    titulo: "",
-    descripcion: "",
+    titulo: '',
+    descripcion: '',
     intervaloCantidad: 1,
-    intervaloUnidad: "dias",
-    tipoIntervalo: "",
-    categoria: "",
-    fechaFin: "",           // YYYY-MM-DD
-    fechaInicioProm: "",    // YYYY-MM-DD (irá a fecha_objetivo en BD)
+    intervaloUnidad: 'dias',
+    tipoIntervalo: '',
+    categoria: '',
+    fechaFin: '',
+    fechaInicioProm: '',
     enviarEmail: true,
-    asuntoEmail: "",
-    cuerpoEmail: "",
-    modulo: "",
-    tipo: "General"
+    asuntoEmail: '',
+    cuerpoEmail: '',
+    modulo: '',
+    tipo: 'General',
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // ✅ Cargar datos en edición
+  // ✅ Cargar datos según modo
   useEffect(() => {
-    if (mode === "edit" && id) {
-      (async () => {
-        try {
-          setLoading(true);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        if (mode === 'editEspecifica' && id) {
+          const res = await getNotificacionEspecificaById(id);
+          if (res && res.pk_id_notificacion) {
+            setFormData({
+              titulo: res.titulo || '',
+              descripcion: res.descripcion || '',
+              intervaloCantidad: res.intervalo_dias || 1,
+              intervaloUnidad: 'dias',
+              tipoIntervalo: res.tipo_intervalo || '',
+              categoria: res.fk_id_categoria_notificacion?.toString() || '',
+              fechaFin: toInputDate(res.fecha_fin),
+              fechaInicioProm: toInputDate(res.fecha_objetivo),
+              enviarEmail: res.enviar_email === 1,
+              asuntoEmail: res.asunto_email || '',
+              cuerpoEmail: res.cuerpo_email || '',
+              modulo: res.fk_id_modulo_notificacion?.toString() || '',
+              tipo: 'Recordatorio',
+            });
+          } else {
+            console.warn('Respuesta inesperada de la API:', res);
+          }
+        } else if (mode === 'edit' && id) {
           const data = await getNotificacionById(id);
           setFormData({
-            titulo: data.titulo || "",
-            descripcion: data.descripcion || "",
+            titulo: data.titulo || '',
+            descripcion: data.descripcion || '',
             intervaloCantidad: data.intervalo_dias || 1,
-            intervaloUnidad: "dias", // siempre convertimos a días en BD
-            tipoIntervalo: data.tipo_intervalo || "",
-            categoria: data.fk_id_categoria_notificacion?.toString() || "",
-            fechaFin: toInputDate(data.fecha_fin),          // ✅ normalizado para <input type="date">
-            fechaInicioProm: toInputDate(data.fecha_objetivo), 
+            intervaloUnidad: 'dias',
+            tipoIntervalo: data.tipo_intervalo || '',
+            categoria: data.fk_id_categoria_notificacion?.toString() || '',
+            fechaFin: toInputDate(data.fecha_fin),
+            fechaInicioProm: toInputDate(data.fecha_objetivo),
             enviarEmail: data.enviar_email === 1,
-            asuntoEmail: data.asunto_email || "",
-            cuerpoEmail: data.cuerpo_email || "",
-            modulo: data.fk_id_modulo_notificacion?.toString() || "",
-            tipo: data.nombre_tipo || "General"
+            asuntoEmail: data.asunto_email || '',
+            cuerpoEmail: data.cuerpo_email || '',
+            modulo: data.fk_id_modulo_notificacion?.toString() || '',
+            tipo: data.nombre_tipo || 'General',
           });
-          setLoading(false);
-        } catch (error) {
-          console.error("Error al cargar notificación:", error);
-          setLoading(false);
+        } else if (mode === 'createExpediente') {
+          setFormData((prev) => ({
+            ...prev,
+            modulo: '1',
+            categoria: '1',
+            tipo: 'Recordatorio',
+            tipoIntervalo: 'despues_registro',
+          }));
+        } else if (mode === 'createOrden') {
+          setFormData((prev) => ({
+            ...prev,
+            modulo: '2',
+            categoria: '1',
+            tipo: 'Recordatorio',
+          }));
         }
-      })();
+        setLoading(false);
+      } catch (error) {
+        console.error('Error al cargar notificación:', error);
+        setLoading(false);
+        if (error.response?.status === 401) {
+          alert('No tienes permisos para ver esta notificación.');
+          const origin = location.state?.from;
+          if (mode.includes('Expediente') || origin === 'expedientes') navigate('/expedientes');
+          else if (
+            mode.includes('Orden') ||
+            mode.includes('editEspecifica') ||
+            origin === 'ordenes'
+          )
+            navigate('/ordenes');
+          else navigate('/notificaciones');
+        } else {
+          alert('Error al cargar la notificación. Intenta nuevamente.');
+        }
+      }
+    };
+
+    if (mode === 'edit' || mode === 'editEspecifica') {
+      fetchData();
+    } else if (mode === 'createExpediente' || mode === 'createOrden') {
+      if (mode === 'createExpediente') {
+        setFormData((prev) => ({
+          ...prev,
+          modulo: '1',
+          categoria: '1',
+          tipo: 'Recordatorio',
+          tipoIntervalo: 'despues_registro',
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          modulo: '2',
+          categoria: '1',
+          tipo: 'Recordatorio',
+        }));
+      }
     }
   }, [mode, id]);
 
@@ -79,95 +158,151 @@ const NotificacionForm = ({ mode = "create" }) => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     });
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.titulo.trim()) newErrors.titulo = "Debe ingresar un título";
-    if (!formData.descripcion.trim())
-      newErrors.descripcion = "Debe ingresar una descripción";
-    if (!formData.categoria) newErrors.categoria = "Debe seleccionar una categoría";
-    if (!formData.modulo) newErrors.modulo = "Debe seleccionar un módulo";
-    if (formData.categoria !== PROMO_CATEGORY_ID && formData.modulo === "2" && !formData.tipoIntervalo) {
-     newErrors.tipoIntervalo = "Debe elegir cuándo se enviará";
+    if (!formData.titulo.trim()) newErrors.titulo = 'Debe ingresar un título';
+    if (!formData.descripcion.trim()) newErrors.descripcion = 'Debe ingresar una descripción';
+
+    // Validaciones solo para notificaciones generales
+    if (!isSpecific) {
+      if (!formData.categoria) newErrors.categoria = 'Debe seleccionar una categoría';
+      if (!formData.modulo) newErrors.modulo = 'Debe seleccionar un módulo';
+      if (
+        formData.categoria !== PROMO_CATEGORY_ID &&
+        formData.modulo === '2' &&
+        !formData.tipoIntervalo
+      ) {
+        newErrors.tipoIntervalo = 'Debe elegir cuándo se enviará';
+      }
+      if (formData.categoria === PROMO_CATEGORY_ID && !formData.fechaInicioProm) {
+        newErrors.fechaInicioProm = 'Debe seleccionar una fecha de inicio';
+      }
     }
-    if (formData.categoria === PROMO_CATEGORY_ID && !formData.fechaInicioProm) {
-      newErrors.fechaInicioProm = "Debe seleccionar una fecha de inicio";
+
+    // Validaciones para notificaciones específicas de órdenes
+    if (
+      mode === 'createOrden' &&
+      formData.categoria !== PROMO_CATEGORY_ID &&
+      !formData.tipoIntervalo
+    ) {
+      newErrors.tipoIntervalo = 'Debe elegir cuándo se enviará';
     }
+
+    // Validaciones para promociones específicas
+    if (isSpecific && formData.categoria === PROMO_CATEGORY_ID && !formData.fechaInicioProm) {
+      newErrors.fechaInicioProm = 'Debe seleccionar una fecha de inicio';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-const [pendingPayload, setPendingPayload] = useState(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState(null);
 
-// Al intentar guardar cambios → abre modal
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validateForm()) return;
+  // Al intentar guardar cambios → abre modal
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-// 1) Calcular días
-  let dias = parseInt(formData.intervaloCantidad, 10);
-  if (formData.intervaloUnidad === "semanas") dias *= 7;
-  if (formData.intervaloUnidad === "meses") dias *= 30;
-  if (formData.intervaloUnidad === "anios") dias *= 365;
+    // 1) Calcular días
+    let dias = parseInt(formData.intervaloCantidad, 10);
+    if (formData.intervaloUnidad === 'semanas') dias *= 7;
+    if (formData.intervaloUnidad === 'meses') dias *= 30;
+    if (formData.intervaloUnidad === 'anios') dias *= 365;
 
-// 2) tipo_intervalo válido
-  let tipoIntervalo = formData.tipoIntervalo;
-  if (formData.categoria !== PROMO_CATEGORY_ID) {
-    if (formData.modulo === "1") tipoIntervalo = "despues_registro";
-    // en módulo "2" se respeta lo que eligió el usuario (y ya lo validaste)
-  } else {
-    tipoIntervalo = null; // PROMO no usa intervalos
-  }
+    // 2) tipo_intervalo válido
+    let tipoIntervalo = formData.tipoIntervalo;
+    if (formData.categoria !== PROMO_CATEGORY_ID) {
+      if (formData.modulo === '1') tipoIntervalo = 'despues_registro';
+      // en módulo "2" se respeta lo que eligió el usuario (y ya lo validaste)
+    } else {
+      tipoIntervalo = null; // PROMO no usa intervalos
+    }
 
-  // 3) ¿venimos con intención de reactivar?
-  const reactivateIntent = !!location.state?.reactivateIntent;
+    // 3) ¿venimos con intención de reactivar?
+    const reactivateIntent = !!location.state?.reactivateIntent;
 
-  const payload = {
-    titulo: formData.titulo,
-    descripcion: formData.descripcion,
-    // PROMO: fechaFin solo si la proporcionó; si no es promo, va null
-    fechaFin: formData.categoria === PROMO_CATEGORY_ID ? (formData.fechaFin || null) : null,
-    // PROMO no usa intervalos
-    intervaloDias: formData.categoria === PROMO_CATEGORY_ID ? null : dias,
-    tipo_intervalo: tipoIntervalo,
-    fk_id_categoria_notificacion: Number(formData.categoria || 0),   
-    enviarEmail: formData.enviarEmail,
-    asuntoEmail: formData.asuntoEmail,
-    cuerpoEmail: formData.cuerpoEmail,
-    fk_id_tipo_notificacion: 1,
-    fk_id_modulo_notificacion: Number(formData.modulo || 0),
-    fk_id_estado_notificacion: reactivateIntent ? 1 : 1, // si reactivas al guardar → 1 
-    fk_id_expediente: null,
-    fk_id_orden: null,
-    // PROMO → fecha_objetivo = fechaInicioProm, si no es promo queda null
-    fecha_objetivo: formData.categoria === PROMO_CATEGORY_ID ? (formData.fechaInicioProm || null) : null,
-  };
+    let payload;
 
-    setPendingPayload(payload); // guardar datos temporales
-    setIsConfirmModalOpen(true); // abrir modal
+    // Payload para notificaciones específicas
+    if (isSpecific) {
+      payload = {
+        titulo: formData.titulo,
+        descripcion: formData.descripcion,
+        intervalo_dias: formData.categoria === PROMO_CATEGORY_ID ? null : dias,
+        tipo_intervalo: tipoIntervalo,
+        enviar_email: formData.enviarEmail ? 1 : 0,
+        asunto_email: formData.asuntoEmail,
+        cuerpo_email: formData.cuerpoEmail,
+        fk_id_categoria_notificacion: Number(formData.categoria || 1),
+        fecha_objetivo:
+          formData.categoria === PROMO_CATEGORY_ID ? formData.fechaInicioProm || null : null,
+        fecha_fin: formData.categoria === PROMO_CATEGORY_ID ? formData.fechaFin || null : null,
+      };
+    } else {
+      // Payload para notificaciones generales
+      payload = {
+        titulo: formData.titulo,
+        descripcion: formData.descripcion,
+        fechaFin: formData.categoria === PROMO_CATEGORY_ID ? formData.fechaFin || null : null,
+        intervaloDias: formData.categoria === PROMO_CATEGORY_ID ? null : dias,
+        tipo_intervalo: tipoIntervalo,
+        fk_id_categoria_notificacion: Number(formData.categoria || 0),
+        enviarEmail: formData.enviarEmail,
+        asuntoEmail: formData.asuntoEmail,
+        cuerpoEmail: formData.cuerpoEmail,
+        fk_id_tipo_notificacion: 1,
+        fk_id_modulo_notificacion: Number(formData.modulo || 0),
+        fk_id_estado_notificacion: reactivateIntent ? 1 : 1,
+        fk_id_expediente: null,
+        fk_id_orden: null,
+        fecha_objetivo:
+          formData.categoria === PROMO_CATEGORY_ID ? formData.fechaInicioProm || null : null,
+      };
+    }
+
+    setPendingPayload(payload);
+    setIsConfirmModalOpen(true);
   };
 
   // Ejecutar realmente guardar
   const confirmSave = async () => {
     try {
-      if (mode === "edit" && id) {
+      if (mode === 'createExpediente') {
+        await createNotificacionExpediente(id, pendingPayload);
+        navigate('/expedientes', {
+          state: { successMessage: '✅ Notificación creada con éxito' },
+        });
+      } else if (mode === 'createOrden') {
+        await createNotificacionOrden(id, pendingPayload);
+        navigate('/ordenes', {
+          state: { successMessage: '✅ Notificación creada con éxito' },
+        });
+      } else if (mode === 'editEspecifica' && id) {
+        await updateNotificacionEspecifica(id, pendingPayload);
+        const redirectPath = formData.modulo === '1' ? '/expedientes' : '/ordenes';
+        navigate(redirectPath, {
+          state: { successMessage: '✅ Notificación actualizada con éxito' },
+        });
+      } else if (mode === 'edit' && id) {
         await updateNotificacion(id, pendingPayload);
-        navigate("/notificaciones", {
-          state: { successMessage: "✅ Notificación actualizada con éxito" }
+        navigate('/notificaciones', {
+          state: { successMessage: '✅ Notificación actualizada con éxito' },
         });
       } else {
         await createNotificacion(pendingPayload);
-        navigate("/notificaciones", {
-          state: { successMessage: "✅ Notificación creada con éxito" }
+        navigate('/notificaciones', {
+          state: { successMessage: '✅ Notificación creada con éxito' },
         });
       }
     } catch (error) {
-      console.error("Error al guardar notificación:", error);
-      alert("❌ Ocurrió un error al guardar la notificación");
+      console.error('Error al guardar notificación:', error);
+      alert('❌ Ocurrió un error al guardar la notificación');
     } finally {
       setIsConfirmModalOpen(false);
       setPendingPayload(null);
@@ -183,8 +318,8 @@ const handleSubmit = async (e) => {
       setFormData((p) => ({
         ...p,
         intervaloCantidad: 1,
-        intervaloUnidad: "dias",
-        tipoIntervalo: "", // no enviar nada
+        intervaloUnidad: 'dias',
+        tipoIntervalo: '', // no enviar nada
       }));
     }
   }, [isPromocion]);
@@ -193,22 +328,38 @@ const handleSubmit = async (e) => {
   useEffect(() => {
     if (isPromocion) return;
 
-    if (formData.modulo === "1") {
+    if (formData.modulo === '1') {
       // Expedientes → siempre 'despues_registro'
-      setFormData((p) => ({ ...p, tipoIntervalo: "despues_registro" }));
-    } else if (formData.modulo === "2") {
+      setFormData((p) => ({ ...p, tipoIntervalo: 'despues_registro' }));
+    } else if (formData.modulo === '2') {
       // Órdenes → si está vacío, proponemos 'antes_entrega'
       setFormData((p) => ({
         ...p,
-        tipoIntervalo: p.tipoIntervalo || "antes_entrega",
+        tipoIntervalo: p.tipoIntervalo || 'antes_entrega',
       }));
     }
   }, [formData.modulo]);
 
+  const getFormTitle = () => {
+    if (mode === 'createExpediente') return '🔔 Crear Notificación para Expediente';
+    if (mode === 'createOrden') return '🔔 Crear Notificación para Orden';
+    if (mode === 'editEspecifica') return '✏️ Editar Notificación Específica';
+    if (mode === 'edit') return '✏️ Editar Notificación';
+    return '🔔 Crear Nueva Notificación General';
+  };
+
+  const handleCancel = () => {
+    const origin = location.state?.from;
+    if (mode.includes('Expediente') || origin === 'expedientes') navigate('/expedientes');
+    else if (mode.includes('Orden') || mode.includes('editEspecifica') || origin === 'ordenes')
+      navigate('/ordenes');
+    else navigate('/notificaciones');
+  };
+
   return (
     <div className="notificaciones-container">
       <div className="form-header">
-        <h2>{mode === "edit" ? "✏️ Editar Notificación" : "🔔 Crear Nueva Notificación General"}</h2>
+        <h2>{getFormTitle()}</h2>
       </div>
 
       {location.state?.reactivateIntent && (
@@ -217,8 +368,10 @@ const handleSubmit = async (e) => {
             <span className="banner-icon">⚠️</span>
             <div>
               <strong>Reactivación de Notificación</strong>
-              <p>Revise la configuración y presione <b>Guardar</b> para <b>reactivar</b> esta notificación.
-              Si presiona <b>Cancelar</b>, el estado de la notificacion no cambiará.</p>
+              <p>
+                Revise la configuración y presione <b>Guardar</b> para <b>reactivar</b> esta
+                notificación. Si presiona <b>Cancelar</b>, el estado de la notificacion no cambiará.
+              </p>
             </div>
           </div>
         </div>
@@ -231,327 +384,374 @@ const handleSubmit = async (e) => {
         </div>
       ) : (
         <>
-
-      <form className="notificaciones-form" onSubmit={handleSubmit}>
-        {/* Sección: Información Básica */}
-        <div className="form-section">
-          <div className="section-header">
-            <h3>📝 Información Básica</h3>
-            <p>Datos principales de la notificación</p>
-          </div>
-          
-          <div className="form-grid">
-            {/* ID (solo en edición) */}
-            {mode === "edit" && (
-              <div className="form-field">
-                <label className="field-label">
-                  <span className="label-icon">🆔</span>
-                  ID de Notificación
-                </label>
-                <input 
-                  type="text" 
-                  value={id} 
-                  disabled 
-                  className="field-input disabled"
-                />
+          <form className="notificaciones-form" onSubmit={handleSubmit}>
+            {/* Sección: Información Básica */}
+            <div className="form-section">
+              <div className="section-header">
+                <h3>📝 Información Básica</h3>
+                <p>Datos principales de la notificación</p>
               </div>
-            )}
 
-            {/* Título */}
-            <div className="form-field">
-              <label className="field-label">
-                <span className="label-icon">📌</span>
-                Título *
-              </label>
-              <input
-                type="text"
-                name="titulo"
-                value={formData.titulo}
-                onChange={handleChange}
-                className="field-input"
-                placeholder="Ingrese el título de la notificación"
-              />
-              {errors.titulo && <span className="error-message">{errors.titulo}</span>}
-            </div>
-
-            {/* Descripción */}
-            <div className="form-field full-width">
-              <label className="field-label">
-                <span className="label-icon">📄</span>
-                Descripción *
-              </label>
-              <textarea
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleChange}
-                className="field-textarea"
-                placeholder="Describa el propósito de esta notificación"
-                rows="3"
-              />
-              {errors.descripcion && <span className="error-message">{errors.descripcion}</span>}
-            </div>
-          </div>
-        </div>
-
-        {/* Sección: Configuración de Categoría y Módulo */}
-        <div className="form-section">
-          <div className="section-header">
-            <h3>⚙️ Configuración</h3>
-            <p>Define el tipo y alcance de la notificación</p>
-          </div>
-          
-          <div className="form-grid">
-            {/* Categoría */}
-            <div className="form-field">
-              <label className="field-label">
-                <span className="label-icon">🏷️</span>
-                Categoría *
-              </label>
-              <select
-                name="categoria"
-                value={formData.categoria}
-                onChange={handleChange}
-                className="field-select"
-              >
-                <option value="">Seleccione categoría...</option>
-                <option value="1">📅 Recordatorio</option>
-                <option value="2">🎯 Promoción</option>
-              </select>
-              {errors.categoria && <span className="error-message">{errors.categoria}</span>}
-            </div>
-
-            {/* Módulo */}
-            <div className="form-field">
-              <label className="field-label">
-                <span className="label-icon">📦</span>
-                Módulo *
-              </label>
-              <select
-                name="modulo"
-                value={formData.modulo}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setFormData({
-                    ...formData,
-                    modulo: value,
-                    tipoIntervalo: ""
-                  });
-                }}
-                className="field-select"
-              >
-                <option value="">Seleccione módulo...</option>
-                <option value="1">📁 Expedientes</option>
-                <option value="2">📋 Órdenes</option>
-              </select>
-              {errors.modulo && <span className="error-message">{errors.modulo}</span>}
-            </div>
-          </div>
-        </div>
-
-        {/* Sección: Fechas de Promoción (solo si es promoción) */}
-        {formData.categoria === "2" && (
-          <div className="form-section">
-            <div className="section-header">
-              <h3>📅 Fechas de Promoción</h3>
-              <p>Configure el período de vigencia de la promoción</p>
-            </div>
-            
-            <div className="form-grid">
-              <div className="form-field">
-                <label className="field-label">
-                  <span className="label-icon">🚀</span>
-                  Fecha de Inicio *
-                </label>
-                <input
-                  type="date"
-                  name="fechaInicioProm"
-                  value={formData.fechaInicioProm || ""}
-                  onChange={handleChange}
-                  className="field-input"
-                />
-                {errors.fechaInicioProm && <span className="error-message">{errors.fechaInicioProm}</span>}
-              </div>
-              
-              {formData.fechaInicioProm && (
-                <div className="form-field">
-                  <label className="field-label">
-                    <span className="label-icon">🏁</span>
-                    Fecha de Fin
-                  </label>
-                  <input
-                    type="date"
-                    name="fechaFin"
-                    value={formData.fechaFin || ""}
-                    onChange={handleChange}
-                    className="field-input"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Sección: Configuración de Tiempo (solo si NO es promoción) */}
-        {formData.categoria !== "2" && (
-          <div className="form-section">
-            <div className="section-header">
-              <h3>⏰ Configuración de Tiempo</h3>
-              <p>Define cuándo y cómo se enviará la notificación</p>
-            </div>
-            
-            <div className="form-grid">
-              {/* Tipo de intervalo */}
-              <div className="form-field full-width">
-                <label className="field-label">
-                  <span className="label-icon">❓</span>
-                  ¿Cuándo se enviará?
-                </label>
-                {formData.modulo === "1" && (
-                  <div className="static-option">
-                    <div className="option-card">
-                      <span className="option-icon">📅</span>
-                      <span className="option-text">X días después de la fecha de registro</span>
-                    </div>
+              <div className="form-grid">
+                {/* ID (solo en edición) */}
+                {(mode === 'edit' || mode === 'editEspecifica') && (
+                  <div className="form-field">
+                    <label className="field-label">
+                      <span className="label-icon">🆔</span>
+                      ID de Notificación
+                    </label>
+                    <input type="text" value={id} disabled className="field-input disabled" />
                   </div>
                 )}
-                {formData.modulo === "2" && (
-                  <select
-                    name="tipoIntervalo"
-                    value={formData.tipoIntervalo}
-                    onChange={handleChange}
-                    className="field-select"
-                  >
-                    <option value="">Seleccione opción...</option>
-                    <option value="antes_entrega">⏰ X días antes de la fecha de entrega</option>
-                    <option value="despues_recepcion">📥 X días después de la fecha de recepción</option>
-                  </select>
-                )}
-                {errors.tipoIntervalo && <span className="error-message">{errors.tipoIntervalo}</span>}
-              </div>
 
-              {/* Intervalo */}
-              <div className="form-field">
-                <label className="field-label">
-                  <span className="label-icon">🔢</span>
-                  Intervalo
-                </label>
-                <div className="intervalo-container">
-                  <input
-                    type="number"
-                    name="intervaloCantidad"
-                    value={formData.intervaloCantidad}
-                    onChange={handleChange}
-                    min="0"
-                    className="field-input intervalo-number"
-                    placeholder="0"
-                  />
-                  <select
-                    name="intervaloUnidad"
-                    value={formData.intervaloUnidad}
-                    onChange={handleChange}
-                    className="field-select intervalo-unit"
-                  >
-                    <option value="dias">Días</option>
-                    <option value="semanas">Semanas</option>
-                    <option value="meses">Meses</option>
-                    <option value="anios">Años</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Sección: Configuración de Email */}
-        <div className="form-section">
-          <div className="section-header">
-            <h3>📧 Configuración de Email</h3>
-            <p>Configure el envío de correos electrónicos</p>
-          </div>
-          
-          <div className="form-grid">
-            <div className="form-field full-width">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="enviarEmail"
-                  checked={formData.enviarEmail}
-                  onChange={handleChange}
-                  className="checkbox-input"
-                />
-                <span className="checkbox-custom"></span>
-                <span className="checkbox-text">
-                  <span className="label-icon">📧</span>
-                  ¿Enviar correo al cliente?
-                </span>
-              </label>
-            </div>
-
-            {formData.enviarEmail && (
-              <>
+                {/* Título */}
                 <div className="form-field">
                   <label className="field-label">
-                    <span className="label-icon">📨</span>
-                    Asunto del Correo
+                    <span className="label-icon">📌</span>
+                    Título *
                   </label>
                   <input
                     type="text"
-                    name="asuntoEmail"
-                    value={formData.asuntoEmail}
+                    name="titulo"
+                    value={formData.titulo}
                     onChange={handleChange}
                     className="field-input"
-                    placeholder="Asunto del correo electrónico"
+                    placeholder="Ingrese el título de la notificación"
                   />
+                  {errors.titulo && <span className="error-message">{errors.titulo}</span>}
                 </div>
 
+                {/* Descripción */}
                 <div className="form-field full-width">
                   <label className="field-label">
-                    <span className="label-icon">📝</span>
-                    Cuerpo del Correo
+                    <span className="label-icon">📄</span>
+                    Descripción *
                   </label>
                   <textarea
-                    name="cuerpoEmail"
-                    value={formData.cuerpoEmail}
+                    name="descripcion"
+                    value={formData.descripcion}
                     onChange={handleChange}
                     className="field-textarea"
-                    placeholder="Contenido del correo electrónico"
-                    rows="4"
+                    placeholder="Describa el propósito de esta notificación"
+                    rows="3"
                   />
+                  {errors.descripcion && (
+                    <span className="error-message">{errors.descripcion}</span>
+                  )}
                 </div>
-              </>
-            )}
-          </div>
-        </div>
+              </div>
+            </div>
 
-        {/* Botones de Acción */}
-        <div className="form-actions">
-          <button type="submit" className="btn-primary">
-            <span className="btn-icon">💾</span>
-            {mode === "edit" ? "Guardar Cambios" : "Crear Notificación"}
-          </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={() => navigate("/notificaciones")}
-          >
-            <span className="btn-icon">❌</span>
-            Cancelar
-          </button>
-        </div>
-      </form>
-      
-      <ConfirmModal
-        isOpen={isConfirmModalOpen}
-        title={mode === "edit" ? "Confirmar actualización" : "Confirmar creación"}
-        message={
-          mode === "edit"
-            ? "¿Deseas guardar los cambios de esta notificación?"
-            : "¿Deseas crear esta nueva notificación?"
-        }
-        onConfirm={confirmSave}
-        onCancel={() => setIsConfirmModalOpen(false)}
-      />
-      </>
+            {/* Sección: Configuración de Categoría y Módulo */}
+            {!isSpecific && (
+              <div className="form-section">
+                <div className="section-header">
+                  <h3>⚙️ Configuración</h3>
+                  <p>Define el tipo y alcance de la notificación</p>
+                </div>
+
+                <div className="form-grid">
+                  {/* Categoría */}
+                  <div className="form-field">
+                    <label className="field-label">
+                      <span className="label-icon">🏷️</span>
+                      Categoría *
+                    </label>
+                    <select
+                      name="categoria"
+                      value={formData.categoria}
+                      onChange={handleChange}
+                      className="field-select"
+                    >
+                      <option value="">Seleccione categoría...</option>
+                      <option value="1">📅 Recordatorio</option>
+                      <option value="2">🎯 Promoción</option>
+                    </select>
+                    {errors.categoria && <span className="error-message">{errors.categoria}</span>}
+                  </div>
+
+                  {/* Módulo */}
+                  <div className="form-field">
+                    <label className="field-label">
+                      <span className="label-icon">📦</span>
+                      Módulo *
+                    </label>
+                    <select
+                      name="modulo"
+                      value={formData.modulo}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({
+                          ...formData,
+                          modulo: value,
+                          tipoIntervalo: '',
+                        });
+                      }}
+                      className="field-select"
+                    >
+                      <option value="">Seleccione módulo...</option>
+                      <option value="1">📁 Expedientes</option>
+                      <option value="2">📋 Órdenes</option>
+                    </select>
+                    {errors.modulo && <span className="error-message">{errors.modulo}</span>}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Información estática para notificaciones específicas */}
+            {isSpecific && (
+              <div className="form-section">
+                <div className="section-header">
+                  <h3>ℹ️ Información de Notificación</h3>
+                  <p>Esta es una notificación específica</p>
+                </div>
+
+                <div className="form-grid">
+                  <div className="form-field">
+                    <label className="field-label">
+                      <span className="label-icon">🏷️</span>
+                      Categoría *
+                    </label>
+                    <select
+                      name="categoria"
+                      value={formData.categoria}
+                      onChange={handleChange}
+                      className="field-select"
+                    >
+                      <option value="">Seleccione categoría...</option>
+                      <option value="1">📅 Recordatorio</option>
+                      <option value="2">🎯 Promoción</option>
+                    </select>
+                    {errors.categoria && <span className="error-message">{errors.categoria}</span>}
+                  </div>
+
+                  <div className="form-field">
+                    <label className="field-label">
+                      <span className="label-icon">📦</span>
+                      Módulo
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.modulo === '1' ? '📁 Expedientes' : '📋 Órdenes'}
+                      disabled
+                      className="field-input disabled"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sección: Fechas de Promoción (solo si es promoción) */}
+            {formData.categoria === '2' && (
+              <div className="form-section">
+                <div className="section-header">
+                  <h3>📅 Fechas de Promoción</h3>
+                  <p>Configure el período de vigencia de la promoción</p>
+                </div>
+
+                <div className="form-grid">
+                  <div className="form-field">
+                    <label className="field-label">
+                      <span className="label-icon">🚀</span>
+                      Fecha de Inicio *
+                    </label>
+                    <input
+                      type="date"
+                      name="fechaInicioProm"
+                      value={formData.fechaInicioProm || ''}
+                      onChange={handleChange}
+                      className="field-input"
+                    />
+                    {errors.fechaInicioProm && (
+                      <span className="error-message">{errors.fechaInicioProm}</span>
+                    )}
+                  </div>
+
+                  {formData.fechaInicioProm && (
+                    <div className="form-field">
+                      <label className="field-label">
+                        <span className="label-icon">🏁</span>
+                        Fecha de Fin
+                      </label>
+                      <input
+                        type="date"
+                        name="fechaFin"
+                        value={formData.fechaFin || ''}
+                        onChange={handleChange}
+                        className="field-input"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Sección: Configuración de Tiempo (solo si NO es promoción) */}
+            {formData.categoria !== '2' && (
+              <div className="form-section">
+                <div className="section-header">
+                  <h3>⏰ Configuración de Tiempo</h3>
+                  <p>Define cuándo y cómo se enviará la notificación</p>
+                </div>
+
+                <div className="form-grid">
+                  {/* Tipo de intervalo */}
+                  <div className="form-field full-width">
+                    <label className="field-label">
+                      <span className="label-icon">❓</span>
+                      ¿Cuándo se enviará?
+                    </label>
+                    {formData.modulo === '1' && (
+                      <div className="static-option">
+                        <div className="option-card">
+                          <span className="option-icon">📅</span>
+                          <span className="option-text">
+                            X días después de la fecha de registro
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {formData.modulo === '2' && (
+                      <select
+                        name="tipoIntervalo"
+                        value={formData.tipoIntervalo}
+                        onChange={handleChange}
+                        className="field-select"
+                      >
+                        <option value="">Seleccione opción...</option>
+                        <option value="antes_entrega">
+                          ⏰ X días antes de la fecha de entrega
+                        </option>
+                        <option value="despues_recepcion">
+                          📥 X días después de la fecha de recepción
+                        </option>
+                      </select>
+                    )}
+                    {errors.tipoIntervalo && (
+                      <span className="error-message">{errors.tipoIntervalo}</span>
+                    )}
+                  </div>
+
+                  {/* Intervalo */}
+                  <div className="form-field">
+                    <label className="field-label">
+                      <span className="label-icon">🔢</span>
+                      Intervalo
+                    </label>
+                    <div className="intervalo-container">
+                      <input
+                        type="number"
+                        name="intervaloCantidad"
+                        value={formData.intervaloCantidad}
+                        onChange={handleChange}
+                        min="0"
+                        className="field-input intervalo-number"
+                        placeholder="0"
+                      />
+                      <select
+                        name="intervaloUnidad"
+                        value={formData.intervaloUnidad}
+                        onChange={handleChange}
+                        className="field-select intervalo-unit"
+                      >
+                        <option value="dias">Días</option>
+                        <option value="semanas">Semanas</option>
+                        <option value="meses">Meses</option>
+                        <option value="anios">Años</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sección: Configuración de Email */}
+            <div className="form-section">
+              <div className="section-header">
+                <h3>📧 Configuración de Email</h3>
+                <p>Configure el envío de correos electrónicos</p>
+              </div>
+
+              <div className="form-grid">
+                <div className="form-field full-width">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      name="enviarEmail"
+                      checked={formData.enviarEmail}
+                      onChange={handleChange}
+                      className="checkbox-input"
+                    />
+                    <span className="checkbox-custom"></span>
+                    <span className="checkbox-text">
+                      <span className="label-icon">📧</span>
+                      ¿Enviar correo al cliente?
+                    </span>
+                  </label>
+                </div>
+
+                {formData.enviarEmail && (
+                  <>
+                    <div className="form-field">
+                      <label className="field-label">
+                        <span className="label-icon">📨</span>
+                        Asunto del Correo
+                      </label>
+                      <input
+                        type="text"
+                        name="asuntoEmail"
+                        value={formData.asuntoEmail}
+                        onChange={handleChange}
+                        className="field-input"
+                        placeholder="Asunto del correo electrónico"
+                      />
+                    </div>
+
+                    <div className="form-field full-width">
+                      <label className="field-label">
+                        <span className="label-icon">📝</span>
+                        Cuerpo del Correo
+                      </label>
+                      <textarea
+                        name="cuerpoEmail"
+                        value={formData.cuerpoEmail}
+                        onChange={handleChange}
+                        className="field-textarea"
+                        placeholder="Contenido del correo electrónico"
+                        rows="4"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Botones de Acción */}
+            <div className="form-actions">
+              <button type="submit" className="btn-primary">
+                <span className="btn-icon">💾</span>
+                {mode === 'edit' ? 'Guardar Cambios' : 'Crear Notificación'}
+              </button>
+              <button type="button" className="btn-secondary" onClick={handleCancel}>
+                <span className="btn-icon">❌</span>
+                Cancelar
+              </button>
+            </div>
+          </form>
+
+          <ConfirmModal
+            isOpen={isConfirmModalOpen}
+            title={mode === 'edit' ? 'Confirmar actualización' : 'Confirmar creación'}
+            message={
+              mode === 'edit'
+                ? '¿Deseas guardar los cambios de esta notificación?'
+                : '¿Deseas crear esta nueva notificación?'
+            }
+            onConfirm={confirmSave}
+            onCancel={() => setIsConfirmModalOpen(false)}
+          />
+        </>
       )}
     </div>
   );

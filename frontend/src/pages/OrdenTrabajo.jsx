@@ -1,48 +1,59 @@
-import React, { useState, useEffect } from "react";
-import "../styles/orden-trabajo.css";
-import "../styles/table-responsive.css";
-import "../styles/tables.css";
-import "../styles/popup.css";
-import "../styles/pagination-tooltips.css";
-import "../styles/vista-notificaciones.css";
-import Titulo from "../components/Titulo";
-import Button from "../components/Button";
-import PopUp from "../components/PopUp";
-import { useNavigate } from "react-router-dom";
-import { getOrdenes, deleteOrden } from "../services/ordenTrabajoService";
-import { obtenerTodasLasImagenes } from "../services/imagenesOrdenesService";
-import ImageModal from "../components/ImageModal";
-import { FaAngleDoubleLeft, FaAngleLeft, FaAngleRight, FaAngleDoubleRight } from "react-icons/fa";
+import React, { useState, useEffect } from 'react';
+import '../styles/orden-trabajo.css';
+import '../styles/table-responsive.css';
+import '../styles/tables.css';
+import '../styles/popup.css';
+import '../styles/pagination-tooltips.css';
+import '../styles/vista-notificaciones.css';
+import Titulo from '../components/Titulo';
+import Button from '../components/Button';
+import PopUp from '../components/PopUp';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { getOrdenes, deleteOrden } from '../services/ordenTrabajoService';
+import { obtenerTodasLasImagenes } from '../services/imagenesOrdenesService';
+import {
+  getEstadoNotificacionOrden,
+  getNotificacionEspecificaById,
+  deleteNotificacionEspecifica,
+} from '../services/notificacionesService';
+import ImageModal from '../components/ImageModal';
+import { FaAngleDoubleLeft, FaAngleLeft, FaAngleRight, FaAngleDoubleRight } from 'react-icons/fa';
 
 const OrdenTrabajo = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const columns = [
-    "#",
-    "No Orden",
-    "Paciente",
-    "Dirección",
-    "Correo",
-    "Teléfono",
-    "Fecha Recepción",
-    "Fecha Entrega",
-    "Total",
-    "Adelanto",
-    "Saldo",
-    "Imágenes",
-    "Acciones",
-    "Notificaciones",
-    "Estado",
+    '#',
+    'No Orden',
+    'Paciente',
+    'Dirección',
+    'Correo',
+    'Teléfono',
+    'Fecha Recepción',
+    'Fecha Entrega',
+    'Total',
+    'Adelanto',
+    'Saldo',
+    'Imágenes',
+    'Acciones',
+    'Notificación',
+    'Estado de notificación',
   ];
 
   const [ordenesData, setOrdenesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notificacionesEstado, setNotificacionesEstado] = useState({});
 
-  const [search, setSearch] = useState("");
-  const [sortField, setSortField] = useState("id");
-  const [sortDirection, setSortDirection] = useState("asc");
-  const [sortOption, setSortOption] = useState("");
+  // Estados para modal de visualización
+  const [modalVisible, setModalVisible] = useState(false);
+  const [notificacionSeleccionada, setNotificacionSeleccionada] = useState(null);
+
+  const [search, setSearch] = useState('');
+  const [sortField, setSortField] = useState('id');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [sortOption, setSortOption] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -110,7 +121,7 @@ const OrdenTrabajo = () => {
     isOpen: false,
     title: '',
     message: '',
-    type: 'success'
+    type: 'success',
   });
 
   // Estado para orden a eliminar
@@ -118,7 +129,7 @@ const OrdenTrabajo = () => {
 
   // Estado para imágenes de órdenes desde la base de datos
   const [imagenesOrdenes, setImagenesOrdenes] = useState({});
-  
+
   // Estado para modal de imagen
   const [modalImage, setModalImage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -126,9 +137,9 @@ const OrdenTrabajo = () => {
   // Función para simular guardado de imágenes
   const guardarImagenesOrden = (ordenId, imagenes) => {
     if (imagenes && imagenes.length > 0) {
-      setImagenesOrdenes(prev => ({
+      setImagenesOrdenes((prev) => ({
         ...prev,
-        [ordenId]: imagenes
+        [ordenId]: imagenes,
       }));
     }
   };
@@ -141,7 +152,7 @@ const OrdenTrabajo = () => {
         if (response.success) {
           // Agrupar imágenes por orden_id
           const imagenesAgrupadas = {};
-          response.imagenes.forEach(imagen => {
+          response.imagenes.forEach((imagen) => {
             if (!imagenesAgrupadas[imagen.orden_id]) {
               imagenesAgrupadas[imagen.orden_id] = [];
             }
@@ -149,7 +160,7 @@ const OrdenTrabajo = () => {
               id: imagen.id,
               nombre: imagen.nombre_archivo,
               preview: imagen.url, // URL del servidor
-              url: imagen.url // URL completa para el modal
+              url: imagen.url, // URL completa para el modal
             });
           });
           setImagenesOrdenes(imagenesAgrupadas);
@@ -173,11 +184,11 @@ const OrdenTrabajo = () => {
         if (response.ok) {
           setOrdenesData(response.orders);
         } else {
-          setError("Error al cargar las órdenes");
+          setError('Error al cargar las órdenes');
         }
       } catch (err) {
-        console.error("Error cargando órdenes:", err);
-        setError("Error al cargar las órdenes");
+        console.error('Error cargando órdenes:', err);
+        setError('Error al cargar las órdenes');
       } finally {
         setLoading(false);
       }
@@ -186,22 +197,54 @@ const OrdenTrabajo = () => {
     cargarOrdenes();
   }, []);
 
-  const agregarOrden = () => navigate("/agregar-orden-trabajo");
+  // 🔹 Cargar estados de notificaciones
+  useEffect(() => {
+    const cargarEstadosNotificaciones = async () => {
+      if (ordenesData.length === 0) return;
+
+      const estados = {};
+      for (const orden of ordenesData) {
+        try {
+          const response = await getEstadoNotificacionOrden(orden.pk_id_orden);
+          if (response.ok) {
+            estados[orden.pk_id_orden] = response;
+          }
+        } catch (error) {
+          console.error(
+            `Error al cargar estado de notificación para orden ${orden.pk_id_orden}:`,
+            error
+          );
+        }
+      }
+      setNotificacionesEstado(estados);
+    };
+
+    cargarEstadosNotificaciones();
+  }, [ordenesData]);
+
+  // 🔄 Refresco automático al volver desde formulario
+  useEffect(() => {
+    if (ordenesData.length > 0) {
+      refreshNotificaciones();
+    }
+  }, [location]);
+
+  const agregarOrden = () => navigate('/agregar-orden-trabajo');
   const editarOrden = (id) => navigate(`/editar-orden-trabajo/${id}`);
 
   const verOrden = (id) => navigate(`/ver-orden-trabajo/${id}`);
-  
+
   // Funciones para modal de imagen
   const openImageModal = (imagen, ordenId) => {
     setModalImage(imagen);
     setIsModalOpen(true);
   };
-  
+
   const closeImageModal = () => {
     setModalImage(null);
     setIsModalOpen(false);
   };
-  
+
   const confirmarEliminacion = (id) => {
     setOrdenAEliminar(id);
     setPopup({
@@ -213,7 +256,7 @@ const OrdenTrabajo = () => {
       confirmText: 'Eliminar',
       cancelText: 'Cancelar',
       onConfirm: () => eliminarOrden(id),
-      onCancel: () => setOrdenAEliminar(null)
+      onCancel: () => setOrdenAEliminar(null),
     });
   };
 
@@ -231,8 +274,8 @@ const OrdenTrabajo = () => {
           confirmText: 'Aceptar',
           onConfirm: () => {
             setOrdenAEliminar(null);
-            setPopup(prev => ({ ...prev, isOpen: false }));
-          }
+            setPopup((prev) => ({ ...prev, isOpen: false }));
+          },
         });
       } else {
         setPopup({
@@ -244,12 +287,12 @@ const OrdenTrabajo = () => {
           confirmText: 'Aceptar',
           onConfirm: () => {
             setOrdenAEliminar(null);
-            setPopup(prev => ({ ...prev, isOpen: false }));
-          }
+            setPopup((prev) => ({ ...prev, isOpen: false }));
+          },
         });
       }
     } catch (err) {
-      console.error("Error eliminando orden:", err);
+      console.error('Error eliminando orden:', err);
       setPopup({
         isOpen: true,
         title: 'Error',
@@ -259,98 +302,175 @@ const OrdenTrabajo = () => {
         confirmText: 'Aceptar',
         onConfirm: () => {
           setOrdenAEliminar(null);
-          setPopup(prev => ({ ...prev, isOpen: false }));
-        }
+          setPopup((prev) => ({ ...prev, isOpen: false }));
+        },
       });
     }
   };
 
   const handleEstadoChange = (id, value) => {
     // TODO: Implementar actualización de estado en el backend
-    console.log("Cambiar estado de orden", id, "a", value);
+    console.log('Cambiar estado de orden', id, 'a', value);
   };
 
-  const handleNotificacionChange = (id, value) => {
-    // TODO: Implementar actualización de notificación en el backend
-    console.log("Cambiar notificación de orden", id, "a", value);
+  // 🔔 Handlers de notificaciones
+  const refreshNotificaciones = async () => {
+    try {
+      const estados = {};
+      for (const orden of ordenesData) {
+        const res = await getEstadoNotificacionOrden(orden.pk_id_orden);
+        if (res.ok) {
+          estados[orden.pk_id_orden] = {
+            tieneNotificacion: res.tieneNotificacion,
+            estado: res.estado,
+            id: res.id,
+            titulo: res.titulo,
+          };
+        }
+      }
+      setNotificacionesEstado(estados);
+    } catch (error) {
+      console.error('Error al cargar estados de notificaciones:', error);
+    }
   };
 
+  const handleViewNotificacion = async (orden) => {
+    const estado = notificacionesEstado[orden.pk_id_orden];
+    if (!estado?.id) {
+      showPopup('Info', 'No hay una notificación asociada a este registro.', 'info');
+      return;
+    }
+    try {
+      const res = await getNotificacionEspecificaById(estado.id);
+      if (res && res.pk_id_notificacion) {
+        setNotificacionSeleccionada(res);
+        setModalVisible(true);
+      } else {
+        showPopup('Error', 'No se pudo cargar la notificación.', 'error');
+      }
+    } catch (error) {
+      console.error('Error al obtener detalles de la notificación:', error);
+      if (error.response?.status === 401) {
+        showPopup('Error', 'No tienes permisos para ver esta notificación.', 'error');
+      } else {
+        showPopup('Error', 'Error al cargar la notificación. Intenta nuevamente.', 'error');
+      }
+    }
+  };
+
+  const handleDeleteNotificacion = async (idNotificacion, idOrden) => {
+    if (!window.confirm('¿Seguro que deseas eliminar esta notificación?')) return;
+    try {
+      const res = await deleteNotificacionEspecifica(idNotificacion);
+      if (res.ok || res.success) {
+        await refreshNotificaciones();
+        showPopup('Éxito', 'Notificación eliminada correctamente.', 'success');
+      } else {
+        showPopup('Error', 'No se pudo eliminar la notificación.', 'error');
+      }
+    } catch (error) {
+      console.error(error);
+      showPopup('Error', 'Error al eliminar la notificación.', 'error');
+    }
+  };
+
+  const handleNotificacionChange = (orden, action) => {
+    const estado = notificacionesEstado[orden.pk_id_orden];
+
+    if (action === 'Crear' && !estado?.tieneNotificacion) {
+      navigate(`/notificaciones-especificas/orden/${orden.pk_id_orden}`);
+    } else if (action === 'Mostrar' && estado?.tieneNotificacion) {
+      handleViewNotificacion(orden);
+    } else if (action === 'Editar' && estado?.tieneNotificacion) {
+      navigate(`/notificaciones-especificas/editar/${estado.id}`, { state: { from: 'ordenes' } });
+    } else if (action === 'Eliminar' && estado?.tieneNotificacion) {
+      handleDeleteNotificacion(estado.id, orden.pk_id_orden);
+    }
+  };
 
   // 🔍 Búsqueda y filtrado
   const [filtered, setFiltered] = useState([]);
-  
+
   useEffect(() => {
-    const result = ordenesData.filter((orden) => {
-      if (!search.trim()) return true;
-      const filtro = search.toLowerCase().trim();
-      
-      // Función para normalizar texto (quitar acentos y tildes)
-      const normalizarTexto = (texto) => {
-        return texto
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .toLowerCase();
-      };
-      
-      // Función para formatear fechas para búsqueda
-      const formatearFecha = (fecha) => {
-        if (!fecha) return '';
-        const date = new Date(fecha);
-        return date.toLocaleDateString('es-ES', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        });
-      };
+    const result = ordenesData
+      .filter((orden) => {
+        if (!search.trim()) return true;
+        const filtro = search.toLowerCase().trim();
 
-      // Búsqueda en diferentes campos (normalizada)
-      const busquedaPaciente = normalizarTexto(orden.paciente || "").includes(normalizarTexto(filtro));
-      const busquedaTelefono = (orden.telefono || "").toLowerCase().includes(filtro);
-      const busquedaCorreo = normalizarTexto(orden.correo || "").includes(normalizarTexto(filtro));
-      const busquedaDireccion = normalizarTexto(orden.direccion || "").includes(normalizarTexto(filtro));
-      const busquedaId = (orden.pk_id_orden || "").toString().includes(filtro);
-      const busquedaCorrelativo = (orden.correlativo || "").toString().includes(filtro);
-      
-      // Búsqueda en fechas (formato DD/MM/YYYY)
-      const fechaRecepcionFormateada = formatearFecha(orden.fecha_recepcion);
-      const fechaEntregaFormateada = formatearFecha(orden.fecha_entrega);
-      const busquedaFechaRecepcion = fechaRecepcionFormateada.includes(filtro);
-      const busquedaFechaEntrega = fechaEntregaFormateada.includes(filtro);
-      
-      // Búsqueda en totales (formato numérico)
-      const busquedaTotal = (orden.total || "").toString().includes(filtro);
-      const busquedaAdelanto = (orden.adelanto || "").toString().includes(filtro);
-      const busquedaSaldo = (orden.saldo || "").toString().includes(filtro);
+        // Función para normalizar texto (quitar acentos y tildes)
+        const normalizarTexto = (texto) => {
+          return texto
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+        };
 
-      return (
-        busquedaPaciente ||
-        busquedaTelefono ||
-        busquedaCorreo ||
-        busquedaDireccion ||
-        busquedaId ||
-        busquedaCorrelativo ||
-        busquedaFechaRecepcion ||
-        busquedaFechaEntrega ||
-        busquedaTotal ||
-        busquedaAdelanto ||
-        busquedaSaldo
-      );
-    }).sort((a, b) => {
-      // Ordenar según combobox
-      const dir = sortDirection === "asc" ? 1 : -1;
+        // Función para formatear fechas para búsqueda
+        const formatearFecha = (fecha) => {
+          if (!fecha) return '';
+          const date = new Date(fecha);
+          return date.toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          });
+        };
 
-      if (sortField === "id") return dir * ((a.pk_id_orden || 0) - (b.pk_id_orden || 0));
-      if (sortField === "paciente") {
-        return dir * ((a.paciente || "").localeCompare(b.paciente || ""));
-      }
-      if (sortField === "fechaRecepcion" || sortField === "fechaEntrega") {
-        const fieldName = sortField === "fechaRecepcion" ? "fecha_recepcion" : "fecha_entrega";
-        const da = a[fieldName] ? new Date(a[fieldName]) : new Date(0);
-        const db = b[fieldName] ? new Date(b[fieldName]) : new Date(0);
-        return dir * (da - db);
-      }
-      return 0;
-    });
+        // Búsqueda en diferentes campos (normalizada)
+        const busquedaPaciente = normalizarTexto(orden.paciente || '').includes(
+          normalizarTexto(filtro)
+        );
+        const busquedaTelefono = (orden.telefono || '').toLowerCase().includes(filtro);
+        const busquedaCorreo = normalizarTexto(orden.correo || '').includes(
+          normalizarTexto(filtro)
+        );
+        const busquedaDireccion = normalizarTexto(orden.direccion || '').includes(
+          normalizarTexto(filtro)
+        );
+        const busquedaId = (orden.pk_id_orden || '').toString().includes(filtro);
+        const busquedaCorrelativo = (orden.correlativo || '').toString().includes(filtro);
+
+        // Búsqueda en fechas (formato DD/MM/YYYY)
+        const fechaRecepcionFormateada = formatearFecha(orden.fecha_recepcion);
+        const fechaEntregaFormateada = formatearFecha(orden.fecha_entrega);
+        const busquedaFechaRecepcion = fechaRecepcionFormateada.includes(filtro);
+        const busquedaFechaEntrega = fechaEntregaFormateada.includes(filtro);
+
+        // Búsqueda en totales (formato numérico)
+        const busquedaTotal = (orden.total || '').toString().includes(filtro);
+        const busquedaAdelanto = (orden.adelanto || '').toString().includes(filtro);
+        const busquedaSaldo = (orden.saldo || '').toString().includes(filtro);
+
+        return (
+          busquedaPaciente ||
+          busquedaTelefono ||
+          busquedaCorreo ||
+          busquedaDireccion ||
+          busquedaId ||
+          busquedaCorrelativo ||
+          busquedaFechaRecepcion ||
+          busquedaFechaEntrega ||
+          busquedaTotal ||
+          busquedaAdelanto ||
+          busquedaSaldo
+        );
+      })
+      .sort((a, b) => {
+        // Ordenar según combobox
+        const dir = sortDirection === 'asc' ? 1 : -1;
+
+        if (sortField === 'id') return dir * ((a.pk_id_orden || 0) - (b.pk_id_orden || 0));
+        if (sortField === 'paciente') {
+          return dir * (a.paciente || '').localeCompare(b.paciente || '');
+        }
+        if (sortField === 'fechaRecepcion' || sortField === 'fechaEntrega') {
+          const fieldName = sortField === 'fechaRecepcion' ? 'fecha_recepcion' : 'fecha_entrega';
+          const da = a[fieldName] ? new Date(a[fieldName]) : new Date(0);
+          const db = b[fieldName] ? new Date(b[fieldName]) : new Date(0);
+          return dir * (da - db);
+        }
+        return 0;
+      });
     setFiltered(result);
     setCurrentPage(1); // reset a primera página
   }, [search, ordenesData, sortField, sortDirection]);
@@ -390,8 +510,8 @@ const OrdenTrabajo = () => {
         </div>
         <div className="text-center py-8 text-red-600">
           <p>Error: {error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Reintentar
@@ -409,13 +529,13 @@ const OrdenTrabajo = () => {
       <div className="decoration-circle circle-3"></div>
       <div className="decoration-circle circle-4"></div>
       <div className="decoration-circle circle-5"></div>
-      
+
       <div className="decoration-glasses glasses-1">👓</div>
       <div className="decoration-glasses glasses-2">🥽</div>
       <div className="decoration-glasses glasses-3">👓</div>
       <div className="decoration-glasses glasses-4">🥽</div>
       <div className="decoration-glasses glasses-5">👓</div>
-      
+
       <div className="decoration-tools tool-1">🔧</div>
       <div className="decoration-tools tool-2">⚙️</div>
       <div className="decoration-tools tool-3">🔨</div>
@@ -450,7 +570,9 @@ const OrdenTrabajo = () => {
             style={{ width: '200px', fontSize: '12px' }}
             data-tooltip="Selecciona una ordenación rápida"
           >
-            <option value="" disabled>Seleccione</option>
+            <option value="" disabled>
+              Seleccione
+            </option>
             <option value="id"># Ascendente</option>
             <option value="idDesc"># Descendente</option>
             <option value="fechaRecepcion">Fecha Recepción (antigua)</option>
@@ -475,7 +597,14 @@ const OrdenTrabajo = () => {
                 </div>
               </th>
               <th>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
+                  }}
+                >
                   <div>No.</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span>Orden</span>
@@ -504,8 +633,8 @@ const OrdenTrabajo = () => {
               <th>Saldo</th>
               <th>Imágenes</th>
               <th>Acciones</th>
-              <th>Notificaciones</th>
-              <th>Estado</th>
+              <th>Notificación</th>
+              <th>Estado de notificación</th>
             </tr>
           </thead>
           <tbody>
@@ -518,14 +647,18 @@ const OrdenTrabajo = () => {
                   <td>{orden.direccion}</td>
                   <td>{orden.correo}</td>
                   <td>{orden.telefono}</td>
-                  <td>{orden.fecha_recepcion ? new Date(orden.fecha_recepcion).toLocaleDateString('es-ES') : ''}</td>
-                  <td>{orden.fecha_entrega ? new Date(orden.fecha_entrega).toLocaleDateString('es-ES') : ''}</td>
-                  <td className="text-right">
-                    Q{parseFloat(orden.total || 0).toFixed(2)}
+                  <td>
+                    {orden.fecha_recepcion
+                      ? new Date(orden.fecha_recepcion).toLocaleDateString('es-ES')
+                      : ''}
                   </td>
-                  <td className="text-right">
-                    Q{parseFloat(orden.adelanto || 0).toFixed(2)}
+                  <td>
+                    {orden.fecha_entrega
+                      ? new Date(orden.fecha_entrega).toLocaleDateString('es-ES')
+                      : ''}
                   </td>
+                  <td className="text-right">Q{parseFloat(orden.total || 0).toFixed(2)}</td>
+                  <td className="text-right">Q{parseFloat(orden.adelanto || 0).toFixed(2)}</td>
                   <td className="text-right font-semibold saldo-cell">
                     Q{parseFloat(orden.saldo || 0).toFixed(2)}
                   </td>
@@ -538,9 +671,9 @@ const OrdenTrabajo = () => {
                         console.log('Todas las imágenes disponibles:', imagenesOrdenes); // Debug
                         return imagenesDeOrden ? (
                           imagenesDeOrden.map((imagen, index) => (
-                            <img 
+                            <img
                               key={index}
-                              src={imagen.preview} 
+                              src={imagen.preview}
                               alt={`Imagen ${index + 1}`}
                               title={imagen.nombre}
                               className="imagen-miniatura"
@@ -552,7 +685,8 @@ const OrdenTrabajo = () => {
                                 const errorSpan = document.createElement('span');
                                 errorSpan.textContent = '❌';
                                 errorSpan.title = 'Imagen no disponible';
-                                errorSpan.style.cssText = 'color: #999; font-size: 12px; margin: 2px;';
+                                errorSpan.style.cssText =
+                                  'color: #999; font-size: 12px; margin: 2px;';
                                 e.target.parentNode.appendChild(errorSpan);
                               }}
                             />
@@ -569,12 +703,12 @@ const OrdenTrabajo = () => {
                       defaultValue="Acciones"
                       onChange={(e) => {
                         const accion = e.target.value;
-                        if (accion === "Ver") verOrden(orden.pk_id_orden);
-                        else if (accion === "Editar") editarOrden(orden.pk_id_orden);
-                        else if (accion === "Eliminar") {
+                        if (accion === 'Ver') verOrden(orden.pk_id_orden);
+                        else if (accion === 'Editar') editarOrden(orden.pk_id_orden);
+                        else if (accion === 'Eliminar') {
                           confirmarEliminacion(orden.pk_id_orden);
                         }
-                        e.target.value = "Acciones";
+                        e.target.value = 'Acciones';
                       }}
                     >
                       <option disabled>Acciones</option>
@@ -586,28 +720,35 @@ const OrdenTrabajo = () => {
 
                   <td>
                     <select
-                      defaultValue="Crear"
-                      onChange={(e) =>
-                        handleNotificacionChange(orden.pk_id_orden, e.target.value)
-                      }
+                      className="acciones-select"
+                      defaultValue="Acciones"
+                      onChange={(e) => {
+                        handleNotificacionChange(orden, e.target.value);
+                        e.target.value = 'Acciones';
+                      }}
                     >
-                      <option value="Crear">Crear</option>
-                      <option value="Mostrar">Mostrar</option>
-                      <option value="Editar">Editar</option>
+                      <option disabled>Acciones</option>
+                      {!notificacionesEstado[orden.pk_id_orden]?.tieneNotificacion && (
+                        <option value="Crear">Crear</option>
+                      )}
+                      {notificacionesEstado[orden.pk_id_orden]?.tieneNotificacion && (
+                        <>
+                          <option value="Mostrar">Mostrar</option>
+                          <option value="Editar">Editar</option>
+                          <option value="Eliminar">Eliminar</option>
+                        </>
+                      )}
                     </select>
                   </td>
 
-                  <td>
-                    <select
-                      defaultValue="Pendiente"
-                      onChange={(e) =>
-                        handleEstadoChange(orden.pk_id_orden, e.target.value)
+                  <td className="text-center">
+                    {(() => {
+                      const estado = notificacionesEstado[orden.pk_id_orden];
+                      if (!estado || !estado.tieneNotificacion) {
+                        return '—';
                       }
-                    >
-                      <option value="Pendiente">Pendiente</option>
-                      <option value="En proceso">En proceso</option>
-                      <option value="Realizada">Realizada</option>
-                    </select>
+                      return estado.estado === 'activa' ? 'Activa' : 'Inactiva';
+                    })()}
                   </td>
                 </tr>
               ))
@@ -615,7 +756,7 @@ const OrdenTrabajo = () => {
               <tr>
                 <td
                   colSpan={columns.length}
-                  style={{ textAlign: "center", padding: "16px", color: "#666" }}
+                  style={{ textAlign: 'center', padding: '16px', color: '#666' }}
                 >
                   No hay registros disponibles
                 </td>
@@ -703,7 +844,7 @@ const OrdenTrabajo = () => {
       {/* PopUp para mensajes */}
       <PopUp
         isOpen={popup.isOpen}
-        onClose={() => setPopup(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setPopup((prev) => ({ ...prev, isOpen: false }))}
         title={popup.title}
         message={popup.message}
         type={popup.type}
@@ -721,14 +862,173 @@ const OrdenTrabajo = () => {
         isOpen={isModalOpen}
         onClose={closeImageModal}
         image={modalImage}
-        images={modalImage ? imagenesOrdenes[Object.keys(imagenesOrdenes).find(id => 
-          imagenesOrdenes[id]?.some(img => 
-            img.id === modalImage.id || 
-            img.url === modalImage.url || 
-            img.preview === modalImage.preview
-          )
-        )] || [] : []}
+        images={
+          modalImage
+            ? imagenesOrdenes[
+                Object.keys(imagenesOrdenes).find((id) =>
+                  imagenesOrdenes[id]?.some(
+                    (img) =>
+                      img.id === modalImage.id ||
+                      img.url === modalImage.url ||
+                      img.preview === modalImage.preview
+                  )
+                )
+              ] || []
+            : []
+        }
       />
+
+      {/* Modal para visualizar notificación */}
+      {modalVisible && notificacionSeleccionada && (
+        <div className="modal" onClick={() => setModalVisible(false)}>
+          <div className="modal-content view-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">
+                <span className="modal-icon">🔔</span>
+                Detalles de la Notificación
+              </h3>
+              <span
+                className={`badge ${
+                  notificacionSeleccionada.fk_id_categoria_notificacion === 2
+                    ? 'badge-promocion'
+                    : 'badge-recordatorio'
+                }`}
+              >
+                {notificacionSeleccionada.fk_id_categoria_notificacion === 2
+                  ? 'Promoción'
+                  : 'Recordatorio'}
+              </span>
+            </div>
+
+            <div className="modal-body">
+              {/* Información Básica */}
+              <div className="modal-section">
+                <h4 className="section-title">
+                  <span className="section-icon">📝</span>
+                  Información Básica
+                </h4>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">ID:</span>
+                    <span className="info-value">
+                      {notificacionSeleccionada.pk_id_notificacion}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Título:</span>
+                    <span className="info-value">{notificacionSeleccionada.titulo}</span>
+                  </div>
+                  <div className="info-item full-width">
+                    <span className="info-label">Descripción:</span>
+                    <span className="info-value">{notificacionSeleccionada.descripcion}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Configuración */}
+              <div className="modal-section">
+                <h4 className="section-title">
+                  <span className="section-icon">⚙️</span>
+                  Configuración
+                </h4>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">Módulo:</span>
+                    <span className="info-value">📋 Órdenes</span>
+                  </div>
+
+                  {notificacionSeleccionada.fk_id_categoria_notificacion === 2 ? (
+                    <>
+                      <div className="info-item">
+                        <span className="info-label">Fecha Inicio:</span>
+                        <span className="info-value">
+                          {notificacionSeleccionada.fecha_objetivo
+                            ? new Date(notificacionSeleccionada.fecha_objetivo).toLocaleDateString(
+                                'es-ES'
+                              )
+                            : '—'}
+                        </span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Fecha Fin:</span>
+                        <span className="info-value">
+                          {notificacionSeleccionada.fecha_fin
+                            ? new Date(notificacionSeleccionada.fecha_fin).toLocaleDateString(
+                                'es-ES'
+                              )
+                            : '—'}
+                        </span>
+                      </div>
+                      {notificacionSeleccionada.fecha_objetivo &&
+                        notificacionSeleccionada.fecha_fin && (
+                          <div className="info-item">
+                            <span className="info-label">Duración:</span>
+                            <span className="info-value">
+                              {Math.ceil(
+                                (new Date(notificacionSeleccionada.fecha_fin) -
+                                  new Date(notificacionSeleccionada.fecha_objetivo)) /
+                                  (1000 * 60 * 60 * 24)
+                              )}{' '}
+                              días
+                            </span>
+                          </div>
+                        )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="info-item">
+                        <span className="info-label">Intervalo:</span>
+                        <span className="info-value">
+                          {notificacionSeleccionada.intervalo_dias} días
+                        </span>
+                      </div>
+                      <div className="info-item">
+                        <span className="info-label">Tipo:</span>
+                        <span className="info-value">
+                          {notificacionSeleccionada.tipo_intervalo === 'antes_entrega'
+                            ? '⏰ Antes de entrega'
+                            : '📥 Después de recepción'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Configuración de Email */}
+              {notificacionSeleccionada.enviar_email === 1 && (
+                <div className="modal-section">
+                  <h4 className="section-title">
+                    <span className="section-icon">📧</span>
+                    Configuración de Email
+                  </h4>
+                  <div className="info-grid">
+                    <div className="info-item">
+                      <span className="info-label">Asunto:</span>
+                      <span className="info-value">
+                        {notificacionSeleccionada.asunto_email || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="info-item full-width">
+                      <span className="info-label">Cuerpo:</span>
+                      <span className="info-value">
+                        {notificacionSeleccionada.cuerpo_email || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button onClick={() => setModalVisible(false)} className="btn-primary">
+                <span className="btn-icon">✅</span>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
