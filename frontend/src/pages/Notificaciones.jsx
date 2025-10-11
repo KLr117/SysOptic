@@ -50,6 +50,14 @@ const Notificaciones = () => {
       case '':
         // No hacer nada cuando se selecciona "Seleccione"
         break;
+      case 'titulo':
+        setSortField('titulo');
+        setSortDirection('asc');
+        break;
+      case 'descripcion':
+        setSortField('descripcion');
+        setSortDirection('asc');
+        break;
       case 'tipo':
         setSortField('tipo');
         setSortDirection('asc');
@@ -66,6 +74,14 @@ const Notificaciones = () => {
         setSortField('id');
         setSortDirection('asc');
         break;
+      case 'fecha_reciente':
+        setSortField('fecha_creacion');
+        setSortDirection('desc');
+        break;
+      case 'fecha_antigua':
+        setSortField('fecha_creacion');
+        setSortDirection('asc');
+        break;
       default:
         setSortField('fecha_creacion');
         setSortDirection('desc');
@@ -77,6 +93,7 @@ const Notificaciones = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInput, setPageInput] = useState('1');
   const [inputError, setInputError] = useState(false);
+  const [shouldResetPage, setShouldResetPage] = useState(false);
 
   // Modales
   const [modalVisible, setModalVisible] = useState(false);
@@ -93,6 +110,13 @@ const Notificaciones = () => {
   useEffect(() => {
     fetchNotificaciones();
   }, []);
+
+  // Detectar cambios en la búsqueda para resetear página
+  useEffect(() => {
+    if (search !== '') {
+      setShouldResetPage(true);
+    }
+  }, [search]);
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -124,8 +148,12 @@ const Notificaciones = () => {
         (n.descripcion || '').toLowerCase().includes(q)
     );
     setFiltered(result);
-    setCurrentPage(1);
-  }, [search, notificaciones]);
+    // Solo resetear a página 1 si la búsqueda cambió, no cuando se actualizan las notificaciones
+    if (shouldResetPage) {
+      setCurrentPage(1);
+      setShouldResetPage(false);
+    }
+  }, [search, notificaciones, shouldResetPage]);
 
   // Ordenamiento
   const sortData = (data) => {
@@ -135,6 +163,8 @@ const Notificaciones = () => {
     result.sort((a, b) => {
       if (sortField === 'id') return dir * (a.pk_id_notificacion - b.pk_id_notificacion);
       if (sortField === 'titulo') return dir * (a.titulo || '').localeCompare(b.titulo || '');
+      if (sortField === 'descripcion') return dir * (a.descripcion || '').localeCompare(b.descripcion || '');
+      if (sortField === 'tipo') return dir * (a.tipo || '').localeCompare(b.tipo || '');
       if (sortField === 'categoria')
         return dir * (a.nombre_categoria || '').localeCompare(b.nombre_categoria || '');
       if (sortField === 'modulo')
@@ -159,11 +189,13 @@ const Notificaciones = () => {
 
   useEffect(() => setPageInput(String(currentPage)), [currentPage]);
 
-  // Asegurar rango
+  // Asegurar rango - solo cuando sea realmente necesario
   useEffect(() => {
     const total = Math.max(1, Math.ceil(filtered.length / pageSize));
-    if (currentPage > total) setCurrentPage(total);
-  }, [filtered, pageSize]);
+    if (currentPage > total && total > 0) {
+      setCurrentPage(total);
+    }
+  }, [filtered.length, pageSize, currentPage]);
 
   // Eliminar
   const handleDeleteClick = (noti) => {
@@ -172,9 +204,14 @@ const Notificaciones = () => {
   };
 
   const confirmDelete = async () => {
+    // Guardar la página actual antes de eliminar
+    const paginaActual = currentPage;
+    
     try {
       await deleteNotificacion(selectedNoti.pk_id_notificacion);
       await fetchNotificaciones();
+      // Restaurar la página actual después de actualizar
+      setCurrentPage(paginaActual);
     } catch (error) {
       console.error('Error al eliminar:', error);
     } finally {
@@ -194,11 +231,16 @@ const Notificaciones = () => {
   const confirmEstadoChange = async () => {
     if (!selectedNoti) return;
 
+    // Guardar la página actual antes de hacer cambios
+    const paginaActual = currentPage;
+
     try {
       if (modalAction === 'desactivar') {
         // 2 = inactiva
         await updateEstadoNotificacion(selectedNoti.pk_id_notificacion, 2);
         await fetchNotificaciones();
+        // Restaurar la página actual después de actualizar
+        setCurrentPage(paginaActual);
         setSuccessMessage('Notificación desactivada.');
         setTimeout(() => setSuccessMessage(''), 2000);
       } else {
@@ -314,10 +356,14 @@ const Notificaciones = () => {
             data-tooltip="Selecciona una ordenación rápida"
           >
             <option value="" disabled>Seleccione</option>
+            <option value="titulo">Título</option>
+            <option value="descripcion">Descripción</option>
             <option value="tipo">Tipo</option>
             <option value="categoria">Categoría</option>
-            <option value="modulos">Módulos</option>
+            <option value="modulos">Módulo</option>
             <option value="id">ID</option>
+            <option value="fecha_reciente">Más reciente</option>
+            <option value="fecha_antigua">Más antiguo</option>
           </select>
         </div>
       </div>
@@ -477,9 +523,12 @@ const Notificaciones = () => {
       {/* Modal detalle */}
       {modalVisible && notificacionSeleccionada && (
         <div className="modal">
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content view-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
             <h3 className="modal-title">
-              Detalles de la Notificación{' '}
+                <span className="modal-icon">🔔</span>
+                Detalles de la Notificación
+              </h3>
               <span
                 className={`badge ${
                   notificacionSeleccionada.nombre_categoria === 'Promoción'
@@ -489,79 +538,145 @@ const Notificaciones = () => {
               >
                 {notificacionSeleccionada.nombre_categoria}
               </span>
-            </h3>
-            <p>
-              <strong>ID:</strong> {notificacionSeleccionada.pk_id_notificacion}
-            </p>
-            <p>
-              <strong>Título:</strong> {notificacionSeleccionada.titulo}
-            </p>
-            <p>
-              <strong>Descripción:</strong> {notificacionSeleccionada.descripcion}
-            </p>
-            <p>
-              <strong>Categoría:</strong> {notificacionSeleccionada.nombre_categoria}
-            </p>
-            <p>
-              <strong>Módulo:</strong> {notificacionSeleccionada.nombre_modulo}
-            </p>
-            <p>
-              <strong>Estado:</strong> {notificacionSeleccionada.nombre_estado}
-            </p>
+            </div>
 
-            {/* 🔹 Si es PROMOCIÓN → mostrar fechas de inicio/fin */}
-            {notificacionSeleccionada.nombre_categoria === 'Promoción' ? (
-              <>
-                {notificacionSeleccionada.fecha_objetivo && (
-                  <p>
-                    <strong>Fecha de inicio:</strong>{' '}
-                    {new Date(notificacionSeleccionada.fecha_objetivo).toLocaleDateString()}
-                  </p>
-                )}
-                {notificacionSeleccionada.fecha_fin && (
-                  <p>
-                    <strong>Fecha de fin:</strong>{' '}
-                    {new Date(notificacionSeleccionada.fecha_fin).toLocaleDateString()}
-                  </p>
-                )}
-                <p>
-                  <strong>Duración:</strong>{' '}
+            <div className="modal-body">
+              {/* Sección: Información Básica */}
+              <div className="modal-section">
+                <h4 className="section-title">
+                  <span className="section-icon">📝</span>
+                  Información Básica
+                </h4>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">ID:</span>
+                    <span className="info-value">{notificacionSeleccionada.pk_id_notificacion}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Título:</span>
+                    <span className="info-value">{notificacionSeleccionada.titulo}</span>
+                  </div>
+                  <div className="info-item full-width">
+                    <span className="info-label">Descripción:</span>
+                    <span className="info-value">{notificacionSeleccionada.descripcion}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección: Configuración */}
+              <div className="modal-section">
+                <h4 className="section-title">
+                  <span className="section-icon">⚙️</span>
+                  Configuración
+                </h4>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">Categoría:</span>
+                    <span className="info-value">{notificacionSeleccionada.nombre_categoria}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Módulo:</span>
+                    <span className="info-value">{notificacionSeleccionada.nombre_modulo}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Estado:</span>
+                    <span className={`info-value status-badge ${getEstadoClass(notificacionSeleccionada)}`}>
+                      {getEstadoLabel(notificacionSeleccionada)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección: Fechas de Promoción */}
+              {notificacionSeleccionada.nombre_categoria === 'Promoción' && (
+                <div className="modal-section">
+                  <h4 className="section-title">
+                    <span className="section-icon">📅</span>
+                    Fechas de Promoción
+                  </h4>
+                  <div className="info-grid">
+                    <div className="info-item">
+                      <span className="info-label">Fecha Inicio:</span>
+                      <span className="info-value">
+                        {notificacionSeleccionada.fecha_objetivo
+                          ? new Date(notificacionSeleccionada.fecha_objetivo).toLocaleDateString()
+                          : 'No especificada'}
+                      </span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Fecha Fin:</span>
+                      <span className="info-value">
+                        {notificacionSeleccionada.fecha_fin
+                          ? new Date(notificacionSeleccionada.fecha_fin).toLocaleDateString()
+                          : 'No especificada'}
+                      </span>
+                    </div>
+                    {notificacionSeleccionada.fecha_objetivo && notificacionSeleccionada.fecha_fin && (
+                      <div className="info-item">
+                        <span className="info-label">Duración:</span>
+                        <span className="info-value">
                   {(() => {
                     const inicio = new Date(notificacionSeleccionada.fecha_objetivo);
                     const fin = new Date(notificacionSeleccionada.fecha_fin);
                     const diffDays = Math.round((fin - inicio) / (1000 * 60 * 60 * 24));
                     return diffDays > 0 ? `${diffDays} días` : '—';
                   })()}
-                </p>
-              </>
-            ) : (
-              /* 🔹 Si es RECORDATORIO → mostrar intervalo */
-              <>
-                <p>
-                  <strong>Intervalo:</strong> {notificacionSeleccionada.intervalo_dias} días
-                </p>
-                <p>
-                  <strong>Tipo de intervalo:</strong>{' '}
-                  {intervaloLabels[notificacionSeleccionada.tipo_intervalo]}
-                </p>
-              </>
-            )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-            {/* 🔹 Email (si aplica) */}
-            {notificacionSeleccionada.enviar_email === 1 && (
-              <>
-                <p>
-                  <strong>Asunto Email:</strong> {notificacionSeleccionada.asunto_email}
-                </p>
-                <p>
-                  <strong>Cuerpo Email:</strong> {notificacionSeleccionada.cuerpo_email}
-                </p>
-              </>
-            )}
+              {/* Sección: Configuración de Tiempo */}
+              {notificacionSeleccionada.nombre_categoria !== 'Promoción' && (
+                <div className="modal-section">
+                  <h4 className="section-title">
+                    <span className="section-icon">⏰</span>
+                    Configuración de Tiempo
+                  </h4>
+                  <div className="info-grid">
+                    <div className="info-item">
+                      <span className="info-label">Intervalo:</span>
+                      <span className="info-value">{notificacionSeleccionada.intervalo_dias} días</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Tipo de Intervalo:</span>
+                      <span className="info-value">
+                        {intervaloLabels[notificacionSeleccionada.tipo_intervalo] || 'No especificado'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-            <button onClick={() => setModalVisible(false)} className="btn-cerrar">
+              {/* Sección: Configuración de Email */}
+              {notificacionSeleccionada.enviar_email === 1 && (
+                <div className="modal-section">
+                  <h4 className="section-title">
+                    <span className="section-icon">📧</span>
+                    Configuración de Email
+                  </h4>
+                  <div className="info-grid">
+                    <div className="info-item full-width">
+                      <span className="info-label">Asunto:</span>
+                      <span className="info-value">{notificacionSeleccionada.asunto_email}</span>
+                    </div>
+                    <div className="info-item full-width">
+                      <span className="info-label">Cuerpo del Correo:</span>
+                      <span className="info-value email-body">{notificacionSeleccionada.cuerpo_email}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button onClick={() => setModalVisible(false)} className="btn-primary">
+                <span className="btn-icon">✅</span>
               Cerrar
             </button>
+            </div>
           </div>
         </div>
       )}
