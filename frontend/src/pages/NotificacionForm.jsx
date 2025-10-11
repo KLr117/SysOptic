@@ -207,210 +207,339 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="notificaciones-container">
-      <h2>{mode === "edit" ? "Editar Notificación" : "Crear Nueva Notificación"}</h2>
+      <div className="form-header">
+        <h2>{mode === "edit" ? "✏️ Editar Notificación" : "🔔 Crear Nueva Notificación General"}</h2>
+      </div>
 
       {location.state?.reactivateIntent && (
         <div className="success-banner" style={{ marginBottom: 12 }}>
-          Revise la configuración y presione <b>Guardar</b> para <b>reactivar</b> esta notificación.
-          Si presiona <b>Cancelar</b>, el estado de la notificacion no cambiará.
+          <div className="banner-content">
+            <span className="banner-icon">⚠️</span>
+            <div>
+              <strong>Reactivación de Notificación</strong>
+              <p>Revise la configuración y presione <b>Guardar</b> para <b>reactivar</b> esta notificación.
+              Si presiona <b>Cancelar</b>, el estado de la notificacion no cambiará.</p>
+            </div>
+          </div>
         </div>
       )}
 
       {loading ? (
-        <p>Cargando datos...</p>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Cargando datos...</p>
+        </div>
       ) : (
         <>
 
       <form className="notificaciones-form" onSubmit={handleSubmit}>
-        {/* ID (solo en edición) */}
-        {mode === "edit" && (
-          <div className="form-row">
-            <label>ID:</label>
-            <input type="text" value={id} disabled />
+        {/* Sección: Información Básica */}
+        <div className="form-section">
+          <div className="section-header">
+            <h3>📝 Información Básica</h3>
+            <p>Datos principales de la notificación</p>
           </div>
-        )}
-
-        {/* Título */}
-        <div className="form-row">
-          <label>Título:</label>
-          <input
-            type="text"
-            name="titulo"
-            value={formData.titulo}
-            onChange={handleChange}
-          />
-          {errors.titulo && <span className="error">{errors.titulo}</span>}
-        </div>
-
-        {/* Descripción */}
-        <div className="form-row">
-          <label>Descripción:</label>
-          <textarea
-            name="descripcion"
-            value={formData.descripcion}
-            onChange={handleChange}
-          />
-          {errors.descripcion && <span className="error">{errors.descripcion}</span>}
-        </div>
-
-        {/* Categoría (IDs como values) */}
-        <div className="form-row">
-          <label>Categoría:</label>
-          <select
-            name="categoria"
-            value={formData.categoria}
-            onChange={handleChange}
-          >
-            <option value="">Seleccione categoría...</option>
-            <option value="1">Recordatorio</option>
-            <option value="2">Promoción</option>
-          </select>
-          {errors.categoria && <span className="error">{errors.categoria}</span>}
-        </div>
-
-        {formData.categoria === "2" && (
-           <>
-             <div className="form-row">
-               <label>Fecha inicio (Promoción):</label>
-               <input
-                 type="date"
-                 name="fechaInicioProm"
-                 value={formData.fechaInicioProm || ""}
-                 onChange={handleChange}
-               />
-               {errors.fechaInicioProm && <span className="error">{errors.fechaInicioProm}</span>}
-             </div>
-             {formData.fechaInicioProm && (
-               <div className="form-row">
-                 <label>Fecha fin:</label>
-                 <input
-                   type="date"
-                   name="fechaFin"
-                   value={formData.fechaFin || ""}
-                   onChange={handleChange}
-                 />
-               </div>
-             )}
-           </>
-         )}
-
-        {/* Módulo (IDs como values) */}
-        <div className="form-row">
-          <label>Módulo:</label>
-          <select
-            name="modulo"
-            value={formData.modulo}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFormData({
-                ...formData,
-                modulo: value,
-                tipoIntervalo: ""
-              });
-            }}
-          >
-            <option value="">Seleccione módulo...</option>
-            <option value="1">Expedientes</option>
-            <option value="2">Órdenes</option>
-          </select>
-          {errors.modulo && <span className="error">{errors.modulo}</span>}
-        </div>
-
-        {/* Tipo de intervalo */}
-        {formData.categoria !== "2" && (
-          <div className="form-row">
-            <label>¿Cuándo se enviará?</label>
-            {formData.modulo === "1" && (
-              <p className="static-label">X días después de la fecha de registro</p>
+          
+          <div className="form-grid">
+            {/* ID (solo en edición) */}
+            {mode === "edit" && (
+              <div className="form-field">
+                <label className="field-label">
+                  <span className="label-icon">🆔</span>
+                  ID de Notificación
+                </label>
+                <input 
+                  type="text" 
+                  value={id} 
+                  disabled 
+                  className="field-input disabled"
+                />
+              </div>
             )}
-            {formData.modulo === "2" && (
-              <select
-                name="tipoIntervalo"
-                value={formData.tipoIntervalo}
-                onChange={handleChange}
-              >
-                <option value="">Seleccione opción...</option>
-                <option value="antes_entrega">X días antes de la fecha de entrega</option>
-                <option value="despues_recepcion">X días después de la fecha de recepción</option>
-              </select>
-            )}
-            {errors.tipoIntervalo && <span className="error">{errors.tipoIntervalo}</span>}
-          </div>
-        )}
 
-        {/* Intervalo */}
-        {formData.categoria !== "2" && (
-          <div className="form-row">
-            <label>Intervalo:</label>
-            <div className="intervalo-container">
-              <input
-                type="number"
-                name="intervaloCantidad"
-                value={formData.intervaloCantidad}
-                onChange={handleChange}
-                min="0"
-              />
-              <select
-                name="intervaloUnidad"
-                value={formData.intervaloUnidad}
-                onChange={handleChange}
-              >
-                <option value="dias">Días</option>
-                <option value="semanas">Semanas</option>
-                <option value="meses">Meses</option>
-                <option value="anios">Años</option>
-              </select>
-            </div>
-          </div>
-        )}
-
-        {/* Enviar correo */}
-        <div className="form-row">
-          <label>
-            <input
-              type="checkbox"
-              name="enviarEmail"
-              checked={formData.enviarEmail}
-              onChange={handleChange}
-            />
-            ¿Enviar correo al cliente?
-          </label>
-        </div>
-
-        {formData.enviarEmail && (
-          <>
-            <div className="form-row">
-              <label>Asunto del correo:</label>
+            {/* Título */}
+            <div className="form-field">
+              <label className="field-label">
+                <span className="label-icon">📌</span>
+                Título *
+              </label>
               <input
                 type="text"
-                name="asuntoEmail"
-                value={formData.asuntoEmail}
+                name="titulo"
+                value={formData.titulo}
                 onChange={handleChange}
+                className="field-input"
+                placeholder="Ingrese el título de la notificación"
               />
+              {errors.titulo && <span className="error-message">{errors.titulo}</span>}
             </div>
 
-            <div className="form-row">
-              <label>Cuerpo del correo:</label>
+            {/* Descripción */}
+            <div className="form-field full-width">
+              <label className="field-label">
+                <span className="label-icon">📄</span>
+                Descripción *
+              </label>
               <textarea
-                name="cuerpoEmail"
-                value={formData.cuerpoEmail}
+                name="descripcion"
+                value={formData.descripcion}
                 onChange={handleChange}
+                className="field-textarea"
+                placeholder="Describa el propósito de esta notificación"
+                rows="3"
               />
+              {errors.descripcion && <span className="error-message">{errors.descripcion}</span>}
             </div>
-          </>
+          </div>
+        </div>
+
+        {/* Sección: Configuración de Categoría y Módulo */}
+        <div className="form-section">
+          <div className="section-header">
+            <h3>⚙️ Configuración</h3>
+            <p>Define el tipo y alcance de la notificación</p>
+          </div>
+          
+          <div className="form-grid">
+            {/* Categoría */}
+            <div className="form-field">
+              <label className="field-label">
+                <span className="label-icon">🏷️</span>
+                Categoría *
+              </label>
+              <select
+                name="categoria"
+                value={formData.categoria}
+                onChange={handleChange}
+                className="field-select"
+              >
+                <option value="">Seleccione categoría...</option>
+                <option value="1">📅 Recordatorio</option>
+                <option value="2">🎯 Promoción</option>
+              </select>
+              {errors.categoria && <span className="error-message">{errors.categoria}</span>}
+            </div>
+
+            {/* Módulo */}
+            <div className="form-field">
+              <label className="field-label">
+                <span className="label-icon">📦</span>
+                Módulo *
+              </label>
+              <select
+                name="modulo"
+                value={formData.modulo}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({
+                    ...formData,
+                    modulo: value,
+                    tipoIntervalo: ""
+                  });
+                }}
+                className="field-select"
+              >
+                <option value="">Seleccione módulo...</option>
+                <option value="1">📁 Expedientes</option>
+                <option value="2">📋 Órdenes</option>
+              </select>
+              {errors.modulo && <span className="error-message">{errors.modulo}</span>}
+            </div>
+          </div>
+        </div>
+
+        {/* Sección: Fechas de Promoción (solo si es promoción) */}
+        {formData.categoria === "2" && (
+          <div className="form-section">
+            <div className="section-header">
+              <h3>📅 Fechas de Promoción</h3>
+              <p>Configure el período de vigencia de la promoción</p>
+            </div>
+            
+            <div className="form-grid">
+              <div className="form-field">
+                <label className="field-label">
+                  <span className="label-icon">🚀</span>
+                  Fecha de Inicio *
+                </label>
+                <input
+                  type="date"
+                  name="fechaInicioProm"
+                  value={formData.fechaInicioProm || ""}
+                  onChange={handleChange}
+                  className="field-input"
+                />
+                {errors.fechaInicioProm && <span className="error-message">{errors.fechaInicioProm}</span>}
+              </div>
+              
+              {formData.fechaInicioProm && (
+                <div className="form-field">
+                  <label className="field-label">
+                    <span className="label-icon">🏁</span>
+                    Fecha de Fin
+                  </label>
+                  <input
+                    type="date"
+                    name="fechaFin"
+                    value={formData.fechaFin || ""}
+                    onChange={handleChange}
+                    className="field-input"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
-        <button type="submit" className="btn-agregar">
-          {mode === "edit" ? "Guardar Cambios" : "Guardar Notificación"}
-        </button>
-        <button
-          type="button"
-          className="btn-cerrar"
-          onClick={() => navigate("/notificaciones")}
-        >
-          Cancelar
-        </button>
+        {/* Sección: Configuración de Tiempo (solo si NO es promoción) */}
+        {formData.categoria !== "2" && (
+          <div className="form-section">
+            <div className="section-header">
+              <h3>⏰ Configuración de Tiempo</h3>
+              <p>Define cuándo y cómo se enviará la notificación</p>
+            </div>
+            
+            <div className="form-grid">
+              {/* Tipo de intervalo */}
+              <div className="form-field full-width">
+                <label className="field-label">
+                  <span className="label-icon">❓</span>
+                  ¿Cuándo se enviará?
+                </label>
+                {formData.modulo === "1" && (
+                  <div className="static-option">
+                    <div className="option-card">
+                      <span className="option-icon">📅</span>
+                      <span className="option-text">X días después de la fecha de registro</span>
+                    </div>
+                  </div>
+                )}
+                {formData.modulo === "2" && (
+                  <select
+                    name="tipoIntervalo"
+                    value={formData.tipoIntervalo}
+                    onChange={handleChange}
+                    className="field-select"
+                  >
+                    <option value="">Seleccione opción...</option>
+                    <option value="antes_entrega">⏰ X días antes de la fecha de entrega</option>
+                    <option value="despues_recepcion">📥 X días después de la fecha de recepción</option>
+                  </select>
+                )}
+                {errors.tipoIntervalo && <span className="error-message">{errors.tipoIntervalo}</span>}
+              </div>
+
+              {/* Intervalo */}
+              <div className="form-field">
+                <label className="field-label">
+                  <span className="label-icon">🔢</span>
+                  Intervalo
+                </label>
+                <div className="intervalo-container">
+                  <input
+                    type="number"
+                    name="intervaloCantidad"
+                    value={formData.intervaloCantidad}
+                    onChange={handleChange}
+                    min="0"
+                    className="field-input intervalo-number"
+                    placeholder="0"
+                  />
+                  <select
+                    name="intervaloUnidad"
+                    value={formData.intervaloUnidad}
+                    onChange={handleChange}
+                    className="field-select intervalo-unit"
+                  >
+                    <option value="dias">Días</option>
+                    <option value="semanas">Semanas</option>
+                    <option value="meses">Meses</option>
+                    <option value="anios">Años</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sección: Configuración de Email */}
+        <div className="form-section">
+          <div className="section-header">
+            <h3>📧 Configuración de Email</h3>
+            <p>Configure el envío de correos electrónicos</p>
+          </div>
+          
+          <div className="form-grid">
+            <div className="form-field full-width">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="enviarEmail"
+                  checked={formData.enviarEmail}
+                  onChange={handleChange}
+                  className="checkbox-input"
+                />
+                <span className="checkbox-custom"></span>
+                <span className="checkbox-text">
+                  <span className="label-icon">📧</span>
+                  ¿Enviar correo al cliente?
+                </span>
+              </label>
+            </div>
+
+            {formData.enviarEmail && (
+              <>
+                <div className="form-field">
+                  <label className="field-label">
+                    <span className="label-icon">📨</span>
+                    Asunto del Correo
+                  </label>
+                  <input
+                    type="text"
+                    name="asuntoEmail"
+                    value={formData.asuntoEmail}
+                    onChange={handleChange}
+                    className="field-input"
+                    placeholder="Asunto del correo electrónico"
+                  />
+                </div>
+
+                <div className="form-field full-width">
+                  <label className="field-label">
+                    <span className="label-icon">📝</span>
+                    Cuerpo del Correo
+                  </label>
+                  <textarea
+                    name="cuerpoEmail"
+                    value={formData.cuerpoEmail}
+                    onChange={handleChange}
+                    className="field-textarea"
+                    placeholder="Contenido del correo electrónico"
+                    rows="4"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Botones de Acción */}
+        <div className="form-actions">
+          <button type="submit" className="btn-primary">
+            <span className="btn-icon">💾</span>
+            {mode === "edit" ? "Guardar Cambios" : "Crear Notificación"}
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => navigate("/notificaciones")}
+          >
+            <span className="btn-icon">❌</span>
+            Cancelar
+          </button>
+        </div>
       </form>
+      
       <ConfirmModal
         isOpen={isConfirmModalOpen}
         title={mode === "edit" ? "Confirmar actualización" : "Confirmar creación"}
