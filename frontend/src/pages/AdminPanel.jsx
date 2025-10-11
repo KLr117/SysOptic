@@ -456,22 +456,30 @@ export default function AdminPanel() {
                   placeholder="Ingrese la contraseña"
                   style={{ paddingRight: '40px' }}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                  }}
-                >
-                  {showPassword ? '👁' : '🔒'}
-                </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'rgba(255, 255, 255, 0.9)',
+                          border: '1px solid rgba(137, 13, 15, 0.2)',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '16px',
+                          width: '28px',
+                          height: '28px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 10,
+                          marginTop: '-12px',
+                        }}
+                      >
+                        {showPassword ? '👁' : '🔒'}
+                      </button>
               </div>
             </div>
             <div className="form-group">
@@ -487,22 +495,30 @@ export default function AdminPanel() {
                   placeholder="Confirme la contraseña"
                   style={{ paddingRight: '40px' }}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '18px',
-                  }}
-                >
-                  {showConfirmPassword ? '👁' : '🔒'}
-                </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'rgba(255, 255, 255, 0.9)',
+                          border: '1px solid rgba(137, 13, 15, 0.2)',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '16px',
+                          width: '28px',
+                          height: '28px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          zIndex: 10,
+                          marginTop: '-12px',
+                        }}
+                      >
+                        {showConfirmPassword ? '👁' : '🔒'}
+                      </button>
               </div>
             </div>
           </div>
@@ -786,22 +802,30 @@ export default function AdminPanel() {
                             placeholder="Ingrese nueva contraseña"
                             style={{ paddingRight: '40px' }}
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            style={{
-                              position: 'absolute',
-                              right: '10px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: '18px',
-                            }}
-                          >
-                            {showNewPassword ? '👁' : '🔒'}
-                          </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowNewPassword(!showNewPassword)}
+                                    style={{
+                                      position: 'absolute',
+                                      right: '8px',
+                                      top: '50%',
+                                      transform: 'translateY(-50%)',
+                                      background: 'rgba(255, 255, 255, 0.9)',
+                                      border: '1px solid rgba(137, 13, 15, 0.2)',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer',
+                                      fontSize: '16px',
+                                      width: '28px',
+                                      height: '28px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      zIndex: 10,
+                                      marginTop: '-12px',
+                                    }}
+                                  >
+                                    {showNewPassword ? '👁' : '🔒'}
+                                  </button>
                         </div>
                       </div>
                       <div className="form-group">
@@ -817,22 +841,30 @@ export default function AdminPanel() {
                             placeholder="Confirme nueva contraseña"
                             style={{ paddingRight: '40px' }}
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                            style={{
-                              position: 'absolute',
-                              right: '10px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              fontSize: '18px',
-                            }}
-                          >
-                            {showConfirmNewPassword ? '👁' : '🔒'}
-                          </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                                    style={{
+                                      position: 'absolute',
+                                      right: '8px',
+                                      top: '50%',
+                                      transform: 'translateY(-50%)',
+                                      background: 'rgba(255, 255, 255, 0.9)',
+                                      border: '1px solid rgba(137, 13, 15, 0.2)',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer',
+                                      fontSize: '16px',
+                                      width: '28px',
+                                      height: '28px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      zIndex: 10,
+                                      marginTop: '-12px',
+                                    }}
+                                  >
+                                    {showConfirmNewPassword ? '👁' : '🔒'}
+                                  </button>
                         </div>
                       </div>
                     </div>
