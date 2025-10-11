@@ -23,11 +23,19 @@ export default function AppLayout() {
           <img src="/src/assets/logo.jpg" alt="Fundación Visual Óptica" className="logo-image" />
         </div>
         <nav className="app-nav">
-          <Item to="/dashboard" label="Dashboard" />
-          <Item to="/admin" label="Panel de Administracion" />
-          <Item to="/ordenes" label="Orden de Trabajo" />
-          <Item to="/expedientes" label="Expedientes de Pacientes" />
-          <Item to="/notificaciones" label="Notificaciones" />
+          {user?.permisos?.includes('control_admin') && <Item to="/dashboard" label="Dashboard" />}
+          {user?.permisos?.includes('control_admin') && (
+            <Item to="/admin" label="Panel de Administracion" />
+          )}
+          {user?.permisos?.includes('control_ordenes') && (
+            <Item to="/ordenes" label="Orden de Trabajo" />
+          )}
+          {user?.permisos?.includes('control_expedientes') && (
+            <Item to="/expedientes" label="Expedientes de Pacientes" />
+          )}
+          {user?.permisos?.includes('control_notificaciones') && (
+            <Item to="/notificaciones" label="Notificaciones" />
+          )}
         </nav>
       </aside>
 
