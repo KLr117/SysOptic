@@ -268,8 +268,31 @@ const AgregarOrdenTrabajo = () => {
 
 
   const validarFechas = (fechaRecepcion, fechaEntrega) => {
-    if (!fechaRecepcion || !fechaEntrega) return true; // Si no hay fechas, no validar
-    return fechaRecepcion !== fechaEntrega;
+    if (!fechaRecepcion || !fechaEntrega) return { valido: true }; // Si no hay fechas, no validar
+    
+    // Convertir las fechas a objetos Date para comparar
+    const fechaRec = new Date(fechaRecepcion);
+    const fechaEnt = new Date(fechaEntrega);
+    
+    // Verificar si las fechas son iguales
+    if (fechaRec.getTime() === fechaEnt.getTime()) {
+      return { 
+        valido: false, 
+        mensaje: 'Las fechas no pueden ser iguales.',
+        titulo: 'Fechas Iguales'
+      };
+    }
+    
+    // Verificar si la fecha de entrega es anterior a la de recepción
+    if (fechaEnt <= fechaRec) {
+      return { 
+        valido: false, 
+        mensaje: 'La fecha de entrega debe ser posterior a la fecha de recepción.',
+        titulo: 'Fecha de Entrega Inválida'
+      };
+    }
+    
+    return { valido: true };
   };
 
   const validarFormulario = () => {
@@ -329,11 +352,12 @@ const AgregarOrdenTrabajo = () => {
 
 
     // Validar fechas
-    if (!validarFechas(formData.fecha_recepcion, formData.fecha_entrega)) {
+    const validacionFechas = validarFechas(formData.fecha_recepcion, formData.fecha_entrega);
+    if (!validacionFechas.valido) {
       setPopup({
         isOpen: true,
-        title: 'Fechas Inválidas',
-        message: 'La fecha de recepción no puede ser igual a la fecha de entrega.',
+        title: validacionFechas.titulo,
+        message: validacionFechas.mensaje,
         type: 'warning',
         showButtons: true,
         confirmText: 'Aceptar',
@@ -587,12 +611,15 @@ const AgregarOrdenTrabajo = () => {
           </div>
           <div className="orden-field">
             <label>Fecha Entrega</label>
-            <input 
-              type="date" 
-              name="fecha_entrega"
-              value={formData.fecha_entrega}
-              onChange={handleInputChange}
-            />
+            <div className="tooltip">
+              <input 
+                type="date" 
+                name="fecha_entrega"
+                value={formData.fecha_entrega}
+                onChange={handleInputChange}
+              />
+              <span className="tooltiptext">La fecha de entrega debe ser posterior a la fecha de recepción</span>
+            </div>
           </div>
         </div>
       </div>
