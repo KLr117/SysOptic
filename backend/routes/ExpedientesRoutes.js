@@ -5,6 +5,7 @@ import {
   createExpedienteController,
   updateExpedienteController,
   deleteExpedienteController,
+  getLastCorrelativoExpedienteController,
 } from "../controllers/ExpedientesController.js";
 import { authorizeModules } from "../middlewares/Auth.js";
 
@@ -12,6 +13,13 @@ const router = express.Router();
 
 // GET /api/expedientes - Listar todos los expedientes
 router.get("/", authorizeModules("control_expedientes"), listExpedientes);
+
+// GET /api/expedientes/ultimo-correlativo - Obtener último correlativo para sugerencia
+router.get(
+  "/ultimo-correlativo",
+  authorizeModules("control_expedientes"),
+  getLastCorrelativoExpedienteController
+);
 
 // GET /api/expedientes/:pk_id_expediente - Obtener un expediente específico
 router.get(

@@ -1,6 +1,4 @@
 import db from '../database/db.js';
-import { ImagenesOrdenesController, upload } from '../controllers/imagenesOrdenesController.js';
-import { authMiddleware } from '../middlewares/Auth.js';
 
 class ImagenesExpedientesModel {
   // Crear nueva imagen
@@ -16,7 +14,7 @@ class ImagenesExpedientesModel {
       const [result] = await db.execute(query, [expediente_id, nombre_archivo, ruta_archivo]);
       return { success: true, id: result.insertId };
     } catch (error) {
-      console.error('❌ Error creando imagen:', error);
+      console.error('Error creando imagen:', error);
       return { success: false, error: error.message };
     }
   }
@@ -42,7 +40,7 @@ class ImagenesExpedientesModel {
       const [rows] = await db.execute(query, [expedienteId]);
       return { success: true, imagenes: rows };
     } catch (error) {
-      console.error('❌ Error obteniendo imágenes del expediente:', error);
+      console.error('Error obteniendo imágenes del expediente:', error);
       return { success: false, error: error.message };
     }
   }
@@ -67,7 +65,7 @@ class ImagenesExpedientesModel {
       const [rows] = await db.execute(query);
       return { success: true, imagenes: rows };
     } catch (error) {
-      console.error('❌ Error obteniendo todas las imágenes:', error);
+      console.error('Error obteniendo todas las imágenes:', error);
       return { success: false, error: error.message };
     }
   }
@@ -80,7 +78,7 @@ class ImagenesExpedientesModel {
       const [result] = await db.execute(query, [imagenId]);
       return { success: true, affectedRows: result.affectedRows };
     } catch (error) {
-      console.error('❌ Error eliminando imagen:', error);
+      console.error('Error eliminando imagen:', error);
       return { success: false, error: error.message };
     }
   }
@@ -93,7 +91,7 @@ class ImagenesExpedientesModel {
       const [result] = await db.execute(query, [expedienteId]);
       return { success: true, affectedRows: result.affectedRows };
     } catch (error) {
-      console.error('❌ Error eliminando imágenes del expediente:', error);
+      console.error('Error eliminando imágenes del expediente:', error);
       return { success: false, error: error.message };
     }
   }
@@ -106,7 +104,7 @@ class ImagenesExpedientesModel {
       const [rows] = await db.execute(query, [expedienteId]);
       return { success: true, total: rows[0].total };
     } catch (error) {
-      console.error('❌ Error contando imágenes:', error);
+      console.error('Error contando imágenes:', error);
       return { success: false, error: error.message };
     }
   }
@@ -134,7 +132,7 @@ class ImagenesExpedientesModel {
       }
       return { success: true, imagen: rows[0] };
     } catch (error) {
-      console.error('❌ Error obteniendo imagen por ID:', error);
+      console.error('Error obteniendo imagen por ID:', error);
       return { success: false, error: error.message };
     }
   }

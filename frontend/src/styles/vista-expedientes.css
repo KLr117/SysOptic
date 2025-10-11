@@ -1786,4 +1786,28 @@
   background: #B71C1C;
 }
 
+/* ===== CONTADOR DE FOTOS ===== */
+.contador-fotos {
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.contador-texto {
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Modo oscuro para contador */
+.dark-mode .contador-texto {
+  color: var(--color-text);
+}
+
+/* Responsive para contador */
+@media (max-width: 768px) {
+  .contador-texto {
+    font-size: 0.8rem;
+  }
+}
+
 
