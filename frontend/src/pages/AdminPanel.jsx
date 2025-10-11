@@ -355,13 +355,15 @@ export default function AdminPanel() {
   return (
     <div className="usuarios-container">
       <div className="usuarios-header">
-        <Titulo text="Panel Administrativo" className="titulo" />
+        <div className="header-title">
+          <Titulo text="Panel Administrativo" className="titulo" />
+        </div>
         <div className="header-buttons">
           <button className="btn-mostrar-usuarios" onClick={() => setShowUsersModal(true)}>
             👥 Mostrar Usuarios
           </button>
           <button className="btn-bitacora" onClick={goToBitacora}>
-            Ver Bitácora
+            📋 Ver Bitácora
           </button>
         </div>
       </div>
@@ -468,7 +470,7 @@ export default function AdminPanel() {
                     fontSize: '18px',
                   }}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? '👁' : '🔒'}
                 </button>
               </div>
             </div>
@@ -499,7 +501,7 @@ export default function AdminPanel() {
                     fontSize: '18px',
                   }}
                 >
-                  {showConfirmPassword ? '🙈' : '👁️'}
+                  {showConfirmPassword ? '👁' : '🔒'}
                 </button>
               </div>
             </div>
@@ -544,7 +546,7 @@ export default function AdminPanel() {
         <div className="modal-overlay">
           <div className="modal-container users-modal">
             <div className="modal-header">
-              <h3>Lista de Usuarios</h3>
+              <h3>📋 Gestión de Usuarios del Sistema</h3>
               <button className="modal-close" onClick={() => setShowUsersModal(false)}>
                 ×
               </button>
@@ -658,8 +660,8 @@ export default function AdminPanel() {
       {showEditModal && (
         <div className="modal-overlay">
           <div className="modal-container users-modal">
-            <div className="modal-header">
-              <h3>Editar Usuario</h3>
+            <div className="modal-header edit-user-header">
+              <h3>✏️ Editar Información del Usuario</h3>
               <button className="modal-close" onClick={() => setShowEditModal(false)}>
                 ×
               </button>
@@ -798,7 +800,7 @@ export default function AdminPanel() {
                               fontSize: '18px',
                             }}
                           >
-                            {showNewPassword ? '🙈' : '👁️'}
+                            {showNewPassword ? '👁' : '🔒'}
                           </button>
                         </div>
                       </div>
@@ -829,7 +831,7 @@ export default function AdminPanel() {
                               fontSize: '18px',
                             }}
                           >
-                            {showConfirmNewPassword ? '🙈' : '👁️'}
+                            {showConfirmNewPassword ? '👁' : '🔒'}
                           </button>
                         </div>
                       </div>

@@ -36,15 +36,20 @@
 /* Estilo para el componente Titulo en admin panel */
 .usuarios-container .usuarios-header .titulo {
   color: #890D0F !important;
-  font-size: 32px;
+  font-size: 36px;
   font-weight: bold;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
   text-align: center;
-  text-shadow: 0 2px 4px rgba(137, 13, 15, 0.3);
+  text-shadow: none;
   border-bottom: 3px solid #890D0F;
-  padding-bottom: 0.5rem;
-  display: inline-block;
+  padding-bottom: 1rem;
+  display: block;
   width: 100%;
+  position: relative;
+}
+
+.usuarios-container .usuarios-header .titulo::after {
+  display: none;
 }
 
 /* Modo oscuro para el componente Titulo */
@@ -56,13 +61,19 @@
   background: linear-gradient(135deg, #890D0F, #A01A1C);
   color: white;
   border: none;
-  padding: 12px 25px;
+  padding: 12px 30px;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(137, 13, 15, 0.3);
+  min-width: 150px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .usuarios-container .btn-bitacora:hover {
@@ -129,10 +140,11 @@ body:not(.dark-mode) .usuarios-container {
 
 .usuarios-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2rem;
   margin-bottom: 2rem;
-  padding: 1.5rem 2rem;
+  padding: 2rem;
   background: var(--color-bg-secondary);
   border-radius: 1rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
@@ -145,6 +157,37 @@ body:not(.dark-mode) .usuarios-container {
 .usuarios-header:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.header-title {
+  width: 100%;
+  text-align: center;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: flex-end !important;
+  width: 100%;
+  margin-left: auto;
+}
+
+/* Asegurar que ambos botones del header tengan el mismo tamaño */
+.header-buttons .btn-mostrar-usuarios,
+.header-buttons .btn-bitacora {
+  width: 180px;
+  height: 45px;
+  min-width: 180px;
+  max-width: 180px;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
 }
 
 .usuarios-header h1 {
@@ -169,12 +212,13 @@ body:not(.dark-mode) .usuarios-container {
    ========================= */
 
 .main-form-container {
-  background: var(--color-bg-secondary);
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(185, 28, 28, 0.12) 50%, rgba(220, 38, 38, 0.08) 100%);
   padding: 2rem;
   border-radius: 1rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   margin-bottom: 2rem;
   border: 1px solid var(--color-border);
+  border-top: 4px solid #890D0F;
   position: relative;
   z-index: 1;
 }
@@ -206,15 +250,12 @@ body:not(.dark-mode) .usuarios-container {
 }
 
 .usuarios-container .usuarios-container .form-container h2 {
-  color: var(--color-text);
+  color: #890D0F;
   margin-bottom: 1.5rem;
   text-align: center;
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #890D0F, #A01A1C);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  border-bottom: none;
 }
 
 .usuarios-container .usuario-form {
@@ -248,12 +289,23 @@ body:not(.dark-mode) .usuarios-container {
 .usuarios-container .form-group select {
   padding: 0.75rem 1rem;
   border: 1px solid var(--color-border);
+  border-left: 3px solid #890D0F;
   border-radius: 0.5rem;
   font-size: 1rem;
   transition: all 0.3s ease;
   background: var(--color-bg) !important;
   color: var(--color-text) !important;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.usuarios-container .form-group input:focus,
+.usuarios-container .form-group select:focus {
+  outline: none;
+  border-color: #890D0F !important;
+  border-left: 3px solid #A01A1C;
+  box-shadow: 0 0 0 2px rgba(137, 13, 15, 0.2);
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
 }
 
 /* Forzar colores consistentes en todos los temas */
@@ -643,69 +695,27 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
   margin-bottom: 1.5rem;
   font-size: 1.75rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #890D0F, #A01A1C);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
-  padding: 1rem;
-  border-radius: 0.75rem;
-  background-color: rgba(137, 13, 15, 0.1);
-  border: 2px solid rgba(137, 13, 15, 0.2);
-  box-shadow: 0 4px 12px rgba(137, 13, 15, 0.15);
+  color: #890D0F;
   text-align: center;
+  padding: 0.5rem 0;
+  border-bottom: none;
 }
 
-/* Modo oscuro para títulos de formulario - solo el texto */
+/* Modo oscuro para títulos de formulario */
 .dark-mode .main-form-container h2,
 .dark-mode .usuarios-container .form-container h2 {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-.main-form-container h2::before,
-.form-container h2::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 0.5rem;
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(135deg, #890D0F, #A01A1C);
-  border-radius: 2px;
+  color: #890D0F !important;
 }
 
 .usuarios-container .form-icon {
-  font-size: 2rem;
-  filter: brightness(0) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-  animation: float 3s ease-in-out infinite;
+  font-size: 1.5rem;
+  color: #890D0F;
   transition: all 0.3s ease;
 }
 
 /* Estilos específicos para el icono en modo oscuro */
 .dark-mode .usuarios-container .form-icon {
-  filter: brightness(0) saturate(100%) invert(27%) sepia(51%) saturate(2878%) hue-rotate(346deg) brightness(104%) contrast(97%) drop-shadow(0 2px 4px rgba(137, 13, 15, 0.5));
-  animation: glow 2s ease-in-out infinite alternate;
-}
-
-@keyframes glow {
-  from {
-    filter: brightness(0) invert(1) drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3));
-  }
-  to {
-    filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(255, 255, 255, 0.6));
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
+  color: #890D0F;
 }
 
 /* Responsive para el título */
@@ -911,24 +921,30 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
   gap: 20px;
   justify-content: center;
   margin-top: 30px;
-  padding-top: 25px;
-  border-top: 2px solid var(--color-border);
+  padding: 25px;
+  border-top: 2px solid #890D0F;
+  background: linear-gradient(135deg, rgba(137, 13, 15, 0.05), rgba(160, 26, 28, 0.05));
+  border-radius: 0.5rem;
 }
 
 .btn-primary {
   background: linear-gradient(135deg, #890D0F, #A01A1C);
   color: white;
   border: none;
-  padding: 10px 25px;
+  padding: 12px 30px;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 3px 10px rgba(137, 13, 15, 0.3);
-  min-width: 120px;
+  min-width: 150px;
+  height: 45px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-primary:hover {
@@ -941,16 +957,20 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
   background: linear-gradient(135deg, #6c757d, #495057);
   color: white;
   border: none;
-  padding: 10px 25px;
+  padding: 12px 30px;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 3px 10px rgba(108, 117, 125, 0.3);
-  min-width: 120px;
+  min-width: 150px;
+  height: 45px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-secondary:hover {
@@ -1632,21 +1652,24 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
   background: linear-gradient(135deg, #890D0F, #A01A1C);
   color: white;
   border: none;
-  padding: 12px 25px;
+  padding: 12px 30px;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  box-shadow: 0 4px 15px rgba(137, 13, 15, 0.3);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  min-width: 150px;
+  height: 45px;
 }
 
 .btn-mostrar-usuarios:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+  box-shadow: 0 6px 20px rgba(137, 13, 15, 0.4);
 }
 
 /* =========================
@@ -1670,6 +1693,159 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
 }
 
 /* =========================
+   MODAL DE EDICIÓN DE USUARIO
+   ========================= */
+
+.edit-user-header {
+  background: linear-gradient(135deg, #890D0F, #A01A1C) !important;
+  color: white !important;
+  border-bottom: 3px solid #6B0A0C !important;
+}
+
+.edit-user-header h3 {
+  color: white !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.edit-user-header .modal-close {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-radius: 50% !important;
+  transition: all 0.3s ease !important;
+}
+
+.edit-user-header .modal-close:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Estilos para el modal de edición */
+.users-modal .modal-container {
+  border: 2px solid #890D0F !important;
+  box-shadow: 0 10px 30px rgba(137, 13, 15, 0.3) !important;
+}
+
+.users-modal .modal-body {
+  background: linear-gradient(135deg, 
+    var(--color-bg-secondary) 0%, 
+    rgba(137, 13, 15, 0.05) 50%, 
+    var(--color-bg-secondary) 100%
+  ) !important;
+}
+
+/* Estilos para los campos del formulario de edición */
+.users-modal .usuario-form input,
+.users-modal .usuario-form select {
+  border: 2px solid #890D0F !important;
+  background: var(--color-bg-primary) !important;
+  color: var(--color-text) !important;
+  transition: all 0.3s ease !important;
+}
+
+.users-modal .usuario-form input:focus,
+.users-modal .usuario-form select:focus {
+  border-color: #A01A1C !important;
+  box-shadow: 0 0 0 3px rgba(137, 13, 15, 0.2) !important;
+  background: var(--color-bg-primary) !important;
+  color: var(--color-text) !important;
+}
+
+/* Estilos para los botones en el modal de edición */
+.users-modal .btn-primary {
+  background: linear-gradient(135deg, #890D0F, #A01A1C) !important;
+  border: 2px solid #6B0A0C !important;
+  box-shadow: 0 4px 15px rgba(137, 13, 15, 0.4) !important;
+  min-width: 150px !important;
+  height: 45px !important;
+  padding: 12px 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.users-modal .btn-primary:hover {
+  background: linear-gradient(135deg, #A01A1C, #890D0F) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(137, 13, 15, 0.5) !important;
+}
+
+.users-modal .btn-secondary {
+  background: linear-gradient(135deg, #6c757d, #495057) !important;
+  border: 2px solid #5a6268 !important;
+  min-width: 150px !important;
+  height: 45px !important;
+  padding: 12px 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Estilos para el separador */
+.users-modal hr {
+  border: 2px solid #890D0F !important;
+  background: linear-gradient(90deg, transparent, #890D0F, transparent) !important;
+  height: 2px !important;
+  margin: 30px 0 !important;
+}
+
+/* Estilos para el checkbox de cambiar contraseña */
+.users-modal input[type="checkbox"] {
+  accent-color: #890D0F !important;
+}
+
+.users-modal label {
+  color: var(--color-text) !important;
+  font-weight: 600 !important;
+}
+
+/* Estilos para los iconos de contraseña - Completamente estáticos */
+.users-modal button[style*="position: absolute"],
+.usuario-form button[style*="position: absolute"] {
+  color: #890D0F !important;
+  font-size: 18px !important;
+  opacity: 0.8 !important;
+  filter: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+.users-modal button[style*="position: absolute"]:hover,
+.usuario-form button[style*="position: absolute"]:hover {
+  color: #A01A1C !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Estilos específicos para el icono de ojo - Completamente estático */
+.usuario-form button[style*="position: absolute"] {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 4px !important;
+  padding: 6px !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  transition: none !important;
+  animation: none !important;
+  border: 1px solid rgba(137, 13, 15, 0.2) !important;
+}
+
+.usuario-form button[style*="position: absolute"]:hover {
+  background: rgba(255, 255, 255, 1) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  border: 1px solid rgba(137, 13, 15, 0.3) !important;
+}
+
+/* =========================
    RESPONSIVE
    ========================= */
 
@@ -1680,8 +1856,24 @@ body:not(.dark-mode) .usuario-form select[name="role"] option {
   
   .usuarios-header {
     flex-direction: column;
-    gap: 15px;
+    gap: 1.5rem;
     text-align: center;
+    padding: 1.5rem;
+  }
+  
+  .header-buttons {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  .header-buttons button {
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .usuarios-container .usuarios-header .titulo {
+    font-size: 28px;
   }
   
   .form-row {
