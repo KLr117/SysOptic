@@ -54,3 +54,14 @@ export const deleteExpediente = async (id) => {
     throw new Error('Error al eliminar expediente');
   }
 };
+
+// Obtener último correlativo sugerido
+export const getLastCorrelativoExpediente = async () => {
+  const res = await apiClient.get('/api/expedientes/ultimo-correlativo');
+  if (res.data.ok && res.data.sugerencia !== undefined) {
+    return res.data.sugerencia;
+  } else {
+    console.warn('Respuesta del backend no tiene el formato esperado:', res.data);
+    return 1; // Valor por defecto si hay error
+  }
+};
