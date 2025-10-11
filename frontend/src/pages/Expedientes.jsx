@@ -553,12 +553,17 @@ export default function Expedientes() {
           const expedienteData = {
             ...expediente,
             foto: nuevasFotos
-          });
+          };
+          
+          await updateExpediente(expedienteId, expedienteData);
+          
+          // Guardar fotos actualizadas en cache local
+          guardarFotosEnCache(expedienteId, nuevasFotos);
           
           // Actualizar el estado local
           setExpedientes(prev => prev.map(exp => 
             exp.pk_id_expediente === expedienteId 
-              ? { ...exp, foto: nuevasFotos }
+              ? { ...exp, foto: nuevasFotos, imagenes: nuevasFotos.length > 0 }
               : exp
           ));
           
@@ -566,7 +571,7 @@ export default function Expedientes() {
         }
       } catch (error) {
         console.error('Error al eliminar foto:', error);
-        mostrarPopup('Error al eliminar la foto', 'error');
+        mostrarPopup("Error al eliminar la foto", "error");
       }
     }
     
