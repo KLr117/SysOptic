@@ -1,0 +1,288 @@
+/* Estilos para Modal de Zoom de Imágenes */
+
+.zoom-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeInZoom 0.3s ease-out;
+}
+
+.zoom-modal-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  max-width: 95vw;
+  max-height: 95vh;
+  width: 90vw;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideInZoom 0.3s ease-out;
+}
+
+/* Header del modal de zoom - Solo título y cerrar */
+.zoom-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.zoom-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #1f2937;
+}
+
+.zoom-icon {
+  font-size: 20px;
+}
+
+.zoom-modal-title h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.zoom-controls {
+  display: none;
+}
+
+.zoom-btn {
+  display: none;
+}
+
+.zoom-level {
+  display: none;
+}
+
+.zoom-close-btn {
+  background: #dc2626;
+  border: 1px solid #b91c1c;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.zoom-close-btn:hover {
+  background: #b91c1c;
+  border-color: #991b1b;
+  transform: translateY(-1px);
+}
+
+/* Contenido del modal de zoom */
+.zoom-modal-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: hidden;
+  background: white;
+}
+
+.zoom-image-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.zoom-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Footer del modal de zoom - Controles de zoom */
+.zoom-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 24px;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #f8fafc;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.zoom-btn {
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.zoom-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.zoom-btn:active {
+  transform: translateY(0);
+}
+
+.zoom-level {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 16px;
+  min-width: 60px;
+  text-align: center;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+}
+
+.zoom-instructions {
+  display: none;
+}
+
+.instruction-icon {
+  display: none;
+}
+
+.zoom-close-footer-btn {
+  display: none;
+}
+
+/* Animaciones */
+@keyframes fadeInZoom {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInZoom {
+  from {
+    transform: scale(0.9) translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .zoom-modal-container {
+    width: 95vw;
+    height: 95vh;
+    max-width: none;
+    max-height: none;
+  }
+  
+  .zoom-modal-header {
+    padding: 12px 16px;
+  }
+  
+  .zoom-modal-title h3 {
+    font-size: 16px;
+  }
+  
+  .zoom-controls {
+    gap: 12px;
+    padding: 10px 16px;
+  }
+  
+  .zoom-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  
+  .zoom-level {
+    font-size: 14px;
+    min-width: 50px;
+  }
+  
+  .zoom-modal-content {
+    padding: 10px;
+  }
+  
+  .zoom-modal-footer {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .zoom-modal-header {
+    padding: 10px 12px;
+  }
+  
+  .zoom-modal-title h3 {
+    font-size: 14px;
+  }
+  
+  .zoom-controls {
+    gap: 8px;
+    padding: 8px 12px;
+  }
+  
+  .zoom-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  
+  .zoom-level {
+    font-size: 12px;
+    min-width: 40px;
+  }
+  
+  .zoom-modal-footer {
+    padding: 10px 12px;
+  }
+}

@@ -1,24 +1,16 @@
 // ===============   WENDYs    ===============
-//en la base de datos iniciar en la linea 297 en el ldd modificacion con alter table
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import ConfirmModal from '../components/ConfirmModal';
-import '../styles/vista-expedientes.css';
-import '../styles/popup.css';
-import '../styles/vista-notificaciones.css';
-import Titulo from '../components/Titulo';
-import Button from '../components/Button';
+import React, { useState, useEffect } from "react";
+import ConfirmModal from "../components/ConfirmModal";
+import "../styles/vista-expedientes.css";
+import "../styles/popup.css";
+import Titulo from "../components/Titulo";
+import Button from "../components/Button";
 import {
   getExpedientes,
   createExpediente,
   updateExpediente,
   deleteExpediente,
-} from '../services/expedientesService';
-import {
-  getEstadoNotificacionExpediente,
-  getNotificacionEspecificaById,
-  deleteNotificacionEspecifica,
-} from '../services/notificacionesService';
+} from "../services/expedientesService";
 
 export default function Expedientes() {
   const navigate = useNavigate();
@@ -57,7 +49,7 @@ export default function Expedientes() {
     telefono: '',
     direccion: '',
     email: '',
-    fecha_registro: '', // ✅ Sin fecha sugerida - el cliente debe ingresarla
+    fecha_registro: '', 
     foto: [],
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,10 +74,10 @@ export default function Expedientes() {
   const [sugerenciasCorrelativo, setSugerenciasCorrelativo] = useState([]);
   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
   const [ultimoCorrelativoIngresado, setUltimoCorrelativoIngresado] = useState(null);
-
-  // Estados para modal de imágenes
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalImage, setModalImage] = useState(null);
+   
+   // Estados para modal de imágenes
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [modalImage, setModalImage] = useState(null);
 
   // Estado para notificaciones de expedientes
   const [notificacionesEstado, setNotificacionesEstado] = useState({});
@@ -114,6 +106,114 @@ export default function Expedientes() {
     setModalImage(null);
   };
 
+  // 🔹 Funciones para modal de zoom
+  const openZoomModal = (imagen, expedienteId) => {
+    setZoomImage({
+      ...imagen,
+      expedienteId: expedienteId
+    });
+    setZoomLevel(1);
+    setZoomPosition({ x: 0, y: 0 });
+    setShowZoomModal(true);
+  };
+
+  const closeZoomModal = () => {
+    setShowZoomModal(false);
+    setZoomImage(null);
+    setZoomLevel(1);
+    setZoomPosition({ x: 0, y: 0 });
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.5, 5));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.5, 0.5));
+  };
+
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+    setZoomPosition({ x: 0, y: 0 });
+  };
+
+  const handleImageDrag = (e) => {
+    if (zoomLevel > 1 && e.buttons === 1) {
+      e.preventDefault();
+      const rect = e.currentTarget.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const deltaX = (e.clientX - rect.left - centerX) / centerX;
+      const deltaY = (e.clientY - rect.top - centerY) / centerY;
+      
+      setZoomPosition(prev => ({
+        x: Math.max(-50, Math.min(50, prev.x + deltaX * 10)),
+        y: Math.max(-50, Math.min(50, prev.y + deltaY * 10))
+      }));
+    }
+  };
+
+  const handleWheelZoom = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.2 : 0.2;
+    setZoomLevel(prev => Math.max(0.5, Math.min(5, prev + delta)));
+  };
+
+  // 🔹 Función para cargar fotos desde localStorage
+  const cargarFotosDesdeCache = (expedientes) => {
+    return expedientes.map(exp => {
+      const cacheKey = `expediente_fotos_${exp.pk_id_expediente}`;
+      const fotosCache = localStorage.getItem(cacheKey);
+      
+      if (fotosCache) {
+        try {
+          const fotosParseadas = JSON.parse(fotosCache);
+          console.log(`Fotos cargadas desde cache para expediente ${exp.pk_id_expediente}:`, fotosParseadas);
+          return {
+            ...exp,
+            foto: fotosParseadas,
+            imagenes: fotosParseadas.length > 0
+          };
+        } catch (error) {
+          console.error('Error parseando fotos desde cache:', error);
+          return exp;
+        }
+      }
+      
+      // Si no hay cache pero hay fotos en el backend, usar las del backend y guardarlas en cache
+      if (exp.foto && exp.foto.length > 0) {
+        console.log(`Fotos encontradas en backend para expediente ${exp.pk_id_expediente}, guardando en cache:`, exp.foto);
+        guardarFotosEnCache(exp.pk_id_expediente, exp.foto);
+        return exp;
+      }
+      
+      return exp;
+    });
+  };
+
+  // 🔹 Función para guardar fotos en localStorage
+  const guardarFotosEnCache = (expedienteId, fotos) => {
+    const cacheKey = `expediente_fotos_${expedienteId}`;
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify(fotos));
+      console.log(`Fotos guardadas en cache para expediente ${expedienteId}:`, fotos);
+    } catch (error) {
+      console.error('Error guardando fotos en cache:', error);
+    }
+  };
+
+  // 🔹 Función para limpiar fotos del cache
+  const limpiarFotosDelCache = (expedienteId) => {
+    const cacheKey = `expediente_fotos_${expedienteId}`;
+    try {
+      localStorage.removeItem(cacheKey);
+      console.log(`Fotos eliminadas del cache para expediente ${expedienteId}`);
+    } catch (error) {
+      console.error('Error eliminando fotos del cache:', error);
+    }
+  };
+
   // 🔹 Cargar expedientes
   useEffect(() => {
     const cargarExpedientes = async () => {
@@ -122,7 +222,7 @@ export default function Expedientes() {
         const data = await getExpedientes();
         // Validar que data sea un array antes de establecerlo
         if (Array.isArray(data)) {
-          setExpedientes(data);
+        setExpedientes(data);
         } else {
           console.warn('getExpedientes no retornó un array:', data);
           setExpedientes([]);
@@ -234,7 +334,12 @@ export default function Expedientes() {
     }
   };
 
-  // 🔹 Cargar sugerencias de correlativo
+  // 🔹 Monitorear cambios en el ordenamiento
+  useEffect(() => {
+    console.log('🔄 Estados de ordenamiento cambiaron:', { sortField, sortDirection });
+  }, [sortField, sortDirection]);
+
+  // 🔹 Cargar sugerencias de correlativo usando el nuevo endpoint
   useEffect(() => {
     const cargarSugerenciasCorrelativo = async () => {
       try {
@@ -248,46 +353,46 @@ export default function Expedientes() {
           console.log('Sugerencia basada en último dato ingresado:', siguienteSugerencia);
           return;
         }
-
+        
         // Si no hay último dato ingresado, usar la lógica original
         const data = await getExpedientes();
-        if (Array.isArray(data)) {
-          // Obtener todos los correlativos numéricos para encontrar el siguiente consecutivo
-          const correlativosNumericos = data
-            .map((exp) => exp.correlativo)
-            .filter((correlativo) => correlativo)
-            .map((correlativo) => {
-              // Extraer solo números del correlativo
-              const numeros = correlativo.replace(/\D/g, '');
-              return numeros ? parseInt(numeros) : 0;
-            })
-            .filter((num) => num > 0) // Solo números válidos
-            .sort((a, b) => b - a); // Ordenar de mayor a menor
-
-          console.log('Correlativos numéricos encontrados:', correlativosNumericos);
-
-          if (correlativosNumericos.length > 0) {
-            // Encontrar el siguiente número consecutivo
-            let siguienteNumero = correlativosNumericos[0] + 1;
-
-            // Verificar si el siguiente número ya existe
-            while (correlativosNumericos.includes(siguienteNumero)) {
-              siguienteNumero++;
-            }
-
-            console.log('Siguiente correlativo consecutivo:', siguienteNumero);
-            setSugerenciasCorrelativo([siguienteNumero.toString()]);
-          } else {
-            // Si no hay correlativos, empezar con 1
-            console.log('No hay correlativos existentes, empezando con 1');
-            setSugerenciasCorrelativo(['1']);
-          }
-        }
-      } catch (error) {
-        console.error('Error cargando sugerencias de correlativo:', error);
-        // En caso de error, sugerir 1
-        setSugerenciasCorrelativo(['1']);
-      } finally {
+         if (Array.isArray(data)) {
+           // Obtener todos los correlativos numéricos para encontrar el siguiente consecutivo
+           const correlativosNumericos = data
+             .map(exp => exp.correlativo)
+             .filter(correlativo => correlativo)
+             .map(correlativo => {
+               // Extraer solo números del correlativo
+               const numeros = correlativo.replace(/\D/g, '');
+               return numeros ? parseInt(numeros) : 0;
+             })
+             .filter(num => num > 0) // Solo números válidos
+             .sort((a, b) => b - a); // Ordenar de mayor a menor
+           
+           console.log('Correlativos numéricos encontrados:', correlativosNumericos);
+           
+           if (correlativosNumericos.length > 0) {
+             // Encontrar el siguiente número consecutivo
+             let siguienteNumero = correlativosNumericos[0] + 1;
+             
+             // Verificar si el siguiente número ya existe
+             while (correlativosNumericos.includes(siguienteNumero)) {
+               siguienteNumero++;
+             }
+             
+             console.log('Siguiente correlativo consecutivo:', siguienteNumero);
+             setSugerenciasCorrelativo([siguienteNumero.toString()]);
+           } else {
+             // Si no hay correlativos, empezar con 1
+             console.log('No hay correlativos existentes, empezando con 1');
+             setSugerenciasCorrelativo(['1']);
+           }
+         }
+       } catch (error) {
+         console.error('Error cargando sugerencias de correlativo:', error);
+         // En caso de error, sugerir 1
+         setSugerenciasCorrelativo(['1']);
+       } finally {
         setLoadingSugerencias(false);
       }
     };
@@ -419,57 +524,66 @@ export default function Expedientes() {
 
   // Función para eliminar foto desde la tabla
   const eliminarFotoTabla = (expedienteId, fotoIndex) => {
-    setExpedienteFotoToDelete({ expedienteId, fotoIndex });
-    setShowConfirmEliminarFotoTabla(true);
+    // Obtener información del expediente y la foto
+    const expediente = expedientes.find(exp => exp.pk_id_expediente === expedienteId);
+    if (expediente && expediente.foto && expediente.foto.length > fotoIndex) {
+      setFotoToDeleteInfo({ 
+        expedienteId, 
+        fotoIndex, 
+        expedienteNombre: expediente.nombre,
+        fotoNumero: fotoIndex + 1
+      });
+      setShowConfirmEliminarFotoPopup(true);
+    }
   };
 
-  // Función para confirmar eliminación de foto desde tabla
+  // Función para confirmar eliminación de foto desde tabla usando el sistema actual
   const confirmarEliminarFotoTabla = async () => {
     if (expedienteFotoToDelete) {
       const { expedienteId, fotoIndex } = expedienteFotoToDelete;
-
+      
       try {
         // Obtener el expediente actual
-        const expediente = expedientes.find((exp) => exp.pk_id_expediente === expedienteId);
+        const expediente = expedientes.find(exp => exp.pk_id_expediente === expedienteId);
         if (expediente && expediente.foto) {
           // Crear nuevo array sin la foto eliminada
           const nuevasFotos = expediente.foto.filter((_, i) => i !== fotoIndex);
 
           // Actualizar el expediente en el backend
-          await updateExpediente(expedienteId, {
+          const expedienteData = {
             ...expediente,
-            foto: nuevasFotos,
+            foto: nuevasFotos
           });
-
+          
           // Actualizar el estado local
-          setExpedientes((prev) =>
-            prev.map((exp) =>
-              exp.pk_id_expediente === expedienteId ? { ...exp, foto: nuevasFotos } : exp
-            )
-          );
-
-          mostrarPopup('Foto eliminada correctamente', 'success');
+          setExpedientes(prev => prev.map(exp => 
+            exp.pk_id_expediente === expedienteId 
+              ? { ...exp, foto: nuevasFotos }
+              : exp
+          ));
+          
+          mostrarPopup("Foto eliminada correctamente", "success");
         }
       } catch (error) {
         console.error('Error al eliminar foto:', error);
         mostrarPopup('Error al eliminar la foto', 'error');
       }
     }
-
+    
     setShowConfirmEliminarFotoTabla(false);
     setExpedienteFotoToDelete(null);
   };
 
-  // Función para manejar la carga de fotos
-  const handleFileUpload = (e) => {
+  // Función para manejar la carga de fotos usando el nuevo sistema
+  const handleFileUpload = async (e) => {
     const files = e.target.files;
     if (!files || !files[0]) return;
 
-    if (formData.foto.length >= 2) {
-      mostrarPopup('Solo se permiten máximo 2 fotos', 'warning');
-      return;
-    }
-
+      if (formData.foto.length >= 2) {
+        mostrarPopup("Solo se permiten máximo 2 fotos", "warning");
+        return;
+      }
+    
     const file = files[0];
 
     // Verificar tamaño original
@@ -479,18 +593,16 @@ export default function Expedientes() {
     }
 
     // Redimensionar antes de convertir
-    resizeImage(file, 1200, 900)
-      .then((base64) => {
-        setFormData((prev) => ({
+    resizeImage(file, 1200, 900).then(base64 => {
+      setFormData(prev => ({
           ...prev,
-          foto: [...prev.foto, base64],
+        foto: [...prev.foto, base64]
         }));
         setFotoMensaje(true);
-      })
-      .catch((error) => {
-        console.error('Error al redimensionar imagen:', error);
-        mostrarPopup('Error al procesar la imagen', 'error');
-      });
+    }).catch(error => {
+      console.error('Error al redimensionar imagen:', error);
+      mostrarPopup("Error al procesar la imagen", "error");
+    });
 
     // Limpiar el input para permitir cargar la misma imagen otra vez
     e.target.value = '';
@@ -552,29 +664,82 @@ export default function Expedientes() {
     e.preventDefault();
     try {
       if (editando) {
-        await updateExpediente(editando, formData);
+        // Actualizar expediente con imágenes en el campo fotos
+        const expedienteData = { ...formData };
+        
+        // Convertir imágenes base64 a array para almacenar en el campo fotos
+        if (formData.foto && formData.foto.length > 0) {
+          expedienteData.fotos = formData.foto; // Enviar las imágenes base64
+        } else {
+          expedienteData.fotos = []; // Array vacío si no hay imágenes
+        }
+        
+        // Remover el campo foto del objeto principal
+        delete expedienteData.foto;
+        
+        console.log('=== ACTUALIZANDO EXPEDIENTE ===');
+        console.log('ID:', editando);
+        console.log('Expediente data:', expedienteData);
+        console.log('================================');
+        
+        await updateExpediente(editando, expedienteData);
+        
+        // Guardar fotos en cache local
+        if (expedienteData.fotos && expedienteData.fotos.length > 0) {
+          guardarFotosEnCache(editando, expedienteData.fotos);
+        }
+        
         setExpedientes(
           expedientes.map((exp) =>
-            exp.pk_id_expediente === editando ? { ...formData, pk_id_expediente: editando } : exp
+            exp.pk_id_expediente === editando
+              ? { ...formData, pk_id_expediente: editando }
+              : exp
           )
         );
         mostrarPopup('Expediente actualizado correctamente', 'success');
         setEditando(null);
       } else {
-        const newExp = await createExpediente(formData);
+        // Crear nuevo expediente con imágenes en el campo fotos
+        const expedienteData = { ...formData };
+        
+        // Convertir imágenes base64 a array para almacenar en el campo fotos
+        if (formData.foto && formData.foto.length > 0) {
+          expedienteData.fotos = formData.foto; // Enviar las imágenes base64
+        } else {
+          expedienteData.fotos = []; // Array vacío si no hay imágenes
+        }
+        
+        // Remover el campo foto del objeto principal
+        delete expedienteData.foto;
+        
+        console.log('=== DATOS A ENVIAR AL BACKEND ===');
+        console.log('Expediente data:', expedienteData);
+        console.log('==================================');
+        
+        const newExp = await createExpediente(expedienteData);
+        
+        // Guardar fotos en cache local
+        if (expedienteData.fotos && expedienteData.fotos.length > 0) {
+          guardarFotosEnCache(newExp.pk_id_expediente, expedienteData.fotos);
+        }
+        
         setExpedientes([
           ...expedientes,
-          { ...formData, pk_id_expediente: newExp.pk_id_expediente },
+          { 
+            ...expedienteData, 
+            pk_id_expediente: newExp.pk_id_expediente,
+            foto: expedienteData.fotos || [] // ✅ Agregar campo foto para la tabla
+          },
         ]);
         mostrarPopup('Expediente guardado correctamente', 'success');
       }
       setFormData({
-        correlativo: '',
-        nombre: '',
-        telefono: '',
-        direccion: '',
-        email: '',
-        fecha_registro: '', // ✅ Sin fecha sugerida - el cliente debe ingresarla
+        correlativo: "",
+        nombre: "",
+        telefono: "",
+        direccion: "",
+        email: "",
+        fecha_registro: "", // ✅ Sin fecha sugerida - el cliente debe ingresarla
         foto: [],
       });
       setMostrarFormulario(false);
@@ -584,14 +749,14 @@ export default function Expedientes() {
     }
   };
 
-  const handleEditar = (exp) => {
+  const handleEditar = async (exp) => {
     console.log('Datos del expediente a editar:', exp);
     console.log('Fecha original:', exp.fecha_registro);
     console.log('Tipo de fecha:', typeof exp.fecha_registro);
 
     const fechaFormateada = formatearFechaParaInput(exp.fecha_registro);
     console.log('Fecha formateada para input:', fechaFormateada);
-
+    
     setFormData({
       correlativo: exp.correlativo,
       nombre: exp.nombre,
@@ -599,7 +764,7 @@ export default function Expedientes() {
       direccion: exp.direccion,
       email: exp.email,
       fecha_registro: fechaFormateada,
-      foto: exp.foto || [],
+      foto: imagenesExpediente,
     });
     setEditando(exp.pk_id_expediente);
     setMostrarFormulario(true);
@@ -615,6 +780,10 @@ export default function Expedientes() {
     if (expedienteToDelete) {
       try {
         await deleteExpediente(expedienteToDelete);
+        
+        // Limpiar fotos del cache local
+        limpiarFotosDelCache(expedienteToDelete);
+        
         setExpedientes(expedientes.filter((exp) => exp.pk_id_expediente !== expedienteToDelete));
         mostrarPopup('Expediente eliminado correctamente', 'success');
       } catch (err) {
@@ -641,84 +810,83 @@ export default function Expedientes() {
   };
 
   // Función para mostrar flecha de ordenamiento
-  const renderSortArrow = (field) =>
-    sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
-
-  // Estados para PopUp
-  const [popup, setPopup] = useState({
-    isOpen: false,
-    title: '',
-    message: '',
-    type: 'success',
-  });
+    const renderSortArrow = (field) =>
+      sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
+  
+    // Estados para PopUp
+    const [popup, setPopup] = useState({
+      isOpen: false,
+      title: '',
+      message: '',
+      type: 'success'
+    });
 
   // 🔹 Filtrado y ordenamiento
   const filtro = search.trim().toLowerCase();
   console.log('🔍 Búsqueda activa:', filtro);
   console.log('📊 Total expedientes:', expedientes.length);
-
-  // Validar que expedientes sea un array antes de usar spread operator
-  const expedientesFiltrados = Array.isArray(expedientes)
-    ? [...expedientes]
-    : []
-        .filter((exp) => {
-          const match =
-            !filtro ||
-            (exp.nombre || '').toLowerCase().includes(filtro) ||
-            (exp.telefono || '').toLowerCase().includes(filtro) ||
-            (exp.email || '').toLowerCase().includes(filtro) ||
-            (exp.correlativo || '').toLowerCase().includes(filtro) ||
-            (exp.pk_id_expediente || '').toString().toLowerCase().includes(filtro); // ✅ Agregado búsqueda por ID
-
-          if (filtro && match) {
-            console.log('✅ Expediente encontrado:', {
-              id: exp.pk_id_expediente,
-              nombre: exp.nombre,
-              email: exp.email,
-              telefono: exp.telefono,
-              correlativo: exp.correlativo,
-            });
-          }
-          return match;
-        })
-        .sort((a, b) => {
-          // Ordenamiento por ID (pk_id_expediente)
-          if (sortField === 'id') {
-            const idA = parseInt(a.pk_id_expediente) || 0;
-            const idB = parseInt(b.pk_id_expediente) || 0;
-            return sortDirection === 'asc' ? idA - idB : idB - idA;
-          }
-
-          // Ordenamiento por Nombre
-          if (sortField === 'nombre') {
-            const nombreA = (a.nombre || '').toLowerCase().trim();
-            const nombreB = (b.nombre || '').toLowerCase().trim();
-            if (sortDirection === 'asc') {
-              return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' });
-            } else {
-              return nombreB.localeCompare(nombreA, 'es', { sensitivity: 'base' });
-            }
-          }
-
-          // Ordenamiento por Fecha
-          if (sortField === 'fecha_registro') {
-            // Manejar fechas vacías o inválidas
-            const fechaA = a.fecha_registro ? new Date(a.fecha_registro) : new Date('1900-01-01');
-            const fechaB = b.fecha_registro ? new Date(b.fecha_registro) : new Date('1900-01-01');
-
-            // Verificar que las fechas sean válidas
-            const fechaAValida = !isNaN(fechaA.getTime());
-            const fechaBValida = !isNaN(fechaB.getTime());
-
-            if (!fechaAValida && !fechaBValida) return 0;
-            if (!fechaAValida) return sortDirection === 'asc' ? 1 : -1;
-            if (!fechaBValida) return sortDirection === 'asc' ? -1 : 1;
-
-            return sortDirection === 'asc' ? fechaA - fechaB : fechaB - fechaA;
-          }
-
-          return 0;
-        });
+   
+   // Validar que expedientes sea un array antes de usar spread operator
+   const expedientesFiltrados = Array.isArray(expedientes) ? [...expedientes] : []
+    .filter(
+      (exp) => {
+        const match = !filtro ||
+          (exp.nombre || "").toLowerCase().includes(filtro) ||
+          (exp.telefono || "").toLowerCase().includes(filtro) ||
+          (exp.email || "").toLowerCase().includes(filtro) ||
+          (exp.correlativo || "").toLowerCase().includes(filtro) ||
+          (exp.pk_id_expediente || "").toString().toLowerCase().includes(filtro); // ✅ Agregado búsqueda por ID
+        
+        if (filtro && match) {
+          console.log('✅ Expediente encontrado:', {
+            id: exp.pk_id_expediente,
+            nombre: exp.nombre,
+            email: exp.email,
+            telefono: exp.telefono,
+            correlativo: exp.correlativo
+          });
+        }
+        return match;
+      }
+    )
+    .sort((a, b) => {
+      // Ordenamiento por ID (pk_id_expediente)
+      if (sortField === "id") {
+        const idA = parseInt(a.pk_id_expediente) || 0;
+        const idB = parseInt(b.pk_id_expediente) || 0;
+        return sortDirection === "asc" ? idA - idB : idB - idA;
+      }
+      
+      // Ordenamiento por Nombre
+      if (sortField === "nombre") {
+        const nombreA = (a.nombre || "").toLowerCase().trim();
+        const nombreB = (b.nombre || "").toLowerCase().trim();
+        if (sortDirection === "asc") {
+          return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' });
+        } else {
+          return nombreB.localeCompare(nombreA, 'es', { sensitivity: 'base' });
+        }
+      }
+      
+      // Ordenamiento por Fecha
+      if (sortField === "fecha_registro") {
+        // Manejar fechas vacías o inválidas
+        const fechaA = a.fecha_registro ? new Date(a.fecha_registro) : new Date('1900-01-01');
+        const fechaB = b.fecha_registro ? new Date(b.fecha_registro) : new Date('1900-01-01');
+        
+        // Verificar que las fechas sean válidas
+        const fechaAValida = !isNaN(fechaA.getTime());
+        const fechaBValida = !isNaN(fechaB.getTime());
+        
+        if (!fechaAValida && !fechaBValida) return 0;
+        if (!fechaAValida) return sortDirection === "asc" ? 1 : -1;
+        if (!fechaBValida) return sortDirection === "asc" ? -1 : 1;
+        
+        return sortDirection === "asc" ? fechaA - fechaB : fechaB - fechaA;
+      }
+      
+      return 0;
+    });
 
   // 🔹 Paginación
   const totalPages = Math.ceil(expedientesFiltrados.length / pageSize);
@@ -825,8 +993,8 @@ export default function Expedientes() {
               id="expedientesSortSelect"
               value={sortField + '-' + sortDirection}
               onChange={(e) => {
-                const [field, direction] = e.target.value.split('-');
-                console.log('Cambiando ordenamiento:', field, direction);
+                const [field, direction] = e.target.value.split("-");
+                 console.log('Cambiando ordenamiento:', field, direction);
                 setSortField(field);
                 setSortDirection(direction);
               }}
@@ -881,30 +1049,23 @@ export default function Expedientes() {
                       <td>
                         <div className="imagenes-preview">
                           {(() => {
+                            // Usar el campo foto del expediente para mostrar las imágenes
                             const fotosExpediente = exp.foto;
-                            console.log(
-                              `Fotos para expediente ${exp.pk_id_expediente}:`,
-                              fotosExpediente
-                            );
+                            console.log(`Fotos para expediente ${exp.pk_id_expediente}:`, fotosExpediente);
                             return fotosExpediente && fotosExpediente.length > 0 ? (
                               fotosExpediente.map((foto, index) => (
                                 <div key={index} className="foto-tabla-container">
                                   <img
                                     src={foto}
                                     alt={`Foto ${index + 1}`}
-                                    title={`Foto ${index + 1} - ${exp.nombre}`}
+                                    title={`Foto ${index + 1} - ${exp.nombre} - Click para zoom`}
                                     className="imagen-miniatura"
-                                    onClick={() =>
-                                      openImageModal(
-                                        {
-                                          url: foto,
-                                          preview: foto,
-                                          nombre: `Foto ${index + 1}`,
-                                          id: `${exp.pk_id_expediente}_${index}`,
-                                        },
-                                        exp.pk_id_expediente
-                                      )
-                                    }
+                                    onClick={() => openImageModal({
+                                      url: foto,
+                                      preview: foto,
+                                      nombre: `Foto ${index + 1}`,
+                                      id: `${exp.pk_id_expediente}_${index}`
+                                    }, exp.pk_id_expediente)}
                                     style={{ cursor: 'pointer' }}
                                     onError={(e) => {
                                       console.error('Error cargando miniatura:', e);
@@ -1249,6 +1410,15 @@ export default function Expedientes() {
               </button>
             </div>
 
+            {/* Contador de fotos */}
+            {formData.foto.length > 0 && (
+              <div className="contador-fotos">
+                <span className="contador-texto">
+                  {formData.foto.length} foto{formData.foto.length !== 1 ? 's' : ''} de 2
+                </span>
+              </div>
+            )}
+
             {/* Vista previa de fotos en horizontal */}
             {formData.foto.length > 0 && (
               <div className="vista-previa-fotos-horizontal">
@@ -1313,17 +1483,56 @@ export default function Expedientes() {
         }}
       />
 
-      {/* Modal de confirmación para eliminar foto desde tabla */}
-      <ConfirmModal
-        isOpen={showConfirmEliminarFotoTabla}
-        title="Eliminar foto"
-        message="¿Está de acuerdo con eliminar la foto?"
-        onConfirm={confirmarEliminarFotoTabla}
-        onCancel={() => {
-          setShowConfirmEliminarFotoTabla(false);
-          setExpedienteFotoToDelete(null);
-        }}
-      />
+      {/* Modal de confirmación para eliminar foto desde tabla - POPUP PERSONALIZADO */}
+      {showConfirmEliminarFotoPopup && fotoToDeleteInfo && (
+        <div className="popup-overlay">
+          <div className="popup-container popup-eliminar-foto">
+            <div className="popup-header popup-warning">
+              <div className="popup-icon">
+                ⚠️
+              </div>
+              <h3 className="popup-title">Confirmar Eliminación</h3>
+              <button 
+                className="popup-close"
+                onClick={() => {
+                  setShowConfirmEliminarFotoPopup(false);
+                  setFotoToDeleteInfo(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div className="popup-body">
+              <div className="popup-message-container">
+                <p className="popup-message">
+                  ¿Está seguro de que desea eliminar la <strong>Foto {fotoToDeleteInfo.fotoNumero}</strong> del expediente de <strong>{fotoToDeleteInfo.expedienteNombre}</strong>?
+                </p>
+                <div className="popup-warning-text">
+                  <span className="warning-icon">⚠️</span>
+                  <span>Esta acción no se puede deshacer</span>
+                </div>
+              </div>
+            </div>
+            <div className="popup-footer">
+              <button 
+                className="popup-btn popup-btn-cancel"
+                onClick={() => {
+                  setShowConfirmEliminarFotoPopup(false);
+                  setFotoToDeleteInfo(null);
+                }}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="popup-btn popup-btn-danger"
+                onClick={confirmarEliminarFotoTabla}
+              >
+                Eliminar Foto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de confirmación para eliminar expediente */}
       <ConfirmModal
@@ -1461,9 +1670,7 @@ export default function Expedientes() {
                     <div className="info-icon">📸</div>
                     <div className="info-content">
                       <label>Total de Fotos</label>
-                      <span className="info-value fotos">
-                        {expedienteVisualizar.foto ? expedienteVisualizar.foto.length : 0}
-                      </span>
+                      <span className="info-value fotos">{expedienteVisualizar.foto ? expedienteVisualizar.foto.length : 0}</span>
                     </div>
                   </div>
 
@@ -1700,6 +1907,95 @@ export default function Expedientes() {
             <div className="modal-footer">
               <button onClick={() => setModalVisible(false)} className="btn-primary">
                 <span className="btn-icon">✅</span>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🔹 Modal de Zoom para Imágenes */}
+      {showZoomModal && zoomImage && (
+        <div className="modal-overlay zoom-modal-overlay">
+          <div className="zoom-modal-container">
+            {/* Header del modal de zoom */}
+            <div className="zoom-modal-header">
+              <div className="zoom-modal-title">
+                <span className="zoom-icon">🔍</span>
+                <h3>{zoomImage.nombre}</h3>
+              </div>
+              <div className="zoom-controls">
+                <button 
+                  className="zoom-btn zoom-out" 
+                  onClick={handleZoomOut}
+                  title="Alejar"
+                >
+                  ➖
+                </button>
+                <span className="zoom-level">{Math.round(zoomLevel * 100)}%</span>
+                <button 
+                  className="zoom-btn zoom-in" 
+                  onClick={handleZoomIn}
+                  title="Acercar"
+                >
+                  ➕
+                </button>
+                <button 
+                  className="zoom-btn zoom-reset" 
+                  onClick={handleResetZoom}
+                  title="Restablecer zoom"
+                >
+                  🔄
+                </button>
+              </div>
+              <button 
+                className="zoom-close-btn"
+                onClick={closeZoomModal}
+                title="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Contenido del modal de zoom */}
+            <div className="zoom-modal-content">
+              <div 
+                className="zoom-image-container"
+                onMouseMove={handleImageDrag}
+                onMouseDown={handleImageDrag}
+                onWheel={handleWheelZoom}
+              >
+                <img
+                  src={zoomImage.url || zoomImage.preview}
+                  alt={zoomImage.nombre || "Imagen"}
+                  className="zoom-image"
+                  style={{
+                    transform: `scale(${zoomLevel}) translate(${zoomPosition.x}%, ${zoomPosition.y}%)`,
+                    transformOrigin: 'center center',
+                    transition: 'transform 0.2s ease-out',
+                    cursor: zoomLevel > 1 ? 'grab' : 'default'
+                  }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    const errorDiv = document.createElement('div');
+                    errorDiv.innerHTML = '<p>❌ Error al cargar la imagen</p>';
+                    errorDiv.style.cssText = 'text-align: center; color: #999; padding: 20px;';
+                    e.target.parentNode.appendChild(errorDiv);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Footer del modal de zoom */}
+            <div className="zoom-modal-footer">
+              <div className="zoom-instructions">
+                <span className="instruction-icon">💡</span>
+                <span>Usa los controles, rueda del mouse para zoom o arrastra cuando esté ampliada</span>
+              </div>
+              <button 
+                onClick={closeZoomModal} 
+                className="zoom-close-footer-btn"
+              >
                 Cerrar
               </button>
             </div>
