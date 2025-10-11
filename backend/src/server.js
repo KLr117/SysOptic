@@ -11,6 +11,7 @@ import imagenesOrdenesRoutes from "../routes/imagenesOrdenesRoutes.js";
 import mailTestRoutes from "../routes/mailTestRoutes.js";
 import usersRoutes from "../routes/UsersRoutes.js";
 import { authMiddleware } from "../middlewares/Auth.js";
+import { logBitacoraMiddleware } from "../middlewares/bitacoraLogger.js";
 
 import {
   procesarPromocionesActivas,
@@ -34,9 +35,7 @@ app.use("/api/mail", mailTestRoutes);
 // ======================
 app.use((req, res, next) => {
   // Permitir acceso público solo a imágenes servidas directamente
-  const publicImageRoutes = [
-    /^\/api\/imagenes-ordenes\/servir/,
-  ];
+  const publicImageRoutes = [/^\/api\/imagenes-ordenes\/servir/];
 
   const isPublic = publicImageRoutes.some((pattern) => pattern.test(req.path));
   if (isPublic) return next(); // ⚠️ No requiere token
@@ -44,6 +43,11 @@ app.use((req, res, next) => {
   // Para todo lo demás, aplicar autenticación normal
   return authMiddleware(req, res, next);
 });
+
+// ======================
+// 📝 Middleware de bitácora automática
+// ======================
+app.use("/api", logBitacoraMiddleware);
 
 // ======================
 // 🔐 Rutas protegidas
@@ -65,7 +69,6 @@ app.use("/public", express.static("public"));
 app.listen(PORT, () => {
   console.log(`✅ Backend corriendo en http://localhost:${PORT}`);
 
-  
   // ==========================
   // 🕒 CRON DE PROMOCIONES SYSOPTIC
   // ==========================

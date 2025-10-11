@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { logout, getUser } from '../utils/Auth';
 import { useTheme } from '../context/ThemeContext';
@@ -10,6 +10,13 @@ export default function AppLayout() {
   const user = getUser();
   const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Actualizar reloj cada segundo
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -46,6 +53,19 @@ export default function AppLayout() {
               {user ? `${user.firstName[0]}${user.lastName?.[0] || ''}`.toUpperCase() : 'U'}
             </div>
             <span>{user ? `Hola, ${user.firstName} ${user.lastName}` : 'Panel'}</span>
+          </div>
+          <div
+            style={{
+              fontSize: '0.9rem',
+              color: 'var(--color-text-secondary)',
+              marginLeft: 'auto',
+              marginRight: '1rem',
+              display: 'flex',
+              gap: '10px',
+            }}
+          >
+            <span>📅 {currentTime.toLocaleDateString()}</span>
+            <span>⏰ {currentTime.toLocaleTimeString()}</span>
           </div>
           <button onClick={handleLogout} className="logout-btn">
             Cerrar sesión
