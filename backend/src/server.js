@@ -68,8 +68,8 @@ app.use("/api/users", usersRoutes);
 // ======================
 // 📁 Archivos estáticos
 // ======================
-app.use("/uploads", express.static("uploads"));
-app.use("/public", express.static("uploads"));
+app.use("/uploads", express.static("public/uploads"));
+app.use("/public", express.static("public"));
 
 app.listen(PORT, () => {
   console.log(`✅ Backend corriendo en http://localhost:${PORT}`);

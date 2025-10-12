@@ -64,7 +64,7 @@ export default function Expedientes() {
     direccion: '',
     email: '',
     fecha_registro: '',
-    foto: [], // Ahora será array de archivos, no base64
+    foto: [], // Ahora será array de archivos
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -89,15 +89,15 @@ export default function Expedientes() {
   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
   const [ultimoCorrelativoIngresado, setUltimoCorrelativoIngresado] = useState(null);
    
-   // Estados para modal de imágenes
-   const [isModalOpen, setIsModalOpen] = useState(false);
-   const [modalImage, setModalImage] = useState(null);
-   
   // Estados para modal de zoom
    const [showZoomModal, setShowZoomModal] = useState(false);
    const [zoomImage, setZoomImage] = useState(null);
    const [zoomLevel, setZoomLevel] = useState(1);
    const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+
+  // Estados para modal de imágenes
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [modalImage, setModalImage] = useState(null);
 
   // Estados para popup personalizado de eliminación de foto
   const [showConfirmEliminarFotoPopup, setShowConfirmEliminarFotoPopup] = useState(false);
@@ -123,11 +123,34 @@ export default function Expedientes() {
       expedienteId: expedienteId,
      });
      setIsModalOpen(true);
-   };
+  };
 
-   const closeImageModal = () => {
-     setIsModalOpen(false);
-     setModalImage(null);
+  const closeImageModal = () => {
+    setIsModalOpen(false);
+    setModalImage(null);
+  };
+
+  const handleImageDrag = (e) => {
+    if (zoomLevel > 1 && e.buttons === 1) {
+      e.preventDefault();
+      const rect = e.currentTarget.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      const deltaX = (e.clientX - rect.left - centerX) / centerX;
+      const deltaY = (e.clientY - rect.top - centerY) / centerY;
+      
+      setZoomPosition((prev) => ({
+        x: Math.max(-50, Math.min(50, prev.x + deltaX * 10)),
+        y: Math.max(-50, Math.min(50, prev.y + deltaY * 10)),
+      }));
+    }
+  };
+
+  const handleWheelZoom = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.2 : 0.2;
+    setZoomLevel((prev) => Math.max(0.5, Math.min(5, prev + delta)));
   };
 
   // 🔹 Funciones para modal de zoom
@@ -161,42 +184,7 @@ export default function Expedientes() {
     setZoomPosition({ x: 0, y: 0 });
   };
 
-  const handleImageDrag = (e) => {
-    if (zoomLevel > 1 && e.buttons === 1) {
-      e.preventDefault();
-      const rect = e.currentTarget.getBoundingClientRect();
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      
-      const deltaX = (e.clientX - rect.left - centerX) / centerX;
-      const deltaY = (e.clientY - rect.top - centerY) / centerY;
-      
-      setZoomPosition((prev) => ({
-        x: Math.max(-50, Math.min(50, prev.x + deltaX * 10)),
-        y: Math.max(-50, Math.min(50, prev.y + deltaY * 10)),
-      }));
-    }
-  };
-
-  const handleWheelZoom = (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.2 : 0.2;
-    setZoomLevel((prev) => Math.max(0.5, Math.min(5, prev + delta)));
-  };
-
-  // 🔹 Función para cargar imágenes de un expediente desde la BD
-  const cargarImagenesExpediente = async (expedienteId) => {
-    try {
-      const response = await obtenerImagenesPorExpediente(expedienteId);
-      if (response.success && response.imagenes) {
-        return response.imagenes.map(img => img.url); // Retornar solo las URLs
-      }
-      return [];
-    } catch (error) {
-      console.error('Error cargando imágenes del expediente:', error);
-      return [];
-    }
-  };
+  // 🔹 Función eliminada - las imágenes ahora vienen con el expediente
 
   // 🔹 Cargar expedientes
   useEffect(() => {
@@ -225,49 +213,7 @@ export default function Expedientes() {
     cargarExpedientes();
   }, []);
 
-  // 🔹 Cargar imágenes de expedientes desde la base de datos
-  useEffect(() => {
-    const cargarImagenesExpedientes = async () => {
-      // Solo cargar si hay expedientes
-      if (expedientes.length === 0) return;
-
-      try {
-        console.log('Cargando imágenes para todos los expedientes...');
-        
-        // Cargar imágenes para cada expediente
-        const expedientesConImagenes = await Promise.all(
-          expedientes.map(async (expediente) => {
-            try {
-              // Obtener imágenes de este expediente específico
-              const imagenesUrls = await cargarImagenesExpediente(expediente.pk_id_expediente);
-              
-              console.log(`Imágenes cargadas para expediente ${expediente.pk_id_expediente}:`, imagenesUrls);
-              
-              return {
-                ...expediente,
-                foto: imagenesUrls // Reemplazar el array vacío con las URLs reales
-              };
-            } catch (error) {
-              console.error(`Error cargando imágenes para expediente ${expediente.pk_id_expediente}:`, error);
-              return {
-                ...expediente,
-                foto: [] // Mantener array vacío si hay error
-              };
-            }
-          })
-        );
-
-        // Actualizar el estado con las imágenes cargadas
-        setExpedientes(expedientesConImagenes);
-        console.log('Todos los expedientes actualizados con sus imágenes');
-        
-      } catch (error) {
-        console.error('Error general cargando imágenes de expedientes:', error);
-      }
-    };
-
-    cargarImagenesExpedientes();
-  }, [expedientes.length]); // Se ejecuta cuando cambia el número de expedientes
+  // 🔹 Carga de imágenes eliminada - ahora se obtienen directamente con JOIN
 
   // 🔹 Cargar estados de notificaciones
   useEffect(() => {
@@ -353,7 +299,7 @@ export default function Expedientes() {
       if (res.ok || res.success) {
         await refreshNotificaciones();
         alert('Éxito: Notificación eliminada correctamente.');
-      } else {
+        } else {
         alert('Error: No se pudo eliminar la notificación.');
       }
     } catch (error) {
@@ -468,6 +414,7 @@ export default function Expedientes() {
        return fecha; // Devolver fecha original si hay error
      }
    };
+  
 
    // 🔹 Función para formatear fecha
    const formatearFecha = (fecha) => {
@@ -496,12 +443,7 @@ export default function Expedientes() {
        return fecha; // Devolver fecha original si hay error
      }
    };
-
-   // 🔹 Función de redimensionamiento de imágenes
-   // 🔹 Función de redimensionamiento eliminada - ahora se usa comprimirImagen del servicio
-
-  // 🔹 Manejo de formulario
-  // Función para eliminar una foto específica
+  // 🔹 Manejo de formulario - Función para eliminar una foto específica
   const eliminarFoto = (index) => {
     // Guardar el índice de la foto a eliminar
     setFotoIndexToDelete(index);
@@ -558,9 +500,6 @@ export default function Expedientes() {
           };
           
           await updateExpediente(expedienteId, expedienteData);
-          
-          // Cache eliminado - ahora se usan archivos reales
-          
           // Actualizar el estado local
           setExpedientes((prev) =>
             prev.map((exp) =>
@@ -599,7 +538,7 @@ export default function Expedientes() {
       mostrarPopup('Solo se permiten archivos de imagen', 'error');
       return;
     }
-
+    
     // Verificar tamaño original
     if (file.size > 5 * 1024 * 1024) {
       // 5MB
@@ -756,23 +695,17 @@ export default function Expedientes() {
             
             console.log('Todas las imágenes subidas exitosamente');
             
-            // Cargar las URLs de las imágenes desde la BD
-            imagenesUrls = await cargarImagenesExpediente(newExp.pk_id_expediente);
-            console.log('URLs de imágenes cargadas:', imagenesUrls);
+            // Las imágenes se cargan automáticamente con el expediente
+            console.log('Imágenes subidas exitosamente');
           } catch (error) {
             console.error('Error subiendo imágenes:', error);
             // Continuar aunque falle la subida de imágenes
           }
         }
         
-        setExpedientes([
-          ...expedientes,
-          { 
-            ...expedienteData, 
-            pk_id_expediente: newExp.pk_id_expediente,
-            foto: imagenesUrls, // Usar URLs reales de las imágenes
-          },
-        ]);
+        // Recargar expedientes para obtener las imágenes actualizadas
+        const expedientesActualizados = await getExpedientes();
+        setExpedientes(expedientesActualizados);
         mostrarPopup('Expediente guardado correctamente', 'success');
       }
       setFormData({
@@ -893,11 +826,11 @@ export default function Expedientes() {
         return match;
         })
     .sort((a, b) => {
-      // Ordenamiento por ID (pk_id_expediente)
-          if (sortField === 'id') {
-        const idA = parseInt(a.pk_id_expediente) || 0;
-        const idB = parseInt(b.pk_id_expediente) || 0;
-            return sortDirection === 'asc' ? idA - idB : idB - idA;
+      // Ordenamiento por Correlativo
+          if (sortField === 'correlativo') {
+        const correlativoA = parseInt(a.correlativo) || 0;
+        const correlativoB = parseInt(b.correlativo) || 0;
+            return sortDirection === 'asc' ? correlativoA - correlativoB : correlativoB - correlativoA;
       }
       
       // Ordenamiento por Nombre
@@ -1046,8 +979,8 @@ export default function Expedientes() {
             >
               <option value="fecha_registro-desc">Fecha - Más reciente</option>
               <option value="fecha_registro-asc">Fecha - Más antiguo</option>
-              <option value="id-asc">ID - Más antiguo</option>
-              <option value="id-desc">ID - Más reciente</option>
+              <option value="correlativo-asc">Correlativo - Menor a Mayor</option>
+              <option value="correlativo-desc">Correlativo - Mayor a Menor</option>
               <option value="nombre-asc">Nombre A-Z</option>
               <option value="nombre-desc">Nombre Z-A</option>
             </select>
@@ -1068,7 +1001,7 @@ export default function Expedientes() {
                         <div className="header-numero">
                           <span className="simbolo-numero">#</span>
                           <span className="indicador-orden">
-                            {sortField === 'id' && (sortDirection === 'asc' ? '↑' : '↓')}
+                            {sortField === 'correlativo' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </span>
                         </div>
                       ) : (
@@ -1475,7 +1408,7 @@ export default function Expedientes() {
               {formData.foto.map((imagen, i) => (
                   <div key={imagen.id || i} className="foto-miniatura-container">
                 <img
-                  src={imagen.preview} // Usar preview URL en lugar de base64
+                  src={imagen.preview} // Usar preview URL para mostrar la imagen
                   alt={`Foto ${i + 1}`}
                       className="foto-miniatura"
                   onClick={() => setFotoAmpliada(imagen.preview)}
@@ -1772,7 +1705,7 @@ export default function Expedientes() {
               </button>
             )}
           <button className="btn-close-foto" onClick={() => setFotoAmpliada(null)}>
-            ×
+            X
           </button>
         </div>
       )}

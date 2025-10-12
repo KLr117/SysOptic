@@ -1,5 +1,5 @@
 import ImagenesExpedientesModel from '../models/imagenesExpedientesModel.js';
-// import { updateImagenesExpediente } from '../models/ExpedientesModel.js'; // Comentado - no se usa
+import { updateFotosExpediente } from '../models/ExpedientesModel.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -7,9 +7,15 @@ import fs from 'fs';
 // Configuración de multer para subir archivos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Usar directorio temporal del sistema (no crear uploads)
-    const tempDir = process.env.TEMP || '/tmp';
-    cb(null, tempDir);
+    // Crear directorio de uploads si no existe
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'expedientes');
+    
+    // Crear directorio si no existe
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     // Generar nombre único para evitar conflictos
@@ -65,13 +71,15 @@ class ImagenesExpedientesController {
       const imagenData = {
         expediente_id: parseInt(expediente_id),
         nombre_archivo: req.file.originalname, // Nombre original del archivo
-        ruta_archivo: req.file.path // Ruta donde se guardó el archivo
+        ruta_archivo: `/uploads/expedientes/${req.file.filename}` // Ruta relativa para servir desde el servidor web
       };
 
       // Guardar metadatos de la imagen en la base de datos
       const result = await ImagenesExpedientesModel.crearImagen(imagenData);
       
       if (result.success) {
+        // Actualizar campo fotos en el expediente
+        await updateFotosExpediente(parseInt(expediente_id), true);
         
         res.status(201).json({
           success: true,
@@ -159,13 +167,33 @@ class ImagenesExpedientesController {
     try {
       const { imagenId } = req.params;
       
+      // Primero obtener el expediente_id de la imagen antes de eliminarla
+      const imagenInfo = await ImagenesExpedientesModel.obtenerImagenPorId(imagenId);
+      if (!imagenInfo.success) {
+        return res.status(404).json({
+          success: false,
+          message: 'Imagen no encontrada'
+        });
+      }
+      
+      const expedienteId = imagenInfo.imagen.expediente_id;
+      
+      // Eliminar la imagen
       const result = await ImagenesExpedientesModel.eliminarImagen(imagenId);
       
       if (result.success) {
+        // Verificar si quedan imágenes para este expediente
+        const imagenesRestantes = await ImagenesExpedientesModel.contarImagenesPorExpediente(expedienteId);
+        const tieneImagenes = imagenesRestantes.count > 0;
+        
+        // Actualizar el campo fotos
+        await updateFotosExpediente(expedienteId, tieneImagenes);
+        
         res.json({
           success: true,
           message: 'Imagen eliminada exitosamente',
-          affectedRows: result.affectedRows
+          affectedRows: result.affectedRows,
+          tieneImagenes: tieneImagenes
         });
       } else {
         res.status(500).json({
