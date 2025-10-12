@@ -1727,7 +1727,7 @@ export default function Expedientes() {
             {/* Footer mejorado */}
             <div className="modal-footer-profesional">
               <div className="footer-info">
-                <span className="footer-text">Visual Optics - Sistema de Expedientes</span>
+                <span className="footer-text"> Sistema de Expedientes </span>
               </div>
               <div className="footer-actions">
                 <button
