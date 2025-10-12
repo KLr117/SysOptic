@@ -123,7 +123,7 @@
   border: 1px solid #890D0F;
   border-radius: 4px;
   background-color: var(--color-bg-secondary);
-  text-align: center;
+  text-align: left; /* nombres de los campos al lado izquierdo */
 }
 
 /* Labels específicos alineados a la izquierda */
@@ -134,9 +134,9 @@
   text-align: left !important;
 }
 
-/* Campo de correlativo con marco destacado */
-.campo-correlativo input {
-  border: 1px solid #890D0F !important;
+/* TODOS LOS INPUTS DEL FORMULARIO CON BORDES */
+.formulario-expediente input {
+  border: 2px solid #890D0F !important;
   border-radius: 6px !important;
   box-shadow: 
     0 2px 8px rgba(137, 13, 15, 0.1),
@@ -148,7 +148,58 @@
   ) !important;
   color: var(--color-text) !important;
   font-weight: 500 !important;
-  text-align: center !important;
+  text-align: left !important;
+  position: relative !important;
+  z-index: 101 !important;
+  pointer-events: auto !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 1rem !important;
+  width: 100% !important;
+}
+
+.formulario-expediente input:focus {
+  outline: none !important;
+  border-color: #A01A1C !important;
+  background: var(--color-hover) !important;
+  color: var(--color-text) !important;
+  box-shadow: 
+    0 4px 12px rgba(137, 13, 15, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.formulario-expediente input::placeholder {
+  text-align: left !important;
+  color: var(--color-text-muted) !important;
+}
+
+/* Campo de correo con tamaño reducido */
+.formulario-expediente input[name="email"] {
+  max-width: 300px !important;
+  width: 100% !important;
+}
+
+/* Label del campo de correo alineado con el input */
+.formulario-expediente label[for="email"] {
+  max-width: 100px !important;
+  width: fit-content !important;
+  display: block !important;
+}
+
+/* Campo de correlativo con marco destacado */
+.campo-correlativo input {
+  border: 2px solid #890D0F !important;
+  border-radius: 6px !important;
+  box-shadow: 
+    0 2px 8px rgba(137, 13, 15, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  background: linear-gradient(135deg, 
+    var(--color-bg-secondary) 0%, 
+    rgba(137, 13, 15, 0.03) 50%, 
+    var(--color-bg-secondary) 100%
+  ) !important;
+  color: var(--color-text) !important;
+  font-weight: 500 !important;
+  text-align: left !important;
   position: relative !important;
   z-index: 101 !important;
   pointer-events: auto !important;
@@ -162,7 +213,7 @@
 }
 
 .botones-formulario {
-  display: flex;
+  display: flex;      /*container-expedientes .btn-success */ 
   justify-content: flex-end;
   gap: 0.75rem;
   margin-top: 1.5rem;
@@ -204,19 +255,23 @@
   transform: translateY(-1px);
 }
 
-.expedientes-container .btn-success {
-  background-color: var(--color-success-solid);
+.container-expedientes .btn-success {/*boton de guardar*/
+  background-color: #16a34a;
   color: #fff;
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   cursor: pointer;
-  border: none;
+  border: 2px solid #16a34a;
   font-size: 14px;
-  transition: background-color 0.2s, transform 0.2s;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.3);
 }
-.expedientes-container .btn-success:hover {
-  background-color: #059669;
+.container-expedientes .btn-success:hover {
+  background-color: #15803d;
+  border-color: #15803d;
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(22, 163, 74, 0.4);
 }
 
 .expedientes-container .btn-salir {
@@ -575,22 +630,25 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Botón cancelar específico */
+/* Botón cancelar específico - Color rojo con borde */
 .btn-cancel {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--color-border);
+  border: 2px solid #dc2626;
   border-radius: 0.25rem;
   cursor: pointer;
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text);
+  background-color: #dc2626;
+  color: white;
   font-size: 14px;
-  transition: background-color 0.2s, transform 0.2s, border-color 0.2s;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
 }
 
 .btn-cancel:hover {
-  background-color: var(--color-hover);
-  border-color: var(--color-danger-solid);
+  background-color: #b91c1c;
+  border-color: #b91c1c;
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4);
 }
 
 /* Header del formulario */
@@ -1809,5 +1867,3 @@
     font-size: 0.8rem;
   }
 }
-
-
