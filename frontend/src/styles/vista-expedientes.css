@@ -118,7 +118,7 @@
 .campo-formulario label {
   color: var(--color-text);
   font-weight: 500;
-  margin-bottom: 0.25rem;
+  margin: 0; /* Quitar margen */
   padding: 0.25rem 0.5rem;
   border: 1px solid #890D0F;
   border-radius: 4px;

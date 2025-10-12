@@ -235,6 +235,7 @@ CREATE TABLE tbl_imagenes_ordenes (
 -- ==============================================================
 ALTER TABLE tbl_expedientes 
 ADD COLUMN fotos  TEXT AFTER fecha_registro; -- agrege fotos y no imagenes
+
 CREATE TABLE tbl_imagenes_expedientes (
   id INT PRIMARY KEY AUTO_INCREMENT,
   expediente_id INT NOT NULL,
@@ -268,3 +269,14 @@ ADD CONSTRAINT fk_bitacora_user_objetivo
   REFERENCES tbl_users(pk_id_user)
   ON DELETE SET NULL
   ON UPDATE CASCADE;
+
+-- ====================================
+-- agregadas en expedientes e imagenes
+-- ====================================
+ALTER TABLE tbl_expedientes
+ENGINE = InnoDB,
+CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+
+ALTER TABLE tbl_imagenes_expedientes
+ADD INDEX expediente_id (expediente_id);
+SELECT * FROM tbl_imagenes_expedientes;
