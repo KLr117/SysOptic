@@ -7,8 +7,6 @@ import {
   createNotificacionExpediente,
   createNotificacionOrden,
   updateNotificacionEspecifica,
-  getNotificacionExpediente,
-  getNotificacionOrden,
   getNotificacionEspecificaById,
 } from '../services/notificacionesService';
 import '../styles/vista-notificaciones.css';
@@ -42,7 +40,7 @@ const NotificacionForm = ({ mode = 'create' }) => {
     categoria: '',
     fechaFin: '',
     fechaInicioProm: '',
-    enviarEmail: true,
+    enviarEmail: false,
     asuntoEmail: '',
     cuerpoEmail: '',
     modulo: '',
@@ -55,6 +53,10 @@ const NotificacionForm = ({ mode = 'create' }) => {
   const [categoriaOriginal, setCategoriaOriginal] = useState('');
   const [showCambiarCategoriaModal, setShowCambiarCategoriaModal] = useState(false);
   const [pendingCategoriaChange, setPendingCategoriaChange] = useState(null);
+  const [fechaInicioOriginal, setFechaInicioOriginal] = useState('');
+  const [showCambiarFechaModal, setShowCambiarFechaModal] = useState(false);
+  const [pendingFechaInicioChange, setPendingFechaInicioChange] = useState(null);
+
 
   // ✅ Cargar datos según modo
   useEffect(() => {
@@ -82,6 +84,7 @@ const NotificacionForm = ({ mode = 'create' }) => {
             // Detectar si hay correos enviados
             setCorreosEnviados(res.correos_enviados > 0 || res.envios_registrados > 0);
             setCategoriaOriginal(res.fk_id_categoria_notificacion?.toString() || '');
+            setFechaInicioOriginal(toInputDate(res.fecha_objetivo) || '');
           } else {
             console.warn('Respuesta inesperada de la API:', res);
           }
@@ -105,6 +108,7 @@ const NotificacionForm = ({ mode = 'create' }) => {
           // Detectar si hay correos enviados
           setCorreosEnviados(data.correos_enviados > 0 || data.envios_registrados > 0);
           setCategoriaOriginal(data.fk_id_categoria_notificacion?.toString() || '');
+          setFechaInicioOriginal(toInputDate(data.fecha_objetivo) || '');
         } else if (mode === 'createExpediente') {
           setFormData((prev) => ({
             ...prev,
@@ -165,13 +169,26 @@ const NotificacionForm = ({ mode = 'create' }) => {
   }, [mode, id]);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const { name, value, type, checked } = e.target;
 
-    // Validación especial para cambio de categoría si hay correos enviados
+    // 🟡 Validación especial para cambio de categoría si hay correos enviados
     if (name === 'categoria' && (mode === 'edit' || mode === 'editEspecifica') && correosEnviados) {
       if (value !== categoriaOriginal) {
         setPendingCategoriaChange(value);
         setShowCambiarCategoriaModal(true);
+        return; // No aplicar el cambio hasta confirmar
+      }
+    }
+
+    // 🟡 Validación especial para cambio de fecha de inicio si hay correos enviados
+    if (
+      name === 'fechaInicioProm' &&
+      (mode === 'edit' || mode === 'editEspecifica') &&
+      correosEnviados
+    ) {
+      if (value !== fechaInicioOriginal) {
+        setPendingFechaInicioChange(value);
+        setShowCambiarFechaModal(true);
         return; // No aplicar el cambio hasta confirmar
       }
     }
@@ -196,6 +213,20 @@ const NotificacionForm = ({ mode = 'create' }) => {
   const cancelarCambiarCategoria = () => {
     setShowCambiarCategoriaModal(false);
     setPendingCategoriaChange(null);
+  };
+
+  const confirmarCambiarFecha = () => {
+    setFormData({
+      ...formData,
+      fechaInicioProm: pendingFechaInicioChange,
+    });
+    setShowCambiarFechaModal(false);
+    setPendingFechaInicioChange(null);
+  };
+
+  const cancelarCambiarFecha = () => {
+    setShowCambiarFechaModal(false);
+    setPendingFechaInicioChange(null);
   };
 
   const validateForm = () => {
@@ -618,6 +649,8 @@ const NotificacionForm = ({ mode = 'create' }) => {
                       name="fechaInicioProm"
                       value={formData.fechaInicioProm || ''}
                       onChange={handleChange}
+                      onClick={(e) => e.target.showPicker && e.target.showPicker()}  // ✅ abre calendario al hacer clic
+                      onFocus={(e) => e.target.showPicker && e.target.showPicker()}  // ✅ abre también al enfocar con tab
                       className="field-input"
                     />
                     {errors.fechaInicioProm && (
@@ -637,6 +670,8 @@ const NotificacionForm = ({ mode = 'create' }) => {
                         value={formData.fechaFin || ''}
                         onChange={handleChange}
                         min={formData.fechaInicioProm}
+                        onClick={(e) => e.target.showPicker && e.target.showPicker()}  // ✅ abre calendario al hacer clic
+                        onFocus={(e) => e.target.showPicker && e.target.showPicker()}  // ✅ abre también al enfocar con tab
                         className="field-input"
                       />
                       {errors.fechaFin && <span className="error-message">{errors.fechaFin}</span>}
@@ -839,6 +874,31 @@ const NotificacionForm = ({ mode = 'create' }) => {
             onConfirm={confirmarCambiarCategoria}
             onCancel={cancelarCambiarCategoria}
           />
+          {/* Fin Modal de advertencia de cambio de categoría */}
+
+          {/* Modal de advertencia de cambio de fecha de inicio */}
+          <ConfirmModal
+            isOpen={showCambiarFechaModal}
+            title="⚠️ Advertencia: Cambio de Fecha de Inicio"
+            message={
+              <>
+                <p>
+                  Ya fue enviado un correo basado en esta configuración de fecha de inicio.
+                  <br />
+                  <br />
+                  <strong>¿Está seguro que desea cambiar la fecha de inicio de esta notificación?</strong>
+                </p>
+                <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#666' }}>
+                  Si la cambia, no se reenviará un nuevo correo automáticamente a los registros que ya recibieron uno bajo esta configuración.
+                  <br />   
+                  Si necesita enviar un nuevo correo, elimine esta notificación y cree una nueva.
+                </p>
+              </>
+            }
+            onConfirm={confirmarCambiarFecha}
+            onCancel={cancelarCambiarFecha}
+          />
+          {/* Fin Modal de advertencia de cambio de categoría */}
         </>
       )}
     </div>
