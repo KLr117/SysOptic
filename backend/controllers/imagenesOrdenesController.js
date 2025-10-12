@@ -8,15 +8,19 @@ import fs from 'fs';
 // NOTA: Deshabilitado para evitar crear directorios uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // No crear directorio uploads, usar directorio temporal del sistema
-    const tempDir = process.env.TEMP || '/tmp';
-    cb(null, tempDir);
+    // Directorio persistente para las imágenes de órdenes
+    const uploadsDir = path.join(process.cwd(), "public", "uploads", "ordenes");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, `orden_${req.body.orden_id}_${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
+  },
 });
+
 
 const upload = multer({
   storage: storage,
@@ -59,7 +63,7 @@ class ImagenesOrdenesController {
       const imagenData = {
         orden_id: parseInt(orden_id),
         nombre_archivo: req.file.originalname,
-        ruta_archivo: req.file.path
+        ruta_archivo: `/uploads/ordenes/${req.file.filename}`
       };
 
       const result = await ImagenesOrdenesModel.crearImagen(imagenData);
