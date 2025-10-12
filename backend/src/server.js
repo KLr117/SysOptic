@@ -13,6 +13,9 @@ import mailTestRoutes from "../routes/mailTestRoutes.js";
 import usersRoutes from "../routes/UsersRoutes.js";
 import { authMiddleware } from "../middlewares/Auth.js";
 import { logBitacoraMiddleware } from "../middlewares/bitacoraLogger.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
 
 import {
   procesarPromocionesActivas,
@@ -24,6 +27,10 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
+
+// === Configuración de rutas absolutas seguras ===
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ======================
 // 🌐 Rutas públicas
@@ -68,8 +75,15 @@ app.use("/api/users", usersRoutes);
 // ======================
 // 📁 Archivos estáticos
 // ======================
-app.use("/uploads", express.static("public/uploads"));
-app.use("/public", express.static("public"));
+// Crear carpeta uploads si no existe (seguridad en producción)
+const uploadsDir = path.join(__dirname, "../public/uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Servir archivos estáticos
+app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
+app.use("/public", express.static(path.join(__dirname, "../public")));
 
 app.listen(PORT, () => {
   console.log(`✅ Backend corriendo en http://localhost:${PORT}`);
