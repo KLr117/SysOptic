@@ -51,6 +51,10 @@ const NotificacionForm = ({ mode = 'create' }) => {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [correosEnviados, setCorreosEnviados] = useState(false);
+  const [categoriaOriginal, setCategoriaOriginal] = useState('');
+  const [showCambiarCategoriaModal, setShowCambiarCategoriaModal] = useState(false);
+  const [pendingCategoriaChange, setPendingCategoriaChange] = useState(null);
 
   // ✅ Cargar datos según modo
   useEffect(() => {
@@ -75,6 +79,9 @@ const NotificacionForm = ({ mode = 'create' }) => {
               modulo: res.fk_id_modulo_notificacion?.toString() || '',
               tipo: 'Recordatorio',
             });
+            // Detectar si hay correos enviados
+            setCorreosEnviados(res.correos_enviados > 0 || res.envios_registrados > 0);
+            setCategoriaOriginal(res.fk_id_categoria_notificacion?.toString() || '');
           } else {
             console.warn('Respuesta inesperada de la API:', res);
           }
@@ -95,6 +102,9 @@ const NotificacionForm = ({ mode = 'create' }) => {
             modulo: data.fk_id_modulo_notificacion?.toString() || '',
             tipo: data.nombre_tipo || 'General',
           });
+          // Detectar si hay correos enviados
+          setCorreosEnviados(data.correos_enviados > 0 || data.envios_registrados > 0);
+          setCategoriaOriginal(data.fk_id_categoria_notificacion?.toString() || '');
         } else if (mode === 'createExpediente') {
           setFormData((prev) => ({
             ...prev,
@@ -156,20 +166,50 @@ const NotificacionForm = ({ mode = 'create' }) => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+
+    // Validación especial para cambio de categoría si hay correos enviados
+    if (name === 'categoria' && (mode === 'edit' || mode === 'editEspecifica') && correosEnviados) {
+      if (value !== categoriaOriginal) {
+        setPendingCategoriaChange(value);
+        setShowCambiarCategoriaModal(true);
+        return; // No aplicar el cambio hasta confirmar
+      }
+    }
+
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
     });
   };
 
+  // Confirmar cambio de categoría
+  const confirmarCambiarCategoria = () => {
+    setFormData({
+      ...formData,
+      categoria: pendingCategoriaChange,
+    });
+    setShowCambiarCategoriaModal(false);
+    setPendingCategoriaChange(null);
+  };
+
+  // Cancelar cambio de categoría
+  const cancelarCambiarCategoria = () => {
+    setShowCambiarCategoriaModal(false);
+    setPendingCategoriaChange(null);
+  };
+
   const validateForm = () => {
     const newErrors = {};
+
+    // Campos obligatorios básicos
     if (!formData.titulo.trim()) newErrors.titulo = 'Debe ingresar un título';
     if (!formData.descripcion.trim()) newErrors.descripcion = 'Debe ingresar una descripción';
 
+    // Categoría obligatoria siempre
+    if (!formData.categoria) newErrors.categoria = 'Debe seleccionar una categoría';
+
     // Validaciones solo para notificaciones generales
     if (!isSpecific) {
-      if (!formData.categoria) newErrors.categoria = 'Debe seleccionar una categoría';
       if (!formData.modulo) newErrors.modulo = 'Debe seleccionar un módulo';
       if (
         formData.categoria !== PROMO_CATEGORY_ID &&
@@ -177,9 +217,6 @@ const NotificacionForm = ({ mode = 'create' }) => {
         !formData.tipoIntervalo
       ) {
         newErrors.tipoIntervalo = 'Debe elegir cuándo se enviará';
-      }
-      if (formData.categoria === PROMO_CATEGORY_ID && !formData.fechaInicioProm) {
-        newErrors.fechaInicioProm = 'Debe seleccionar una fecha de inicio';
       }
     }
 
@@ -192,9 +229,29 @@ const NotificacionForm = ({ mode = 'create' }) => {
       newErrors.tipoIntervalo = 'Debe elegir cuándo se enviará';
     }
 
-    // Validaciones para promociones específicas
-    if (isSpecific && formData.categoria === PROMO_CATEGORY_ID && !formData.fechaInicioProm) {
-      newErrors.fechaInicioProm = 'Debe seleccionar una fecha de inicio';
+    // Validaciones para promociones (generales y específicas)
+    if (formData.categoria === PROMO_CATEGORY_ID) {
+      if (!formData.fechaInicioProm) {
+        newErrors.fechaInicioProm = 'Debe seleccionar una fecha de inicio';
+      }
+      // Validar que fecha fin no sea anterior a fecha inicio
+      if (formData.fechaInicioProm && formData.fechaFin) {
+        const fechaInicio = new Date(formData.fechaInicioProm);
+        const fechaFin = new Date(formData.fechaFin);
+        if (fechaFin < fechaInicio) {
+          newErrors.fechaFin = 'La fecha fin no puede ser anterior a la fecha de inicio';
+        }
+      }
+    }
+
+    // Validaciones de email si está activo
+    if (formData.enviarEmail) {
+      if (!formData.asuntoEmail || !formData.asuntoEmail.trim()) {
+        newErrors.asuntoEmail = 'Debe ingresar un asunto para el correo';
+      }
+      if (!formData.cuerpoEmail || !formData.cuerpoEmail.trim()) {
+        newErrors.cuerpoEmail = 'Debe ingresar el cuerpo del correo';
+      }
     }
 
     setErrors(newErrors);
@@ -579,8 +636,10 @@ const NotificacionForm = ({ mode = 'create' }) => {
                         name="fechaFin"
                         value={formData.fechaFin || ''}
                         onChange={handleChange}
+                        min={formData.fechaInicioProm}
                         className="field-input"
                       />
+                      {errors.fechaFin && <span className="error-message">{errors.fechaFin}</span>}
                     </div>
                   )}
                 </div>
@@ -696,7 +755,7 @@ const NotificacionForm = ({ mode = 'create' }) => {
                     <div className="form-field">
                       <label className="field-label">
                         <span className="label-icon">📨</span>
-                        Asunto del Correo
+                        Asunto del Correo *
                       </label>
                       <input
                         type="text"
@@ -706,12 +765,15 @@ const NotificacionForm = ({ mode = 'create' }) => {
                         className="field-input"
                         placeholder="Asunto del correo electrónico"
                       />
+                      {errors.asuntoEmail && (
+                        <span className="error-message">{errors.asuntoEmail}</span>
+                      )}
                     </div>
 
                     <div className="form-field full-width">
                       <label className="field-label">
                         <span className="label-icon">📝</span>
-                        Cuerpo del Correo
+                        Cuerpo del Correo *
                       </label>
                       <textarea
                         name="cuerpoEmail"
@@ -721,6 +783,9 @@ const NotificacionForm = ({ mode = 'create' }) => {
                         placeholder="Contenido del correo electrónico"
                         rows="4"
                       />
+                      {errors.cuerpoEmail && (
+                        <span className="error-message">{errors.cuerpoEmail}</span>
+                      )}
                     </div>
                   </>
                 )}
@@ -750,6 +815,29 @@ const NotificacionForm = ({ mode = 'create' }) => {
             }
             onConfirm={confirmSave}
             onCancel={() => setIsConfirmModalOpen(false)}
+          />
+
+          {/* Modal de advertencia de cambio de categoría */}
+          <ConfirmModal
+            isOpen={showCambiarCategoriaModal}
+            title="⚠️ Advertencia: Cambio de Categoría"
+            message={
+              <>
+                <p>
+                  Ya fue enviado un correo a este cliente con esta configuración.
+                  <br />
+                  <strong>¿Está seguro que desea cambiar la categoría de esta notificación?</strong>
+                </p>
+                <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#666' }}>
+                  Si la cambia, no se enviará un nuevo correo.
+                  <br />
+                  Si desea reenviar una notificación, elimínela y cree una nueva con la categoría
+                  deseada.
+                </p>
+              </>
+            }
+            onConfirm={confirmarCambiarCategoria}
+            onCancel={cancelarCambiarCategoria}
           />
         </>
       )}
