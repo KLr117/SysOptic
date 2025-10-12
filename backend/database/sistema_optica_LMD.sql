@@ -15,7 +15,7 @@ INSERT INTO tbl_roles (nombre_role) VALUES
 -- ==============================================
 INSERT INTO tbl_users (first_name, last_name, username, password, fk_id_role)
 VALUES 
-('Kevin', 'López', 'admin', '$2b$10$xHDvN6J5jlf12BvV2wNCJulgjxOCuZV9dwnY92k659d6y932j6Aou', 1);          -- Rol Administrador
+('Usuario', 'Administrador', 'SuperUser_SysOp', '$2b$10$oeEKdk4ajP/m9wG23wdDuOg8n/qDMa66inQw9yM4vn/CcteQ1/.1O', 1);          -- Rol Administrador
 
 -- ==============================================
 -- INSERTS DE PERMISOS
