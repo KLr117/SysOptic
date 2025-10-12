@@ -5,6 +5,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import '../styles/vista-expedientes.css';
 import '../styles/popup.css';
 import '../styles/vista-notificaciones.css';
+import '../styles/zoom-modal.css';
 import Titulo from '../components/Titulo';
 import Button from '../components/Button';
 import {
@@ -77,21 +78,21 @@ export default function Expedientes() {
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
   const [popupType, setPopupType] = useState('success'); // "success", "error", "warning", "info"
-
-  // Estados para sugerencias de correlativo
+  
+   // Estados para sugerencias de correlativo
   const [sugerenciasCorrelativo, setSugerenciasCorrelativo] = useState([]);
   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
   const [ultimoCorrelativoIngresado, setUltimoCorrelativoIngresado] = useState(null);
-
-  // Estados para modal de imágenes
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalImage, setModalImage] = useState(null);
-
+   
+   // Estados para modal de imágenes
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [modalImage, setModalImage] = useState(null);
+   
   // Estados para modal de zoom
-  const [showZoomModal, setShowZoomModal] = useState(false);
-  const [zoomImage, setZoomImage] = useState(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+   const [showZoomModal, setShowZoomModal] = useState(false);
+   const [zoomImage, setZoomImage] = useState(null);
+   const [zoomLevel, setZoomLevel] = useState(1);
+   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
 
   // Estados para popup personalizado de eliminación de foto
   const [showConfirmEliminarFotoPopup, setShowConfirmEliminarFotoPopup] = useState(false);
@@ -110,18 +111,18 @@ export default function Expedientes() {
     }, 3000);
   };
 
-  // 🔹 Funciones para modal de imágenes
-  const openImageModal = (imagen, expedienteId) => {
-    setModalImage({
-      ...imagen,
+   // 🔹 Funciones para modal de imágenes
+   const openImageModal = (imagen, expedienteId) => {
+     setModalImage({
+       ...imagen,
       expedienteId: expedienteId,
-    });
-    setIsModalOpen(true);
-  };
+     });
+     setIsModalOpen(true);
+   };
 
-  const closeImageModal = () => {
-    setIsModalOpen(false);
-    setModalImage(null);
+   const closeImageModal = () => {
+     setIsModalOpen(false);
+     setModalImage(null);
   };
 
   // 🔹 Funciones para modal de zoom
@@ -161,10 +162,10 @@ export default function Expedientes() {
       const rect = e.currentTarget.getBoundingClientRect();
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
-
+      
       const deltaX = (e.clientX - rect.left - centerX) / centerX;
       const deltaY = (e.clientY - rect.top - centerY) / centerY;
-
+      
       setZoomPosition((prev) => ({
         x: Math.max(-50, Math.min(50, prev.x + deltaX * 10)),
         y: Math.max(-50, Math.min(50, prev.y + deltaY * 10)),
@@ -183,7 +184,7 @@ export default function Expedientes() {
     return expedientes.map((exp) => {
       const cacheKey = `expediente_fotos_${exp.pk_id_expediente}`;
       const fotosCache = localStorage.getItem(cacheKey);
-
+      
       if (fotosCache) {
         try {
           const fotosParseadas = JSON.parse(fotosCache);
@@ -201,7 +202,7 @@ export default function Expedientes() {
           return exp;
         }
       }
-
+      
       // Si no hay cache pero hay fotos en el backend, usar las del backend y guardarlas en cache
       if (exp.foto && exp.foto.length > 0) {
         console.log(
@@ -211,7 +212,7 @@ export default function Expedientes() {
         guardarFotosEnCache(exp.pk_id_expediente, exp.foto);
         return exp;
       }
-
+      
       return exp;
     });
   };
@@ -368,7 +369,7 @@ export default function Expedientes() {
     const cargarSugerenciasCorrelativo = async () => {
       try {
         setLoadingSugerencias(true);
-
+        
         // Si hay un último correlativo ingresado, usarlo como base
         if (ultimoCorrelativoIngresado) {
           const numeroIngresado = parseInt(ultimoCorrelativoIngresado);
@@ -377,7 +378,7 @@ export default function Expedientes() {
           console.log('Sugerencia basada en último dato ingresado:', siguienteSugerencia);
           return;
         }
-
+        
         // Si no hay último dato ingresado, usar la lógica original
         const data = await getExpedientes();
         if (Array.isArray(data)) {
@@ -412,115 +413,115 @@ export default function Expedientes() {
             setSugerenciasCorrelativo(['1']);
           }
         }
-      } catch (error) {
-        console.error('Error cargando sugerencias de correlativo:', error);
-        // En caso de error, sugerir 1
-        setSugerenciasCorrelativo(['1']);
-      } finally {
+       } catch (error) {
+         console.error('Error cargando sugerencias de correlativo:', error);
+         // En caso de error, sugerir 1
+         setSugerenciasCorrelativo(['1']);
+       } finally {
         setLoadingSugerencias(false);
       }
     };
+    
+     cargarSugerenciasCorrelativo();
+   }, [ultimoCorrelativoIngresado]);
 
-    cargarSugerenciasCorrelativo();
-  }, [ultimoCorrelativoIngresado]);
+   // 🔹 Función para formatear fecha para input type="date" (YYYY-MM-DD)
+   const formatearFechaParaInput = (fecha) => {
+     if (!fecha) return '';
+     
+     try {
+       // Si viene en formato ISO completo
+       if (fecha.includes('T')) {
+         const fechaObj = new Date(fecha);
+         const año = fechaObj.getFullYear();
+         const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
+         const dia = fechaObj.getDate().toString().padStart(2, '0');
+         return `${año}-${mes}-${dia}`;
+       }
+       
+       // Si viene en formato DD/MM/YYYY
+       if (fecha.includes('/')) {
+         const [dia, mes, año] = fecha.split('/');
+         return `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+       }
+       
+       // Si viene en formato YYYY-MM-DD, devolverlo tal como está
+       if (fecha.includes('-')) {
+         return fecha;
+       }
+       
+       // Si es una fecha válida, convertirla
+       const fechaObj = new Date(fecha);
+       if (!isNaN(fechaObj.getTime())) {
+         const año = fechaObj.getFullYear();
+         const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
+         const dia = fechaObj.getDate().toString().padStart(2, '0');
+         return `${año}-${mes}-${dia}`;
+       }
+       
+       return fecha; // Devolver fecha original si no se puede convertir
+     } catch (error) {
+       console.error('Error al formatear fecha para input:', error);
+       return fecha; // Devolver fecha original si hay error
+     }
+   };
 
-  // 🔹 Función para formatear fecha para input type="date" (YYYY-MM-DD)
-  const formatearFechaParaInput = (fecha) => {
-    if (!fecha) return '';
-
-    try {
+   // 🔹 Función para formatear fecha
+   const formatearFecha = (fecha) => {
+     if (!fecha) return '';
+     
+     try {
       // Si viene en formato ISO completo
-      if (fecha.includes('T')) {
-        const fechaObj = new Date(fecha);
-        const año = fechaObj.getFullYear();
-        const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
-        const dia = fechaObj.getDate().toString().padStart(2, '0');
-        return `${año}-${mes}-${dia}`;
-      }
+       if (fecha.includes('T')) {
+         const fechaObj = new Date(fecha);
+         const dia = fechaObj.getDate().toString().padStart(2, '0');
+         const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
+         const año = fechaObj.getFullYear();
+         return `${dia}/${mes}/${año}`;
+       }
+       
+       // Si viene en formato YYYY-MM-DD
+       if (fecha.includes('-')) {
+         const [año, mes, dia] = fecha.split('-');
+         return `${dia}/${mes}/${año}`;
+       }
+       
+       // Si ya está en formato DD/MM/YYYY, devolverlo tal como está
+       return fecha;
+     } catch (error) {
+       console.error('Error al formatear fecha:', error);
+       return fecha; // Devolver fecha original si hay error
+     }
+   };
 
-      // Si viene en formato DD/MM/YYYY
-      if (fecha.includes('/')) {
-        const [dia, mes, año] = fecha.split('/');
-        return `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-      }
-
-      // Si viene en formato YYYY-MM-DD, devolverlo tal como está
-      if (fecha.includes('-')) {
-        return fecha;
-      }
-
-      // Si es una fecha válida, convertirla
-      const fechaObj = new Date(fecha);
-      if (!isNaN(fechaObj.getTime())) {
-        const año = fechaObj.getFullYear();
-        const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
-        const dia = fechaObj.getDate().toString().padStart(2, '0');
-        return `${año}-${mes}-${dia}`;
-      }
-
-      return fecha; // Devolver fecha original si no se puede convertir
-    } catch (error) {
-      console.error('Error al formatear fecha para input:', error);
-      return fecha; // Devolver fecha original si hay error
-    }
-  };
-
-  // 🔹 Función para formatear fecha
-  const formatearFecha = (fecha) => {
-    if (!fecha) return '';
-
-    try {
-      // Si viene en formato ISO completo
-      if (fecha.includes('T')) {
-        const fechaObj = new Date(fecha);
-        const dia = fechaObj.getDate().toString().padStart(2, '0');
-        const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
-        const año = fechaObj.getFullYear();
-        return `${dia}/${mes}/${año}`;
-      }
-
-      // Si viene en formato YYYY-MM-DD
-      if (fecha.includes('-')) {
-        const [año, mes, dia] = fecha.split('-');
-        return `${dia}/${mes}/${año}`;
-      }
-
-      // Si ya está en formato DD/MM/YYYY, devolverlo tal como está
-      return fecha;
-    } catch (error) {
-      console.error('Error al formatear fecha:', error);
-      return fecha; // Devolver fecha original si hay error
-    }
-  };
-
-  // 🔹 Función de redimensionamiento de imágenes
-  const resizeImage = (file, maxWidth = 1200, maxHeight = 900) => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-
-      img.onload = () => {
-        // Calcular nuevas dimensiones manteniendo proporción
-        let { width, height } = img;
-        if (width > maxWidth || height > maxHeight) {
-          const ratio = Math.min(maxWidth / width, maxHeight / height);
-          width *= ratio;
-          height *= ratio;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Convertir a Base64 con calidad 0.8 (80%)
-        const base64 = canvas.toDataURL('image/jpeg', 0.8);
-        resolve(base64);
-      };
-
-      img.src = URL.createObjectURL(file);
-    });
-  };
+   // 🔹 Función de redimensionamiento de imágenes
+   const resizeImage = (file, maxWidth = 1200, maxHeight = 900) => {
+     return new Promise((resolve) => {
+       const canvas = document.createElement('canvas');
+       const ctx = canvas.getContext('2d');
+       const img = new Image();
+       
+       img.onload = () => {
+         // Calcular nuevas dimensiones manteniendo proporción
+         let { width, height } = img;
+         if (width > maxWidth || height > maxHeight) {
+           const ratio = Math.min(maxWidth / width, maxHeight / height);
+           width *= ratio;
+           height *= ratio;
+         }
+         
+         canvas.width = width;
+         canvas.height = height;
+         ctx.drawImage(img, 0, 0, width, height);
+         
+         // Convertir a Base64 con calidad 0.8 (80%)
+         const base64 = canvas.toDataURL('image/jpeg', 0.8);
+         resolve(base64);
+       };
+       
+       img.src = URL.createObjectURL(file);
+     });
+   };
 
   // 🔹 Manejo de formulario
   // Función para eliminar una foto específica
@@ -551,9 +552,9 @@ export default function Expedientes() {
     // Obtener información del expediente y la foto
     const expediente = expedientes.find((exp) => exp.pk_id_expediente === expedienteId);
     if (expediente && expediente.foto && expediente.foto.length > fotoIndex) {
-      setFotoToDeleteInfo({
-        expedienteId,
-        fotoIndex,
+      setFotoToDeleteInfo({ 
+        expedienteId, 
+        fotoIndex, 
         expedienteNombre: expediente.nombre,
         fotoNumero: fotoIndex + 1,
       });
@@ -565,34 +566,34 @@ export default function Expedientes() {
   const confirmarEliminarFotoTabla = async () => {
     if (fotoToDeleteInfo) {
       const { expedienteId, fotoIndex } = fotoToDeleteInfo;
-
+      
       try {
         // Obtener el expediente actual
         const expediente = expedientes.find((exp) => exp.pk_id_expediente === expedienteId);
         if (expediente && expediente.foto) {
           // Crear nuevo array sin la foto eliminada
           const nuevasFotos = expediente.foto.filter((_, i) => i !== fotoIndex);
-
+          
           // Actualizar el expediente en el backend
           const expedienteData = {
             ...expediente,
             foto: nuevasFotos,
           };
-
+          
           await updateExpediente(expedienteId, expedienteData);
-
+          
           // Guardar fotos actualizadas en cache local
           guardarFotosEnCache(expedienteId, nuevasFotos);
-
+          
           // Actualizar el estado local
           setExpedientes((prev) =>
             prev.map((exp) =>
-              exp.pk_id_expediente === expedienteId
-                ? { ...exp, foto: nuevasFotos, imagenes: nuevasFotos.length > 0 }
-                : exp
+            exp.pk_id_expediente === expedienteId 
+              ? { ...exp, foto: nuevasFotos, imagenes: nuevasFotos.length > 0 }
+              : exp
             )
           );
-
+          
           mostrarPopup('Foto eliminada correctamente', 'success');
         }
       } catch (error) {
@@ -600,7 +601,7 @@ export default function Expedientes() {
         mostrarPopup('Error al eliminar la foto', 'error');
       }
     }
-
+    
     setShowConfirmEliminarFotoPopup(false);
     setFotoToDeleteInfo(null);
   };
@@ -614,26 +615,26 @@ export default function Expedientes() {
       mostrarPopup('Solo se permiten máximo 2 fotos', 'warning');
       return;
     }
-
+    
     const file = files[0];
-
+    
     // Verificar tamaño original
     if (file.size > 2 * 1024 * 1024) {
       // 2MB
       mostrarPopup('La imagen es muy grande. Se redimensionará automáticamente.', 'info');
     }
-
+    
     // Redimensionar antes de convertir
     resizeImage(file, 1200, 900)
       .then((base64) => {
         setFormData((prev) => ({
-          ...prev,
+        ...prev,
           foto: [...prev.foto, base64],
-        }));
-        setFotoMensaje(true);
+      }));
+      setFotoMensaje(true);
       })
       .catch((error) => {
-        console.error('Error al redimensionar imagen:', error);
+      console.error('Error al redimensionar imagen:', error);
         mostrarPopup('Error al procesar la imagen', 'error');
       });
 
@@ -644,13 +645,13 @@ export default function Expedientes() {
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
     console.log('handleInputChange llamado:', { name, value, files: !!files });
-
+    
     // Validación especial para el campo correlativo - solo números
     if (name === 'correlativo') {
       // Permitir solo números
       const soloNumeros = value.replace(/[^0-9]/g, '');
       console.log('Campo correlativo:', { original: value, filtrado: soloNumeros });
-
+      
       // Actualizar el último correlativo ingresado
       if (soloNumeros && soloNumeros.length > 0) {
         setUltimoCorrelativoIngresado(soloNumeros);
@@ -660,31 +661,31 @@ export default function Expedientes() {
         setSugerenciasCorrelativo([siguienteSugerencia]);
         console.log('Sugerencia actualizada basada en último dato:', siguienteSugerencia);
       }
-
+      
       setFormData({ ...formData, [name]: soloNumeros });
       return;
     }
-
-    // Validación especial para el campo nombre - solo letras y espacios
+     
+     // Validación especial para el campo nombre - solo letras y espacios
     if (name === 'nombre') {
-      // Permitir solo letras, espacios y acentos
-      const soloLetras = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
-      console.log('Campo nombre:', { original: value, filtrado: soloLetras });
-      setFormData({ ...formData, [name]: soloLetras });
-      return;
-    }
-
-    // Validación especial para el campo teléfono - formato internacional
+       // Permitir solo letras, espacios y acentos
+       const soloLetras = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+       console.log('Campo nombre:', { original: value, filtrado: soloLetras });
+       setFormData({ ...formData, [name]: soloLetras });
+       return;
+     }
+     
+     // Validación especial para el campo teléfono - formato internacional
     if (name === 'telefono') {
-      // Permitir números, +, (), espacios y guiones
-      const telefonoFiltrado = value.replace(/[^0-9+\-() ]/g, '');
-      console.log('Campo teléfono:', { original: value, filtrado: telefonoFiltrado });
-      setFormData({ ...formData, [name]: telefonoFiltrado });
-      return;
-    }
-
-    console.log('Actualizando campo:', { name, value });
-    setFormData({ ...formData, [name]: value });
+       // Permitir números, +, (), espacios y guiones
+       const telefonoFiltrado = value.replace(/[^0-9+\-() ]/g, '');
+       console.log('Campo teléfono:', { original: value, filtrado: telefonoFiltrado });
+       setFormData({ ...formData, [name]: telefonoFiltrado });
+       return;
+     }
+    
+     console.log('Actualizando campo:', { name, value });
+     setFormData({ ...formData, [name]: value });
   };
 
   useEffect(() => {
@@ -699,29 +700,29 @@ export default function Expedientes() {
       if (editando) {
         // Actualizar expediente con imágenes en el campo fotos
         const expedienteData = { ...formData };
-
+        
         // Convertir imágenes base64 a array para almacenar en el campo fotos
         if (formData.foto && formData.foto.length > 0) {
           expedienteData.fotos = formData.foto; // Enviar las imágenes base64
         } else {
           expedienteData.fotos = []; // Array vacío si no hay imágenes
         }
-
+        
         // Remover el campo foto del objeto principal
         delete expedienteData.foto;
-
+        
         console.log('=== ACTUALIZANDO EXPEDIENTE ===');
         console.log('ID:', editando);
         console.log('Expediente data:', expedienteData);
         console.log('================================');
-
+        
         await updateExpediente(editando, expedienteData);
-
+        
         // Guardar fotos en cache local
         if (expedienteData.fotos && expedienteData.fotos.length > 0) {
           guardarFotosEnCache(editando, expedienteData.fotos);
         }
-
+        
         setExpedientes(
           expedientes.map((exp) =>
             exp.pk_id_expediente === editando ? { ...formData, pk_id_expediente: editando } : exp
@@ -732,32 +733,32 @@ export default function Expedientes() {
       } else {
         // Crear nuevo expediente con imágenes en el campo fotos
         const expedienteData = { ...formData };
-
+        
         // Convertir imágenes base64 a array para almacenar en el campo fotos
         if (formData.foto && formData.foto.length > 0) {
           expedienteData.fotos = formData.foto; // Enviar las imágenes base64
         } else {
           expedienteData.fotos = []; // Array vacío si no hay imágenes
         }
-
+        
         // Remover el campo foto del objeto principal
         delete expedienteData.foto;
-
+        
         console.log('=== DATOS A ENVIAR AL BACKEND ===');
         console.log('Expediente data:', expedienteData);
         console.log('==================================');
-
+        
         const newExp = await createExpediente(expedienteData);
-
+        
         // Guardar fotos en cache local
         if (expedienteData.fotos && expedienteData.fotos.length > 0) {
           guardarFotosEnCache(newExp.pk_id_expediente, expedienteData.fotos);
         }
-
+        
         setExpedientes([
           ...expedientes,
-          {
-            ...expedienteData,
+          { 
+            ...expedienteData, 
             pk_id_expediente: newExp.pk_id_expediente,
             foto: expedienteData.fotos || [], // ✅ Agregar campo foto para la tabla
           },
@@ -784,10 +785,10 @@ export default function Expedientes() {
     console.log('Datos del expediente a editar:', exp);
     console.log('Fecha original:', exp.fecha_registro);
     console.log('Tipo de fecha:', typeof exp.fecha_registro);
-
+    
     const fechaFormateada = formatearFechaParaInput(exp.fecha_registro);
     console.log('Fecha formateada para input:', fechaFormateada);
-
+    
     setFormData({
       correlativo: exp.correlativo,
       nombre: exp.nombre,
@@ -811,10 +812,10 @@ export default function Expedientes() {
     if (expedienteToDelete) {
       try {
         await deleteExpediente(expedienteToDelete);
-
+        
         // Limpiar fotos del cache local
         limpiarFotosDelCache(expedienteToDelete);
-
+        
         setExpedientes(expedientes.filter((exp) => exp.pk_id_expediente !== expedienteToDelete));
         mostrarPopup('Expediente eliminado correctamente', 'success');
       } catch (err) {
@@ -843,21 +844,21 @@ export default function Expedientes() {
   // Función para mostrar flecha de ordenamiento
   const renderSortArrow = (field) =>
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
-
-  // Estados para PopUp
-  const [popup, setPopup] = useState({
-    isOpen: false,
-    title: '',
-    message: '',
+  
+    // Estados para PopUp
+    const [popup, setPopup] = useState({
+      isOpen: false,
+      title: '',
+      message: '',
     type: 'success',
-  });
+    });
 
   // 🔹 Filtrado y ordenamiento
   const filtro = search.trim().toLowerCase();
   console.log('🔍 Búsqueda activa:', filtro);
   console.log('📊 Total expedientes:', expedientes.length);
-
-  // Validar que expedientes sea un array antes de usar spread operator
+   
+   // Validar que expedientes sea un array antes de usar spread operator
   const expedientesFiltrados = Array.isArray(expedientes)
     ? [...expedientes]
     : []
@@ -869,27 +870,27 @@ export default function Expedientes() {
             (exp.email || '').toLowerCase().includes(filtro) ||
             (exp.correlativo || '').toLowerCase().includes(filtro) ||
             (exp.pk_id_expediente || '').toString().toLowerCase().includes(filtro); // ✅ Agregado búsqueda por ID
-
-          if (filtro && match) {
-            console.log('✅ Expediente encontrado:', {
-              id: exp.pk_id_expediente,
-              nombre: exp.nombre,
-              email: exp.email,
-              telefono: exp.telefono,
+        
+        if (filtro && match) {
+          console.log('✅ Expediente encontrado:', {
+            id: exp.pk_id_expediente,
+            nombre: exp.nombre,
+            email: exp.email,
+            telefono: exp.telefono,
               correlativo: exp.correlativo,
-            });
-          }
-          return match;
+          });
+        }
+        return match;
         })
-        .sort((a, b) => {
-          // Ordenamiento por ID (pk_id_expediente)
+    .sort((a, b) => {
+      // Ordenamiento por ID (pk_id_expediente)
           if (sortField === 'id') {
-            const idA = parseInt(a.pk_id_expediente) || 0;
-            const idB = parseInt(b.pk_id_expediente) || 0;
+        const idA = parseInt(a.pk_id_expediente) || 0;
+        const idB = parseInt(b.pk_id_expediente) || 0;
             return sortDirection === 'asc' ? idA - idB : idB - idA;
-          }
-
-          // Ordenamiento por Nombre
+      }
+      
+      // Ordenamiento por Nombre
           if (sortField === 'nombre') {
             const nombreA = (a.nombre || '').toLowerCase().trim();
             const nombreB = (b.nombre || '').toLowerCase().trim();
@@ -898,18 +899,18 @@ export default function Expedientes() {
             } else {
               return nombreB.localeCompare(nombreA, 'es', { sensitivity: 'base' });
             }
-          }
-
-          // Ordenamiento por Fecha
+      }
+      
+      // Ordenamiento por Fecha
           if (sortField === 'fecha_registro') {
-            // Manejar fechas vacías o inválidas
-            const fechaA = a.fecha_registro ? new Date(a.fecha_registro) : new Date('1900-01-01');
-            const fechaB = b.fecha_registro ? new Date(b.fecha_registro) : new Date('1900-01-01');
-
-            // Verificar que las fechas sean válidas
-            const fechaAValida = !isNaN(fechaA.getTime());
-            const fechaBValida = !isNaN(fechaB.getTime());
-
+        // Manejar fechas vacías o inválidas
+        const fechaA = a.fecha_registro ? new Date(a.fecha_registro) : new Date('1900-01-01');
+        const fechaB = b.fecha_registro ? new Date(b.fecha_registro) : new Date('1900-01-01');
+        
+        // Verificar que las fechas sean válidas
+        const fechaAValida = !isNaN(fechaA.getTime());
+        const fechaBValida = !isNaN(fechaB.getTime());
+        
             if (!fechaAValida && !fechaBValida) return 0;
             if (!fechaAValida) return sortDirection === 'asc' ? 1 : -1;
             if (!fechaBValida) return sortDirection === 'asc' ? -1 : 1;
@@ -917,8 +918,8 @@ export default function Expedientes() {
             return sortDirection === 'asc' ? fechaA - fechaB : fechaB - fechaA;
           }
 
-          return 0;
-        });
+      return 0;
+    });
 
   // 🔹 Paginación
   const totalPages = Math.ceil(expedientesFiltrados.length / pageSize);
@@ -965,40 +966,40 @@ export default function Expedientes() {
       <h2>Gestión de Expedientes</h2>
 
       {/* 🔹 POPUP DE NOTIFICACIONES - VERSIÓN MEJORADA */}
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-container">
-            <div className={`popup-header popup-${popupType}`}>
-              <div className="popup-icon">
+{showPopup && (
+  <div className="popup-overlay">
+    <div className="popup-container">
+      <div className={`popup-header popup-${popupType}`}>
+        <div className="popup-icon">
                 {popupType === 'success' && '✓'}
                 {popupType === 'error' && '✕'}
                 {popupType === 'warning' && '!'}
                 {popupType === 'info' && 'i'}
-              </div>
-              <h3 className="popup-title">
+        </div>
+        <h3 className="popup-title">
                 {popupType === 'success' && 'Éxito'}
                 {popupType === 'error' && 'Error'}
                 {popupType === 'warning' && 'Advertencia'}
                 {popupType === 'info' && 'Información'}
-              </h3>
+        </h3>
               <button className="popup-close" onClick={() => setShowPopup(false)}>
-                ×
-              </button>
-            </div>
-            <div className="popup-body">
-              <p className="popup-message">{popupMessage}</p>
-            </div>
-            <div className="popup-footer">
-              <button
-                className={`popup-btn popup-btn-${popupType}`}
-                onClick={() => setShowPopup(false)}
-              >
-                Aceptar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          ×
+        </button>
+      </div>
+      <div className="popup-body">
+        <p className="popup-message">{popupMessage}</p>
+      </div>
+      <div className="popup-footer">
+        <button 
+          className={`popup-btn popup-btn-${popupType}`}
+          onClick={() => setShowPopup(false)}
+        >
+          Aceptar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* 🔹 MOSTRAR CONTROLES SOLO CUANDO NO ESTÉ EN MODO FORMULARIO */}
       {!mostrarFormulario && (
@@ -1020,7 +1021,7 @@ export default function Expedientes() {
             <label htmlFor="expedientesSortSelect" className="expedientes-sort-label">
               Ordenar por:
             </label>
-
+           
             <select
               id="expedientesSortSelect"
               value={sortField + '-' + sortDirection}
@@ -1090,17 +1091,17 @@ export default function Expedientes() {
                             return fotosExpediente && fotosExpediente.length > 0 ? (
                               fotosExpediente.map((foto, index) => (
                                 <div key={index} className="foto-tabla-container">
-                                  <img
-                                    src={foto}
+                                  <img 
+                                    src={foto} 
                                     alt={`Foto ${index + 1}`}
                                     title={`Foto ${index + 1} - ${exp.nombre} - Click para zoom`}
                                     className="imagen-miniatura"
                                     onClick={() =>
-                                      openImageModal(
+                                      openZoomModal(
                                         {
-                                          url: foto,
-                                          preview: foto,
-                                          nombre: `Foto ${index + 1}`,
+                                      url: foto,
+                                      preview: foto,
+                                          nombre: `Foto ${index + 1} - ${exp.nombre}`,
                                           id: `${exp.pk_id_expediente}_${index}`,
                                         },
                                         exp.pk_id_expediente
@@ -1219,8 +1220,8 @@ export default function Expedientes() {
               {/* Selector de items por página */}
               <div className="page-size-selector">
                 <span>Mostrar</span>
-                <select
-                  value={pageSize}
+                <select 
+                  value={pageSize} 
                   onChange={(e) => setPageSize(Number(e.target.value))}
                   className="page-size-select"
                 >
@@ -1242,8 +1243,8 @@ export default function Expedientes() {
 
               {/* Controles de paginación */}
               <div className="pagination-controls">
-                <button
-                  onClick={() => setCurrentPage(1)}
+                <button 
+                  onClick={() => setCurrentPage(1)} 
                   disabled={currentPageClamped === 1}
                   className="pagination-btn"
                 >
@@ -1305,7 +1306,6 @@ export default function Expedientes() {
                 value={formData.fecha_registro}
                 onChange={handleInputChange}
                 required
-                disabled={!!editando}
               />
             </div>
             <div className="campo-formulario campo-correlativo">
@@ -1353,14 +1353,14 @@ export default function Expedientes() {
                   </div>
                 </div>
               )}
-
+              
               {!editando && loadingSugerencias && (
                 <div className="sugerencias-loading">
                   <span className="loading-spinner"></span>
                   <span>Cargando sugerencias...</span>
                 </div>
               )}
-
+              
               <label>No. Correlativo *</label>
               <input
                 type="text"
@@ -1407,40 +1407,40 @@ export default function Expedientes() {
           </div>
 
           <div className="campo-formulario">
-            <label>Correo</label>
+             <label>Correo</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              placeholder="Ej: usuario@email.com"
+               placeholder="Ej: usuario@email.com"
             />
           </div>
 
           <div className="campo-formulario">
-            <label>Dirección</label>
+             <label>Dirección</label>
             <input
               type="text"
               name="direccion"
               value={formData.direccion}
               onChange={handleInputChange}
-              placeholder="Ej: Calle Principal #123"
+               placeholder="Ej: Calle Principal #123"
             />
           </div>
 
           <div className="campo-formulario">
-            <label>Fotos *</label>
-
+            <label>Fotos</label>
+            
             {/* Botón para subir fotos */}
             <div className="upload-photos-container">
-              <input
-                type="file"
-                id="photo-upload"
-                accept="image/*"
+              <input 
+                type="file" 
+                id="photo-upload" 
+                accept="image/*" 
                 onChange={handleFileUpload}
                 style={{ display: 'none' }}
               />
-              <button
+              <button 
                 type="button"
                 className="btn-subir-foto"
                 onClick={() => document.getElementById('photo-upload').click()}
@@ -1462,14 +1462,14 @@ export default function Expedientes() {
             {/* Vista previa de fotos en horizontal */}
             {formData.foto.length > 0 && (
               <div className="vista-previa-fotos-horizontal">
-                {formData.foto.map((img, i) => (
+              {formData.foto.map((img, i) => (
                   <div key={i} className="foto-miniatura-container">
-                    <img
-                      src={img}
-                      alt={`Foto ${i + 1}`}
+                <img
+                  src={img}
+                  alt={`Foto ${i + 1}`}
                       className="foto-miniatura"
-                      onClick={() => setFotoAmpliada(img)}
-                    />
+                  onClick={() => setFotoAmpliada(img)}
+                />
                     <button
                       type="button"
                       className="btn-eliminar-foto"
@@ -1479,8 +1479,8 @@ export default function Expedientes() {
                       ✕
                     </button>
                   </div>
-                ))}
-              </div>
+              ))}
+            </div>
             )}
           </div>
 
@@ -1530,7 +1530,7 @@ export default function Expedientes() {
             <div className="popup-header popup-warning">
               <div className="popup-icon">⚠️</div>
               <h3 className="popup-title">Confirmar Eliminación</h3>
-              <button
+              <button 
                 className="popup-close"
                 onClick={() => {
                   setShowConfirmEliminarFotoPopup(false);
@@ -1554,7 +1554,7 @@ export default function Expedientes() {
               </div>
             </div>
             <div className="popup-footer">
-              <button
+              <button 
                 className="popup-btn popup-btn-cancel"
                 onClick={() => {
                   setShowConfirmEliminarFotoPopup(false);
@@ -1598,15 +1598,15 @@ export default function Expedientes() {
                   <p>Información detallada del paciente</p>
                 </div>
               </div>
-              <button
-                onClick={() => setExpedienteVisualizar(null)}
+              <button 
+                onClick={() => setExpedienteVisualizar(null)} 
                 className="btn-close-profesional"
                 title="Cerrar"
               >
                 ✕
               </button>
             </div>
-
+            
             {/* Body con diseño mejorado - Orden igual al formulario */}
             <div className="modal-body-profesional">
               {/* Primera fila: Fecha y Correlativo */}
@@ -1622,9 +1622,9 @@ export default function Expedientes() {
                       <span className="info-value fecha">
                         {formatearFecha(expedienteVisualizar.fecha_registro)}
                       </span>
-                    </div>
-                  </div>
-
+                </div>
+                </div>
+                  
                   <div className="info-card">
                     <div className="info-icon">🔢</div>
                     <div className="info-content">
@@ -1632,8 +1632,8 @@ export default function Expedientes() {
                       <span className="info-value correlativo">
                         {expedienteVisualizar.correlativo}
                       </span>
-                    </div>
-                  </div>
+                </div>
+                </div>
                 </div>
               </div>
 
@@ -1648,18 +1648,18 @@ export default function Expedientes() {
                     <div className="info-content">
                       <label>Nombre del Paciente</label>
                       <span className="info-value nombre">{expedienteVisualizar.nombre}</span>
-                    </div>
-                  </div>
+                </div>
+              </div>
 
                   <div className="info-card">
                     <div className="info-icon">📞</div>
                     <div className="info-content">
                       <label>Teléfono</label>
                       <span className="info-value telefono">{expedienteVisualizar.telefono}</span>
-                    </div>
                   </div>
                 </div>
-              </div>
+                </div>
+            </div>
 
               {/* Tercera fila: Correo (ancho completo) */}
               <div className="info-section terciaria">
@@ -1712,7 +1712,7 @@ export default function Expedientes() {
                       </span>
                     </div>
                   </div>
-
+                  
                   <div className="info-card">
                     <div className="info-icon">✅</div>
                     <div className="info-content">
@@ -1730,13 +1730,13 @@ export default function Expedientes() {
                 <span className="footer-text"> Sistema de Expedientes </span>
               </div>
               <div className="footer-actions">
-                <button
-                  onClick={() => setExpedienteVisualizar(null)}
+              <button 
+                onClick={() => setExpedienteVisualizar(null)} 
                   className="btn-cerrar-profesional"
-                >
+              >
                   <span className="btn-icon">✓</span>
-                  Cerrar
-                </button>
+                Cerrar
+              </button>
               </div>
             </div>
           </div>
@@ -1963,22 +1963,6 @@ export default function Expedientes() {
                 <span className="zoom-icon">🔍</span>
                 <h3>{zoomImage.nombre}</h3>
               </div>
-              <div className="zoom-controls">
-                <button className="zoom-btn zoom-out" onClick={handleZoomOut} title="Alejar">
-                  ➖
-                </button>
-                <span className="zoom-level">{Math.round(zoomLevel * 100)}%</span>
-                <button className="zoom-btn zoom-in" onClick={handleZoomIn} title="Acercar">
-                  ➕
-                </button>
-                <button
-                  className="zoom-btn zoom-reset"
-                  onClick={handleResetZoom}
-                  title="Restablecer zoom"
-                >
-                  🔄
-                </button>
-              </div>
               <button className="zoom-close-btn" onClick={closeZoomModal} title="Cerrar">
                 ✕
               </button>
@@ -1986,7 +1970,7 @@ export default function Expedientes() {
 
             {/* Contenido del modal de zoom */}
             <div className="zoom-modal-content">
-              <div
+              <div 
                 className="zoom-image-container"
                 onMouseMove={handleImageDrag}
                 onMouseDown={handleImageDrag}
@@ -2015,6 +1999,22 @@ export default function Expedientes() {
 
             {/* Footer del modal de zoom */}
             <div className="zoom-modal-footer">
+              <div className="zoom-controls">
+                <button className="zoom-btn zoom-out" onClick={handleZoomOut} title="Alejar">
+                  ➖
+                </button>
+                <span className="zoom-level">{Math.round(zoomLevel * 100)}%</span>
+                <button className="zoom-btn zoom-in" onClick={handleZoomIn} title="Acercar">
+                  ➕
+                </button>
+                <button
+                  className="zoom-btn zoom-reset"
+                  onClick={handleResetZoom}
+                  title="Restablecer zoom"
+                >
+                  🔄
+                </button>
+              </div>
               <div className="zoom-instructions">
                 <span className="instruction-icon">💡</span>
                 <span>

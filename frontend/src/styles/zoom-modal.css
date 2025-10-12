@@ -1,4 +1,4 @@
-/* Estilos para Modal de Zoom de Imágenes */
+/* Estilos para Modal de Zoom de Imágenes - Versión Profesional */
 
 .zoom-modal-overlay {
   position: fixed;
@@ -6,26 +6,32 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: white;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
-  animation: fadeInZoom 0.3s ease-out;
+  animation: fadeInZoom 0.4s ease-out;
 }
 
 .zoom-modal-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  max-width: 95vw;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 20px;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.3),
+    0 10px 30px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  max-width: 80vw;
   max-height: 95vh;
-  width: 90vw;
+  width: 75vw;
   height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: slideInZoom 0.3s ease-out;
+  animation: slideInZoom 0.4s ease-out;
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Header del modal de zoom - Solo título y cerrar */
@@ -33,28 +39,54 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 21px;
+  background: linear-gradient(135deg, #890D0F 0%, #A01A1C 100%);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.zoom-modal-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .zoom-modal-title {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: #1f2937;
+  gap: 15px;
+  color: white;
+  z-index: 1;
+  position: relative;
 }
 
 .zoom-icon {
-  font-size: 20px;
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .zoom-modal-title h3 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .zoom-controls {
@@ -70,24 +102,33 @@
 }
 
 .zoom-close-btn {
-  background: #dc2626;
-  border: 1px solid #b91c1c;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border: 2px solid #dc2626;
   color: white;
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 16px;
-  transition: all 0.2s ease;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+  z-index: 1;
+  position: relative;
 }
 
 .zoom-close-btn:hover {
-  background: #b91c1c;
-  border-color: #991b1b;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  border-color: #b91c1c;
+  transform: scale(1.1) translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
+}
+
+.zoom-close-btn:active {
+  transform: scale(1.05) translateY(-1px);
 }
 
 /* Contenido del modal de zoom */
@@ -96,9 +137,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 30px;
   overflow: hidden;
-  background: white;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  position: relative;
+}
+
+.zoom-modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(137, 13, 15, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(137, 13, 15, 0.05) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .zoom-image-container {
@@ -109,89 +164,149 @@
   justify-content: center;
   overflow: hidden;
   position: relative;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.1),
+    0 4px 15px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(137, 13, 15, 0.1);
 }
 
 .zoom-image {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   user-select: none;
   -webkit-user-drag: none;
+  transition: transform 0.2s ease-out;
 }
 
 /* Footer del modal de zoom - Controles de zoom */
 .zoom-modal-footer {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 16px 24px;
-  background: white;
-  border-top: 1px solid #e5e7eb;
+  justify-content: space-between;
+  padding: 17px 21px;
+  background: linear-gradient(135deg, #890D0F 0%, #A01A1C 100%);
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.zoom-modal-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    transparent 50%, 
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  animation: shimmer 3s infinite;
 }
 
 .zoom-controls {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: #f8fafc;
-  padding: 12px 20px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 10px 17px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  position: relative;
 }
 
 .zoom-btn {
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #374151;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #890D0F;
+  width: 35px;
+  height: 35px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .zoom-btn:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 .zoom-btn:active {
-  transform: translateY(0);
+  transform: translateY(-1px) scale(1.02);
 }
 
 .zoom-level {
-  color: #1f2937;
-  font-weight: 600;
-  font-size: 16px;
-  min-width: 60px;
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  min-width: 56px;
   text-align: center;
-  background: white;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .zoom-instructions {
-  display: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 1;
+  position: relative;
 }
 
 .instruction-icon {
-  display: none;
+  font-size: 16px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
 .zoom-close-footer-btn {
-  display: none;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border: 2px solid #dc2626;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+  z-index: 1;
+  position: relative;
+}
+
+.zoom-close-footer-btn:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  border-color: #b91c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6);
 }
 
 /* Animaciones */
