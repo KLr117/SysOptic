@@ -1,74 +1,34 @@
-import express from "express";
-import {
-  ImagenesExpedientesController,
-  upload,
-} from "../controllers/imagenesExpedientesController.js";
-import { authorizeModules } from "../middlewares/Auth.js";
+import express from 'express';
+import { ImagenesExpedientesController, upload } from '../controllers/imagenesExpedientesController.js';
 
 const router = express.Router();
 
-// 🔹 SUBIR IMAGEN A EXPEDIENTE
-router.post(
-  "/subir",
-  authorizeModules("control_expedientes"),
-  upload.single("imagen"),
-  ImagenesExpedientesController.subirImagen
-);
+// Ruta para subir imagen de expediente
+// POST /api/imagenes-expedientes/subir
+// Body: FormData con 'imagen' (archivo) y 'expediente_id' (número)
+router.post('/subir', upload.single('imagen'), ImagenesExpedientesController.subirImagen);
 
-// 🔹 OBTENER IMÁGENES DE UN EXPEDIENTE ESPECÍFICO
-router.get(
-  "/expediente/:expedienteId",
-  authorizeModules("control_expedientes"),
-  ImagenesExpedientesController.obtenerImagenesPorExpediente
-);
+// Ruta para obtener todas las imágenes de un expediente específico
+// GET /api/imagenes-expedientes/expediente/:expedienteId
+router.get('/expediente/:expedienteId', ImagenesExpedientesController.obtenerImagenesPorExpediente);
 
-// 🔹 OBTENER TODAS LAS IMÁGENES
-router.get(
-  "/todas",
-  authorizeModules("control_expedientes"),
-  ImagenesExpedientesController.obtenerTodasLasImagenes
-);
+// Ruta para obtener todas las imágenes (administración)
+// GET /api/imagenes-expedientes/todas
+router.get('/todas', ImagenesExpedientesController.obtenerTodasLasImagenes);
 
-// 🔹 CONTAR IMÁGENES POR EXPEDIENTE
-router.get(
-  "/contar/:expedienteId",
-  authorizeModules("control_expedientes"),
-  ImagenesExpedientesController.contarImagenesPorExpediente
-);
+// Ruta para eliminar imagen específica
+// DELETE /api/imagenes-expedientes/:imagenId
+router.delete('/:imagenId', ImagenesExpedientesController.eliminarImagen);
 
-// 🔹 SERVIR IMAGEN POR ID
-router.get(
-  "/servir/:imagenId",
-  authorizeModules("control_expedientes"),
-  ImagenesExpedientesController.servirImagen
-);
+// Ruta para contar imágenes de un expediente
+// GET /api/imagenes-expedientes/contar/:expedienteId
+router.get('/contar/:expedienteId', ImagenesExpedientesController.contarImagenesPorExpediente);
 
-// 🔹 SERVIR IMAGEN POR RUTA (para rutas codificadas)
-router.get(
-  "/servir-ruta/*",
-  authorizeModules("control_expedientes"),
-  ImagenesExpedientesController.servirImagenPorRuta
-);
+// Ruta para servir imagen por ID (mostrar imagen en el navegador)
+// GET /api/imagenes-expedientes/servir/:imagenId
+router.get('/servir/:imagenId', ImagenesExpedientesController.servirImagen);
 
-// 🔹 OBTENER IMAGEN POR ID (información)
-router.get(
-  "/:imagenId",
-  authorizeModules("control_expedientes"),
-  ImagenesExpedientesController.obtenerImagenPorId
-);
-
-// 🔹 ELIMINAR IMAGEN (debe ir al final para evitar conflictos)
-router.delete(
-  "/:imagenId",
-  authorizeModules("control_expedientes"),
-  ImagenesExpedientesController.eliminarImagen
-);
-
-// 🔹 ELIMINAR TODAS LAS IMÁGENES DE UN EXPEDIENTE
-router.delete(
-  "/expediente/:expedienteId",
-  authorizeModules("control_expedientes"),
-  ImagenesExpedientesController.eliminarImagenesPorExpediente
-);
+// Ruta para servir imagen por ruta directa (alternativa) - TEMPORALMENTE DESHABILITADA
+// router.get('/servir-ruta/*', ImagenesExpedientesController.servirImagenPorRuta);
 
 export default router;

@@ -74,13 +74,16 @@ export const createExpedienteController = async (req, res) => {
       });
     }
 
-    // Validación de email si se proporciona
-    if (expedienteData.email && !isValidEmail(expedienteData.email)) {
-      console.log('❌ Validación fallida: Email inválido');
-      return res.status(400).json({ 
-        ok: false, 
-        message: "Formato de email inválido" 
-      });
+    // Validación de email si se proporciona (función isValidEmail debe estar definida)
+    if (expedienteData.email && expedienteData.email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(expedienteData.email)) {
+        console.log('❌ Validación fallida: Email inválido');
+        return res.status(400).json({ 
+          ok: false, 
+          message: "Formato de email inválido" 
+        });
+      }
     }
 
     console.log('🚀 Intentando crear expediente...');

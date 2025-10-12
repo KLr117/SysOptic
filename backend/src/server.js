@@ -8,6 +8,7 @@ import ordenTrabajoRoutes from "../routes/OrdenTrabajoRoutes.js";
 import expedientesRoutes from "../routes/ExpedientesRoutes.js";
 import notificacionesRoutes from "../routes/notificacionesRoutes.js";
 import imagenesOrdenesRoutes from "../routes/imagenesOrdenesRoutes.js";
+import imagenesExpedientesRoutes from "../routes/imagenesExpedientesRoutes.js";
 import mailTestRoutes from "../routes/mailTestRoutes.js";
 import usersRoutes from "../routes/UsersRoutes.js";
 import { authMiddleware } from "../middlewares/Auth.js";
@@ -35,7 +36,10 @@ app.use("/api/mail", mailTestRoutes);
 // ======================
 app.use((req, res, next) => {
   // Permitir acceso público solo a imágenes servidas directamente
-  const publicImageRoutes = [/^\/api\/imagenes-ordenes\/servir/];
+  const publicImageRoutes = [
+    /^\/api\/imagenes-ordenes\/servir/,
+    /^\/api\/imagenes-expedientes\/servir/
+  ];
 
   const isPublic = publicImageRoutes.some((pattern) => pattern.test(req.path));
   if (isPublic) return next(); // ⚠️ No requiere token
@@ -58,13 +62,14 @@ app.use("/api/ordenes", ordenTrabajoRoutes);
 app.use("/api/expedientes", expedientesRoutes);
 app.use("/api/notificaciones", notificacionesRoutes);
 app.use("/api/imagenes-ordenes", imagenesOrdenesRoutes);
+app.use("/api/imagenes-expedientes", imagenesExpedientesRoutes);
 app.use("/api/users", usersRoutes);
 
 // ======================
 // 📁 Archivos estáticos
 // ======================
 app.use("/uploads", express.static("uploads"));
-app.use("/public", express.static("public"));
+app.use("/public", express.static("uploads"));
 
 app.listen(PORT, () => {
   console.log(`✅ Backend corriendo en http://localhost:${PORT}`);

@@ -15,6 +15,11 @@ import {
   deleteExpediente,
   getLastCorrelativoExpediente
 } from '../services/expedientesService';
+import { 
+  subirImagen, 
+  comprimirImagen,
+  obtenerImagenesPorExpediente
+} from '../services/imagenesExpedientesService';
 import {
   getEstadoNotificacionExpediente,
   getNotificacionEspecificaById,
@@ -59,7 +64,7 @@ export default function Expedientes() {
     direccion: '',
     email: '',
     fecha_registro: '',
-    foto: [],
+    foto: [], // Ahora será array de archivos, no base64
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -179,63 +184,17 @@ export default function Expedientes() {
     setZoomLevel((prev) => Math.max(0.5, Math.min(5, prev + delta)));
   };
 
-  // 🔹 Función para cargar fotos desde localStorage
-  const cargarFotosDesdeCache = (expedientes) => {
-    return expedientes.map((exp) => {
-      const cacheKey = `expediente_fotos_${exp.pk_id_expediente}`;
-      const fotosCache = localStorage.getItem(cacheKey);
-      
-      if (fotosCache) {
-        try {
-          const fotosParseadas = JSON.parse(fotosCache);
-          console.log(
-            `Fotos cargadas desde cache para expediente ${exp.pk_id_expediente}:`,
-            fotosParseadas
-          );
-          return {
-            ...exp,
-            foto: fotosParseadas,
-            imagenes: fotosParseadas.length > 0,
-          };
-        } catch (error) {
-          console.error('Error parseando fotos desde cache:', error);
-          return exp;
-        }
-      }
-      
-      // Si no hay cache pero hay fotos en el backend, usar las del backend y guardarlas en cache
-      if (exp.foto && exp.foto.length > 0) {
-        console.log(
-          `Fotos encontradas en backend para expediente ${exp.pk_id_expediente}, guardando en cache:`,
-          exp.foto
-        );
-        guardarFotosEnCache(exp.pk_id_expediente, exp.foto);
-        return exp;
-      }
-      
-      return exp;
-    });
-  };
-
-  // 🔹 Función para guardar fotos en localStorage
-  const guardarFotosEnCache = (expedienteId, fotos) => {
-    const cacheKey = `expediente_fotos_${expedienteId}`;
+  // 🔹 Función para cargar imágenes de un expediente desde la BD
+  const cargarImagenesExpediente = async (expedienteId) => {
     try {
-      localStorage.setItem(cacheKey, JSON.stringify(fotos));
-      console.log(`Fotos guardadas en cache para expediente ${expedienteId}:`, fotos);
+      const response = await obtenerImagenesPorExpediente(expedienteId);
+      if (response.success && response.imagenes) {
+        return response.imagenes.map(img => img.url); // Retornar solo las URLs
+      }
+      return [];
     } catch (error) {
-      console.error('Error guardando fotos en cache:', error);
-    }
-  };
-
-  // 🔹 Función para limpiar fotos del cache
-  const limpiarFotosDelCache = (expedienteId) => {
-    const cacheKey = `expediente_fotos_${expedienteId}`;
-    try {
-      localStorage.removeItem(cacheKey);
-      console.log(`Fotos eliminadas del cache para expediente ${expedienteId}`);
-    } catch (error) {
-      console.error('Error eliminando fotos del cache:', error);
+      console.error('Error cargando imágenes del expediente:', error);
+      return [];
     }
   };
 
@@ -265,6 +224,50 @@ export default function Expedientes() {
     };
     cargarExpedientes();
   }, []);
+
+  // 🔹 Cargar imágenes de expedientes desde la base de datos
+  useEffect(() => {
+    const cargarImagenesExpedientes = async () => {
+      // Solo cargar si hay expedientes
+      if (expedientes.length === 0) return;
+
+      try {
+        console.log('Cargando imágenes para todos los expedientes...');
+        
+        // Cargar imágenes para cada expediente
+        const expedientesConImagenes = await Promise.all(
+          expedientes.map(async (expediente) => {
+            try {
+              // Obtener imágenes de este expediente específico
+              const imagenesUrls = await cargarImagenesExpediente(expediente.pk_id_expediente);
+              
+              console.log(`Imágenes cargadas para expediente ${expediente.pk_id_expediente}:`, imagenesUrls);
+              
+              return {
+                ...expediente,
+                foto: imagenesUrls // Reemplazar el array vacío con las URLs reales
+              };
+            } catch (error) {
+              console.error(`Error cargando imágenes para expediente ${expediente.pk_id_expediente}:`, error);
+              return {
+                ...expediente,
+                foto: [] // Mantener array vacío si hay error
+              };
+            }
+          })
+        );
+
+        // Actualizar el estado con las imágenes cargadas
+        setExpedientes(expedientesConImagenes);
+        console.log('Todos los expedientes actualizados con sus imágenes');
+        
+      } catch (error) {
+        console.error('Error general cargando imágenes de expedientes:', error);
+      }
+    };
+
+    cargarImagenesExpedientes();
+  }, [expedientes.length]); // Se ejecuta cuando cambia el número de expedientes
 
   // 🔹 Cargar estados de notificaciones
   useEffect(() => {
@@ -495,33 +498,7 @@ export default function Expedientes() {
    };
 
    // 🔹 Función de redimensionamiento de imágenes
-   const resizeImage = (file, maxWidth = 1200, maxHeight = 900) => {
-     return new Promise((resolve) => {
-       const canvas = document.createElement('canvas');
-       const ctx = canvas.getContext('2d');
-       const img = new Image();
-       
-       img.onload = () => {
-         // Calcular nuevas dimensiones manteniendo proporción
-         let { width, height } = img;
-         if (width > maxWidth || height > maxHeight) {
-           const ratio = Math.min(maxWidth / width, maxHeight / height);
-           width *= ratio;
-           height *= ratio;
-         }
-         
-         canvas.width = width;
-         canvas.height = height;
-         ctx.drawImage(img, 0, 0, width, height);
-         
-         // Convertir a Base64 con calidad 0.8 (80%)
-         const base64 = canvas.toDataURL('image/jpeg', 0.8);
-         resolve(base64);
-       };
-       
-       img.src = URL.createObjectURL(file);
-     });
-   };
+   // 🔹 Función de redimensionamiento eliminada - ahora se usa comprimirImagen del servicio
 
   // 🔹 Manejo de formulario
   // Función para eliminar una foto específica
@@ -582,8 +559,7 @@ export default function Expedientes() {
           
           await updateExpediente(expedienteId, expedienteData);
           
-          // Guardar fotos actualizadas en cache local
-          guardarFotosEnCache(expedienteId, nuevasFotos);
+          // Cache eliminado - ahora se usan archivos reales
           
           // Actualizar el estado local
           setExpedientes((prev) =>
@@ -606,7 +582,7 @@ export default function Expedientes() {
     setFotoToDeleteInfo(null);
   };
 
-  // Función para manejar la carga de fotos usando el nuevo sistema
+  // Función para manejar la carga de fotos usando el nuevo sistema de archivos
   const handleFileUpload = async (e) => {
     const files = e.target.files;
     if (!files || !files[0]) return;
@@ -618,25 +594,42 @@ export default function Expedientes() {
     
     const file = files[0];
     
+    // Verificar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      mostrarPopup('Solo se permiten archivos de imagen', 'error');
+      return;
+    }
+
     // Verificar tamaño original
-    if (file.size > 2 * 1024 * 1024) {
-      // 2MB
-      mostrarPopup('La imagen es muy grande. Se redimensionará automáticamente.', 'info');
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB
+      mostrarPopup('El archivo es demasiado grande. Máximo 5MB', 'error');
+      return;
     }
     
-    // Redimensionar antes de convertir
-    resizeImage(file, 1200, 900)
-      .then((base64) => {
-        setFormData((prev) => ({
+    try {
+      // Comprimir imagen usando el nuevo servicio (600px, calidad 0.6)
+      const compressedBlob = await comprimirImagen(file, 600, 0.6);
+      const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
+      
+      // Crear objeto con archivo y preview para vista previa
+      const imagenData = {
+        id: Date.now() + Math.random(),
+        file: compressedFile,
+        preview: URL.createObjectURL(compressedFile) // URL para vista previa local
+      };
+
+      // Agregar a la lista de fotos
+      setFormData((prev) => ({
         ...prev,
-          foto: [...prev.foto, base64],
+        foto: [...prev.foto, imagenData]
       }));
-      setFotoMensaje(true);
-      })
-      .catch((error) => {
-      console.error('Error al redimensionar imagen:', error);
-        mostrarPopup('Error al procesar la imagen', 'error');
-      });
+
+      mostrarPopup('Imagen agregada correctamente', 'success');
+    } catch (error) {
+      console.error('Error al procesar imagen:', error);
+      mostrarPopup('Error al procesar la imagen', 'error');
+    }
 
     // Limpiar el input para permitir cargar la misma imagen otra vez
     e.target.value = '';
@@ -698,17 +691,10 @@ export default function Expedientes() {
     e.preventDefault();
     try {
       if (editando) {
-        // Actualizar expediente con imágenes en el campo fotos
+        // Actualizar expediente (sin fotos en el payload)
         const expedienteData = { ...formData };
         
-        // Convertir imágenes base64 a array para almacenar en el campo fotos
-        if (formData.foto && formData.foto.length > 0) {
-          expedienteData.fotos = formData.foto; // Enviar las imágenes base64
-        } else {
-          expedienteData.fotos = []; // Array vacío si no hay imágenes
-        }
-        
-        // Remover el campo foto del objeto principal
+        // Remover el campo foto del objeto principal (no se envía en el payload)
         delete expedienteData.foto;
         
         console.log('=== ACTUALIZANDO EXPEDIENTE ===');
@@ -718,9 +704,22 @@ export default function Expedientes() {
         
         await updateExpediente(editando, expedienteData);
         
-        // Guardar fotos en cache local
-        if (expedienteData.fotos && expedienteData.fotos.length > 0) {
-          guardarFotosEnCache(editando, expedienteData.fotos);
+        // Subir imágenes por separado si existen
+        if (formData.foto && formData.foto.length > 0) {
+          console.log('Subiendo imágenes para expediente ID:', editando);
+          
+          try {
+            // Subir cada imagen por separado
+            for (const imagen of formData.foto) {
+              await subirImagen(editando, imagen.file);
+              console.log(`Imagen ${imagen.file.name} subida exitosamente`);
+            }
+            
+            console.log('Todas las imágenes subidas exitosamente');
+          } catch (error) {
+            console.error('Error subiendo imágenes:', error);
+            // Continuar aunque falle la subida de imágenes
+          }
         }
         
         setExpedientes(
@@ -731,17 +730,10 @@ export default function Expedientes() {
         mostrarPopup('Expediente actualizado correctamente', 'success');
         setEditando(null);
       } else {
-        // Crear nuevo expediente con imágenes en el campo fotos
+        // Crear nuevo expediente (sin fotos en el payload)
         const expedienteData = { ...formData };
         
-        // Convertir imágenes base64 a array para almacenar en el campo fotos
-        if (formData.foto && formData.foto.length > 0) {
-          expedienteData.fotos = formData.foto; // Enviar las imágenes base64
-        } else {
-          expedienteData.fotos = []; // Array vacío si no hay imágenes
-        }
-        
-        // Remover el campo foto del objeto principal
+        // Remover el campo foto del objeto principal (no se envía en el payload)
         delete expedienteData.foto;
         
         console.log('=== DATOS A ENVIAR AL BACKEND ===');
@@ -750,9 +742,27 @@ export default function Expedientes() {
         
         const newExp = await createExpediente(expedienteData);
         
-        // Guardar fotos en cache local
-        if (expedienteData.fotos && expedienteData.fotos.length > 0) {
-          guardarFotosEnCache(newExp.pk_id_expediente, expedienteData.fotos);
+        // Subir imágenes por separado si existen
+        let imagenesUrls = [];
+        if (formData.foto && formData.foto.length > 0) {
+          console.log('Subiendo imágenes para expediente ID:', newExp.pk_id_expediente);
+          
+          try {
+            // Subir cada imagen por separado
+            for (const imagen of formData.foto) {
+              await subirImagen(newExp.pk_id_expediente, imagen.file);
+              console.log(`Imagen ${imagen.file.name} subida exitosamente`);
+            }
+            
+            console.log('Todas las imágenes subidas exitosamente');
+            
+            // Cargar las URLs de las imágenes desde la BD
+            imagenesUrls = await cargarImagenesExpediente(newExp.pk_id_expediente);
+            console.log('URLs de imágenes cargadas:', imagenesUrls);
+          } catch (error) {
+            console.error('Error subiendo imágenes:', error);
+            // Continuar aunque falle la subida de imágenes
+          }
         }
         
         setExpedientes([
@@ -760,7 +770,7 @@ export default function Expedientes() {
           { 
             ...expedienteData, 
             pk_id_expediente: newExp.pk_id_expediente,
-            foto: expedienteData.fotos || [], // ✅ Agregar campo foto para la tabla
+            foto: imagenesUrls, // Usar URLs reales de las imágenes
           },
         ]);
         mostrarPopup('Expediente guardado correctamente', 'success');
@@ -1462,13 +1472,13 @@ export default function Expedientes() {
             {/* Vista previa de fotos en horizontal */}
             {formData.foto.length > 0 && (
               <div className="vista-previa-fotos-horizontal">
-              {formData.foto.map((img, i) => (
-                  <div key={i} className="foto-miniatura-container">
+              {formData.foto.map((imagen, i) => (
+                  <div key={imagen.id || i} className="foto-miniatura-container">
                 <img
-                  src={img}
+                  src={imagen.preview} // Usar preview URL en lugar de base64
                   alt={`Foto ${i + 1}`}
                       className="foto-miniatura"
-                  onClick={() => setFotoAmpliada(img)}
+                  onClick={() => setFotoAmpliada(imagen.preview)}
                 />
                     <button
                       type="button"
