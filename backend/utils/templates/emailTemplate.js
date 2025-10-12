@@ -1,7 +1,7 @@
 import { fileURLToPath } from "url";
 import path from "path";
 
-export const buildEmailTemplate = ({ titulo, cuerpo }) => {
+export const buildEmailTemplate = ({ cuerpo }) => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
   // Logo desde URL
@@ -47,7 +47,7 @@ const logoUrl = `file://${path.resolve("./public/images/logo.jpg")}`;
               <img src="${logoUrl}" alt="${brand}" style="width:40px; border-radius:6px;" />
             </td>
             <td class="header-title" style="width:75%; text-align:center; vertical-align:middle;">
-              <h2 style="margin:0; font-weight:500;">${titulo}</h2>
+              <h2 style="margin:0; font-weight:500;">Fundación Visual Óptica</h2>
             </td>
           </tr>
         </table>
@@ -72,7 +72,7 @@ const logoUrl = `file://${path.resolve("./public/images/logo.jpg")}`;
               ✉️ <strong>E-mail:</strong> ${email}<br>
               ☎️ <strong>Teléfonos:</strong> ${phone1} / ${phone2}<br>
               📱 <strong>WhatsApp:</strong> <a href="https://api.whatsapp.com/send?phone=502${whatsapp.replace(/\D/g, '')}" style="color:${colorPrincipal}; text-decoration:none; font-weight:bold;">${whatsappDisplay}</a><br>
-              <p style="margin-top:8px; color:#888;">❤️ <strong>Gracias por confiar en nosotros</strong> ❤️</p>
+              <p style="margin-top:8px; color:#888;">👓 <strong>Gracias por confiar en nosotros</strong> 👓</p>
             </td>
           </tr>
         </table>

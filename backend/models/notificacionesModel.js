@@ -49,6 +49,7 @@ export const getNotificaciones = async () => {
   const [rows] = await pool.query(query);
   return rows;
 };
+
 export const getNotificacionById = async (id) => {
   const query = `
     SELECT 
@@ -56,7 +57,12 @@ export const getNotificacionById = async (id) => {
       c.nombre_categoria, 
       t.nombre_tipo, 
       m.nombre_modulo, 
-      e.nombre_estado
+      e.nombre_estado,
+      (
+        SELECT COUNT(*) 
+        FROM tbl_notificaciones_enviadas ne 
+        WHERE ne.fk_id_notificacion = n.pk_id_notificacion
+      ) AS correos_enviados
     FROM tbl_notificaciones n
     LEFT JOIN tbl_categorias_notificacion c ON n.fk_id_categoria_notificacion = c.pk_id_categoria_notificacion
     LEFT JOIN tbl_tipos_notificacion t ON n.fk_id_tipo_notificacion = t.pk_id_tipo_notificacion
