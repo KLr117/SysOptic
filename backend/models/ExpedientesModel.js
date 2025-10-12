@@ -16,28 +16,12 @@ export const getAllExpedientes = async () => {
     ORDER BY fecha_registro DESC
   `);
   
-  // Procesar las fotos (si están almacenadas como JSON) y determinar si tiene imágenes
-  return rows.map(expediente => {
-    let fotosArray = [];
-    let tieneImagenes = false;
-    
-    if (expediente.fotos) {
-      try {
-        fotosArray = JSON.parse(expediente.fotos);
-        tieneImagenes = Array.isArray(fotosArray) && fotosArray.length > 0;
-      } catch (error) {
-        console.error('Error parsing fotos JSON:', error);
-        fotosArray = [];
-        tieneImagenes = false;
-      }
-    }
-    
-    return {
-      ...expediente,
-      foto: fotosArray,
-      imagenes: tieneImagenes
-    };
-  });
+  // Retornar expedientes sin procesar fotos (ahora se manejan por separado)
+  return rows.map(expediente => ({
+    ...expediente,
+    foto: [], // Array vacío - las fotos se cargan por separado
+    imagenes: false // Siempre false - las fotos se cargan por separado
+  }));
 };
 
 // Obtener expediente por ID
@@ -57,24 +41,10 @@ export const getExpedienteById = async (id) => {
   `, [id]);
   
   if (rows[0]) {
-    let fotosArray = [];
-    let tieneImagenes = false;
-    
-    if (rows[0].fotos) {
-      try {
-        fotosArray = JSON.parse(rows[0].fotos);
-        tieneImagenes = Array.isArray(fotosArray) && fotosArray.length > 0;
-      } catch (error) {
-        console.error('Error parsing fotos JSON:', error);
-        fotosArray = [];
-        tieneImagenes = false;
-      }
-    }
-    
     return {
       ...rows[0],
-      foto: fotosArray,
-      imagenes: tieneImagenes
+      foto: [], // Array vacío - las fotos se cargan por separado
+      imagenes: false // Siempre false - las fotos se cargan por separado
     };
   }
   return null;
@@ -88,28 +58,25 @@ export const createExpediente = async (expedienteData) => {
     telefono,
     direccion,
     email,
-    fecha_registro,
-    fotos
+    fecha_registro
   } = expedienteData;
 
   const correlativoGenerado = correlativo || `EXP-${Date.now()}`;
 
-  // Procesar las fotos - convertir array a JSON string
-  const fotosJson = Array.isArray(fotos) ? JSON.stringify(fotos) : JSON.stringify([]);
-
   console.log('=== CREANDO EXPEDIENTE ===');
   console.log('Correlativo:', correlativoGenerado);
   console.log('Nombre:', nombre);
-  console.log('Fotos recibidas:', fotos);
-  console.log('Fotos JSON:', fotosJson);
+  console.log('Teléfono:', telefono);
+  console.log('Email:', email);
   console.log('==========================');
 
+  // Insertar expediente sin campo fotos (las imágenes se manejan por separado)
   const [result] = await pool.query(`
     INSERT INTO tbl_expedientes 
-    (correlativo, nombre, telefono, direccion, email, fecha_registro, fotos)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    (correlativo, nombre, telefono, direccion, email, fecha_registro)
+    VALUES (?, ?, ?, ?, ?, ?)
   `, [
-    correlativoGenerado, nombre, telefono, direccion, email, fecha_registro, fotosJson
+    correlativoGenerado, nombre, telefono, direccion, email, fecha_registro
   ]);
 
   return result.insertId;
@@ -123,20 +90,17 @@ export const updateExpediente = async (id, expedienteData) => {
     telefono,
     direccion,
     email,
-    fecha_registro,
-    fotos
+    fecha_registro
   } = expedienteData;
 
-  // Procesar las fotos - convertir array a JSON string
-  const fotosJson = Array.isArray(fotos) ? JSON.stringify(fotos) : JSON.stringify([]);
-
+  // Actualizar expediente sin campo fotos (las imágenes se manejan por separado)
   const [result] = await pool.query(`
     UPDATE tbl_expedientes 
     SET correlativo = ?, nombre = ?, telefono = ?, direccion = ?,
-        email = ?, fecha_registro = ?, fotos = ?
+        email = ?, fecha_registro = ?
     WHERE pk_id_expediente = ?
   `, [
-    correlativo, nombre, telefono, direccion, email, fecha_registro, fotosJson, id
+    correlativo, nombre, telefono, direccion, email, fecha_registro, id
   ]);
 
   return result.affectedRows > 0;
@@ -170,13 +134,3 @@ export const getLastCorrelativoExpediente = async () => {
   return 0; // Si no hay expedientes, empezar desde 0
 };
 
-// Actualizar campo imagenes en expediente
-export const updateImagenesExpediente = async (expedienteId, tieneImagenes) => {
-  const [result] = await pool.query(`
-    UPDATE tbl_expedientes 
-    SET imagenes = ? 
-    WHERE pk_id_expediente = ?
-  `, [tieneImagenes, expedienteId]);
-  
-  return result.affectedRows > 0;
-};
