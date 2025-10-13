@@ -48,6 +48,11 @@ app.use((req, res, next) => {
     /^\/api\/imagenes-expedientes\/servir/
   ];
 
+  // Permitir acceso a archivos estáticos de uploads
+  if (req.path.startsWith('/uploads/')) {
+    return next(); // ⚠️ No requiere token
+  }
+
   const isPublic = publicImageRoutes.some((pattern) => pattern.test(req.path));
   if (isPublic) return next(); // ⚠️ No requiere token
 

@@ -29,7 +29,11 @@ export const getAllExpedientes = async () => {
           WHERE expediente_id = ?
         `, [expediente.pk_id_expediente]);
         
-        const imagenes = imagenesRows.map(img => img.ruta_archivo);
+        const imagenes = imagenesRows.map(img => {
+          // Generar URL completa para acceso directo
+          const baseUrl = process.env.API_URL || 'http://localhost:4000';
+          return `${baseUrl}${img.ruta_archivo}`;
+        });
         
         return {
           ...expediente,
@@ -79,7 +83,11 @@ export const getExpedienteById = async (id) => {
         WHERE expediente_id = ?
       `, [id]);
       
-      const imagenes = imagenesRows.map(img => img.ruta_archivo);
+      const imagenes = imagenesRows.map(img => {
+        // Generar URL completa para acceso directo
+        const baseUrl = process.env.API_URL || 'http://localhost:4000';
+        return `${baseUrl}${img.ruta_archivo}`;
+      });
       
       return {
         ...rows[0],
@@ -113,14 +121,6 @@ export const createExpediente = async (expedienteData) => {
 
   const correlativoGenerado = correlativo || `EXP-${Date.now()}`;
 
-  console.log('=== CREANDO EXPEDIENTE ===');
-  console.log('Correlativo:', correlativoGenerado);
-  console.log('Nombre:', nombre);
-  console.log('Teléfono:', telefono);
-  console.log('Email:', email);
-  console.log('==========================');
-
-  // Insertar expediente con fotos vacío inicialmente
   const [result] = await pool.query(`
     INSERT INTO tbl_expedientes 
     (correlativo, nombre, telefono, direccion, email, fecha_registro, fotos)
@@ -134,26 +134,31 @@ export const createExpediente = async (expedienteData) => {
 
 // Actualizar expediente
 export const updateExpediente = async (id, expedienteData) => {
-  const {
-    correlativo,
-    nombre,
-    telefono,
-    direccion,
-    email,
-    fecha_registro
-  } = expedienteData;
+  try {
+    const {
+      correlativo,
+      nombre,
+      telefono,
+      direccion,
+      email,
+      fecha_registro
+    } = expedienteData;
 
-  // Actualizar expediente sin campo fotos (las imágenes se manejan por separado)
-  const [result] = await pool.query(`
-    UPDATE tbl_expedientes 
-    SET correlativo = ?, nombre = ?, telefono = ?, direccion = ?,
-        email = ?, fecha_registro = ?
-    WHERE pk_id_expediente = ?
-  `, [
-    correlativo, nombre, telefono, direccion, email, fecha_registro, id
-  ]);
+    // Actualizar expediente sin campo fotos (las imágenes se manejan por separado)
+    const [result] = await pool.query(`
+      UPDATE tbl_expedientes 
+      SET correlativo = ?, nombre = ?, telefono = ?, direccion = ?,
+          email = ?, fecha_registro = ?
+      WHERE pk_id_expediente = ?
+    `, [
+      correlativo, nombre, telefono, direccion, email, fecha_registro, id
+    ]);
 
-  return result.affectedRows > 0;
+    return result.affectedRows > 0;
+  } catch (error) {
+    console.error('❌ Error en updateExpediente:', error);
+    throw error;
+  }
 };
 
 // Eliminar expediente
@@ -186,12 +191,17 @@ export const getLastCorrelativoExpediente = async () => {
 
 // Actualizar campo fotos en expediente
 export const updateFotosExpediente = async (expedienteId, tieneImagenes) => {
-  const valorFotos = tieneImagenes ? 'SI' : ''; // Usar 'SI' si tiene imágenes, vacío si no
-  const [result] = await pool.query(`
-    UPDATE tbl_expedientes 
-    SET fotos = ? 
-    WHERE pk_id_expediente = ?
-  `, [valorFotos, expedienteId]);
+  try {
+    const valorFotos = tieneImagenes ? 'SI' : ''; // Usar 'SI' si tiene imágenes, vacío si no
+    const [result] = await pool.query(`
+      UPDATE tbl_expedientes 
+      SET fotos = ? 
+      WHERE pk_id_expediente = ?
+    `, [valorFotos, expedienteId]);
 
-  return result.affectedRows > 0;
+    return result.affectedRows > 0;
+  } catch (error) {
+    console.error('Error en updateFotosExpediente:', error);
+    throw error;
+  }
 };

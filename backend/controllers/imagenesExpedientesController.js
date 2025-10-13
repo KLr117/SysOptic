@@ -176,6 +176,61 @@ class ImagenesExpedientesController {
     }
   }
 
+  // Eliminar imagen específica
+  static async eliminarImagen(req, res) {
+    try {
+      const { imagenId } = req.params;
+      
+      // Primero obtener el expediente_id de la imagen antes de eliminarla
+      const imagenInfo = await ImagenesExpedientesModel.obtenerImagenPorId(imagenId);
+      if (!imagenInfo.success) {
+        return res.status(404).json({
+          success: false,
+          message: 'Imagen no encontrada'
+        });
+      }
+      
+      const expedienteId = imagenInfo.imagen.expediente_id;
+      
+      // Eliminar la imagen
+      const result = await ImagenesExpedientesModel.eliminarImagen(imagenId);
+      
+      if (result.success) {
+        // Verificar si quedan imágenes para este expediente
+        const imagenesRestantes = await ImagenesExpedientesModel.contarImagenesPorExpediente(expedienteId);
+        const tieneImagenes = imagenesRestantes.count > 0;
+        
+      // Actualizar el campo fotos
+      try {
+        await updateFotosExpediente(expedienteId, tieneImagenes);
+      } catch (updateError) {
+        console.error('Error actualizando campo fotos:', updateError);
+        // Continuar aunque falle la actualización del campo fotos
+      }
+        
+        res.json({
+          success: true,
+          message: 'Imagen eliminada exitosamente',
+          affectedRows: result.affectedRows,
+          tieneImagenes: tieneImagenes
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: 'Error al eliminar imagen',
+          error: result.error
+        });
+      }
+    } catch (error) {
+      console.error('Error en eliminarImagen:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: error.message
+      });
+    }
+  }
+
   // ==========================
 // 🗑️ ELIMINAR IMAGEN (FTP + BD)
 // ==========================
@@ -288,11 +343,14 @@ static async eliminarImagen(req, res) {
   static async servirImagen(req, res) {
     try {
       const { imagenId } = req.params;
+      console.log('🔍 Servir imagen - ID:', imagenId);
       
       // Obtener información de la imagen desde la BD
       const result = await ImagenesExpedientesModel.obtenerImagenPorId(imagenId);
+      console.log('🔍 Resultado BD:', result);
       
       if (!result.success) {
+        console.log('❌ Imagen no encontrada en BD');
         return res.status(404).json({
           success: false,
           message: 'Imagen no encontrada'
@@ -300,10 +358,14 @@ static async eliminarImagen(req, res) {
       }
 
       const imagen = result.imagen;
+      console.log('🔍 Imagen desde BD:', imagen);
+      
       const rutaCompleta = path.resolve(imagen.ruta_archivo);
+      console.log('🔍 Ruta completa:', rutaCompleta);
       
       // Verificar que el archivo existe físicamente
       if (!fs.existsSync(rutaCompleta)) {
+        console.log('❌ Archivo no existe físicamente:', rutaCompleta);
         return res.status(404).json({
           success: false,
           message: 'Archivo de imagen no encontrado en el servidor'

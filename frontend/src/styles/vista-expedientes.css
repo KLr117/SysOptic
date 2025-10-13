@@ -1028,20 +1028,31 @@
   border-bottom: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Flechitas solo en columnas ordenables */
-.table-expedientes th:nth-child(1)::after,
-.table-expedientes th:nth-child(2)::after,
-.table-expedientes th:nth-child(6)::after {
-  content: ' ↕';
-  font-size: 0.7rem;
-  opacity: 0.7;
-  margin-left: 5px;
-}
 
 .table-expedientes th:hover {
   background: linear-gradient(135deg, #A01A1C 0%, #890D0F 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(137, 13, 15, 0.3);
+}
+
+/* Estilos para flechas de ordenamiento */
+.sort-arrow {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  display: inline-block;
+  min-width: 12px;
+  text-align: center;
+}
+
+.sort-arrow:hover {
+  opacity: 1;
+  transform: scale(1.2);
+  color: #fff;
+}
+
+.sort-arrow:active {
+  transform: scale(0.9);
 }
 
 /* Estilo específico para la primera columna */
