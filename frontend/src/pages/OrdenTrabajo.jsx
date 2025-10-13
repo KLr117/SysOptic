@@ -637,7 +637,19 @@ const OrdenTrabajo = () => {
               <th>Imágenes</th>
               <th>Acciones</th>
               <th>Notificación</th>
-              <th>Estado de notificación</th>
+              <th>
+                <div style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  gap: '2px',
+                  lineHeight: '1.2'
+                }}>
+                  <div>Estado</div>
+                  <div>de</div>
+                  <div>Notificación</div>
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -748,9 +760,31 @@ const OrdenTrabajo = () => {
                     {(() => {
                       const estado = notificacionesEstado[orden.pk_id_orden];
                       if (!estado || !estado.tieneNotificacion) {
-                        return '—';
+                        return <span style={{ color: '#666', fontStyle: 'italic' }}>—</span>;
                       }
-                      return estado.estado === 'activa' ? 'Activa' : 'Inactiva';
+                      return estado.estado === 'activa' ? (
+                        <span style={{ 
+                          color: '#22c55e', 
+                          fontWeight: 'bold',
+                          backgroundColor: '#dcfce7',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          display: 'inline-block'
+                        }}>
+                          Activa
+                        </span>
+                      ) : (
+                        <span style={{ 
+                          color: '#ef4444', 
+                          fontWeight: 'bold',
+                          backgroundColor: '#fef2f2',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          display: 'inline-block'
+                        }}>
+                          Inactiva
+                        </span>
+                      );
                     })()}
                   </td>
                 </tr>
