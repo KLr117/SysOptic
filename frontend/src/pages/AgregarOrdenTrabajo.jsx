@@ -436,7 +436,7 @@ const AgregarOrdenTrabajo = () => {
               const imagenFile = new File([imagenComprimida], imagen.file.name, {
                 type: 'image/jpeg'
               });
-              
+
               await subirImagen(ordenId, imagenFile);
               console.log(`Imagen ${imagen.file.name} subida exitosamente`);
             }
