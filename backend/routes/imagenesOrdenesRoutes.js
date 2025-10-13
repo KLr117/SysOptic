@@ -1,15 +1,17 @@
 import express from "express";
 import {
   ImagenesOrdenesController,
-  upload,
+  upload, setOrdenIdMiddleware
 } from "../controllers/imagenesOrdenesController.js";
 import { authorizeModules } from "../middlewares/Auth.js";
 
 const router = express.Router();
 
+// ✅ Capturar orden_id antes de multer
 // Subir imagen
 router.post(
   "/subir",
+  setOrdenIdMiddleware,
   authorizeModules("control_ordenes"),
   upload.single("imagen"),
   ImagenesOrdenesController.subirImagen
@@ -45,6 +47,7 @@ router.get(
 // Eliminar imagen (debe ir al final para evitar conflictos)
 router.delete(
   "/:imagenId",
+  setOrdenIdMiddleware,
   authorizeModules("control_ordenes"),
   ImagenesOrdenesController.eliminarImagen
 );
