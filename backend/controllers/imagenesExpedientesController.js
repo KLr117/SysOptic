@@ -3,26 +3,21 @@ import { updateFotosExpediente } from '../models/ExpedientesModel.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import ftp from 'basic-ftp';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Configuración de multer para subir archivos
+// Configuración de multer (guarda temporalmente en /tmp antes de subir al FTP)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Crear directorio de uploads si no existe
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'expedientes');
-    
-    // Crear directorio si no existe
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-    
-    cb(null, uploadsDir);
+    const tempDir = process.env.TEMP || '/tmp';
+    cb(null, tempDir);
   },
   filename: (req, file, cb) => {
-    // Generar nombre único para evitar conflictos
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    // Formato: expediente_ID_timestamp_random.extensión
     cb(null, `expediente_${req.body.expediente_id}_${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
+  },
 });
 
 // Configuración de multer con límites y filtros
@@ -45,55 +40,74 @@ const upload = multer({
   }
 });
 
+// 🔧 Nueva función auxiliar para subir al FTP
+async function subirAFtp(localPath, remoteFileName, subcarpeta) {
+  const client = new ftp.Client();
+  client.ftp.verbose = false;
+  try {
+    await client.access({
+      host: process.env.FTP_HOST,
+      user: process.env.FTP_USER,
+      password: process.env.FTP_PASS,
+      secure: true,
+    });
+    await client.ensureDir(`/public_html/public/uploads/${subcarpeta}`);
+    await client.uploadFrom(localPath, `${remoteFileName}`);
+    client.close();
+    return true;
+  } catch (err) {
+    console.error("❌ Error al subir al FTP:", err);
+    client.close();
+    return false;
+  }
+}
+
 class ImagenesExpedientesController {
   // Subir imagen para expediente
   static async subirImagen(req, res) {
     try {
       const { expediente_id } = req.body;
-      
-      // Validar que se proporcionó ID de expediente
       if (!expediente_id) {
-        return res.status(400).json({
-          success: false,
-          message: 'ID de expediente es requerido'
-        });
+        return res.status(400).json({ success: false, message: 'ID de expediente es requerido' });
       }
 
-      // Validar que se proporcionó archivo
       if (!req.file) {
-        return res.status(400).json({
+        return res.status(400).json({ success: false, message: 'No se proporcionó archivo' });
+      }
+
+      // Subir al FTP Hostinger
+      const localPath = req.file.path;
+      const remoteFileName = req.file.filename;
+      const subidaExitosa = await subirAFtp(localPath, remoteFileName, "expedientes");
+
+      if (!subidaExitosa) {
+        return res.status(500).json({
           success: false,
-          message: 'No se proporcionó archivo'
+          message: 'Error al subir imagen al servidor remoto',
         });
       }
 
-      // Preparar datos de la imagen para guardar en BD
+      // Guardar metadatos en BD (con ruta pública)
       const imagenData = {
         expediente_id: parseInt(expediente_id),
-        nombre_archivo: req.file.originalname, // Nombre original del archivo
-        ruta_archivo: `/uploads/expedientes/${req.file.filename}` // Ruta relativa para servir desde el servidor web
+        nombre_archivo: req.file.originalname,
+        ruta_archivo: `/public/uploads/expedientes/${remoteFileName}`,
       };
 
-      // Guardar metadatos de la imagen en la base de datos
       const result = await ImagenesExpedientesModel.crearImagen(imagenData);
-      
+
       if (result.success) {
-        // Actualizar campo fotos en el expediente
         await updateFotosExpediente(parseInt(expediente_id), true);
-        
         res.status(201).json({
           success: true,
           message: 'Imagen subida exitosamente',
-          imagen: {
-            id: result.id,
-            ...imagenData
-          }
+          imagen: { id: result.id, ...imagenData },
         });
       } else {
         res.status(500).json({
           success: false,
           message: 'Error al guardar imagen en la base de datos',
-          error: result.error
+          error: result.error,
         });
       }
     } catch (error) {
@@ -101,7 +115,7 @@ class ImagenesExpedientesController {
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor',
-        error: error.message
+        error: error.message,
       });
     }
   }
@@ -162,55 +176,84 @@ class ImagenesExpedientesController {
     }
   }
 
-  // Eliminar imagen específica
-  static async eliminarImagen(req, res) {
-    try {
-      const { imagenId } = req.params;
-      
-      // Primero obtener el expediente_id de la imagen antes de eliminarla
-      const imagenInfo = await ImagenesExpedientesModel.obtenerImagenPorId(imagenId);
-      if (!imagenInfo.success) {
-        return res.status(404).json({
-          success: false,
-          message: 'Imagen no encontrada'
-        });
-      }
-      
-      const expedienteId = imagenInfo.imagen.expediente_id;
-      
-      // Eliminar la imagen
-      const result = await ImagenesExpedientesModel.eliminarImagen(imagenId);
-      
-      if (result.success) {
-        // Verificar si quedan imágenes para este expediente
-        const imagenesRestantes = await ImagenesExpedientesModel.contarImagenesPorExpediente(expedienteId);
-        const tieneImagenes = imagenesRestantes.count > 0;
-        
-        // Actualizar el campo fotos
-        await updateFotosExpediente(expedienteId, tieneImagenes);
-        
-        res.json({
-          success: true,
-          message: 'Imagen eliminada exitosamente',
-          affectedRows: result.affectedRows,
-          tieneImagenes: tieneImagenes
-        });
-      } else {
-        res.status(500).json({
-          success: false,
-          message: 'Error al eliminar imagen',
-          error: result.error
-        });
-      }
-    } catch (error) {
-      console.error('Error en eliminarImagen:', error);
-      res.status(500).json({
+  // ==========================
+// 🗑️ ELIMINAR IMAGEN (FTP + BD)
+// ==========================
+static async eliminarImagen(req, res) {
+  try {
+    const { imagenId } = req.params;
+
+    // Obtener la información de la imagen
+    const imagenInfo = await ImagenesExpedientesModel.obtenerImagenPorId(imagenId);
+    if (!imagenInfo.success || !imagenInfo.imagen) {
+      return res.status(404).json({
         success: false,
-        message: 'Error interno del servidor',
-        error: error.message
+        message: 'Imagen no encontrada'
       });
     }
+
+    const expedienteId = imagenInfo.imagen.expediente_id;
+    const remotePath = `/public_html${imagenInfo.imagen.ruta_archivo}`; // Ruta completa en Hostinger
+
+    // ==========================
+    // 🔌 Conexión FTP para eliminar el archivo remoto
+    // ==========================
+    const client = new ftp.Client();
+    client.ftp.verbose = false;
+    try {
+      await client.access({
+        host: process.env.FTP_HOST,
+        user: process.env.FTP_USER,
+        password: process.env.FTP_PASS,
+        secure: false,
+      });
+
+      await client.remove(remotePath);
+      console.log(`🧹 Archivo eliminado del FTP: ${remotePath}`);
+      client.close();
+    } catch (ftpErr) {
+      console.error("⚠️ Error eliminando archivo del FTP:", ftpErr.message);
+      client.close();
+      // No detenemos el proceso si falla el FTP
+    }
+
+    // ==========================
+    // 🗑️ Eliminar registro en la base de datos
+    // ==========================
+    const result = await ImagenesExpedientesModel.eliminarImagen(imagenId);
+
+    if (result.success) {
+      // Verificar si quedan imágenes para este expediente
+      const imagenesRestantes = await ImagenesExpedientesModel.contarImagenesPorExpediente(expedienteId);
+      const tieneImagenes = imagenesRestantes.count > 0;
+
+      // Actualizar campo fotos
+      await updateFotosExpediente(expedienteId, tieneImagenes);
+
+      res.json({
+        success: true,
+        message: 'Imagen eliminada correctamente (FTP + BD)',
+        affectedRows: result.affectedRows,
+        tieneImagenes
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Error al eliminar imagen en la base de datos',
+        error: result.error
+      });
+    }
+
+  } catch (error) {
+    console.error('Error en eliminarImagen:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: error.message
+    });
   }
+}
+
 
   // Contar imágenes por expediente
   static async contarImagenesPorExpediente(req, res) {
