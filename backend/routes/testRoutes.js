@@ -10,7 +10,7 @@ router.get("/ping-hostinger", async (req, res) => {
     const renderIP = ipResponse.data.ip;
 
     // 2️⃣ Hacer el ping a tu hosting (forzará log en Hostinger)
-    const target = "https://lightsteelblue-termite-871777.hostingersite.com/does_not_exist";
+    const target = "https://lightsteelblue-termite-871777.hostingersite.com/";
     await axios.get(target);
 
     // 3️⃣ Responder con info útil para soporte
