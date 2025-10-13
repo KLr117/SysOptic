@@ -316,6 +316,7 @@ const EditarOrdenTrabajo = () => {
   const actualizarOrden = async () => {
     try {
       setSaving(true);
+      const ordenId = id; // ✅ lo definimos aquí
 
       // Preparar datos para enviar
       const orderData = {
