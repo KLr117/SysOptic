@@ -16,6 +16,7 @@ import { logBitacoraMiddleware } from "../middlewares/bitacoraLogger.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import testRoutes from "../routes/testRoutes.js";
 
 import {
   procesarPromocionesActivas,
@@ -37,6 +38,7 @@ const __dirname = path.dirname(__filename);
 // ======================
 app.use("/api", authRoutes);
 app.use("/api/mail", mailTestRoutes);
+app.use("/api/test", testRoutes);
 
 // ======================
 // 🔒 Middleware global de autenticación JWT (excepto imágenes-ordenes públicas)
