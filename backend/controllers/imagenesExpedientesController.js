@@ -51,7 +51,7 @@ async function subirAFtp(localPath, remoteFileName, subcarpeta) {
       password: process.env.FTP_PASS,
       secure: true,
     });
-    await client.ensureDir(`/public_html/public/uploads/${subcarpeta}`);
+    await client.ensureDir(`/public_html/uploads/${subcarpeta}`);
     await client.uploadFrom(localPath, `${remoteFileName}`);
     client.close();
     return true;
@@ -91,7 +91,7 @@ class ImagenesExpedientesController {
       const imagenData = {
         expediente_id: parseInt(expediente_id),
         nombre_archivo: req.file.originalname,
-        ruta_archivo: `/public/uploads/expedientes/${remoteFileName}`,
+        ruta_archivo: `/uploads/expedientes/${remoteFileName}`,
       };
 
       const result = await ImagenesExpedientesModel.crearImagen(imagenData);
