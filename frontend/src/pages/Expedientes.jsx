@@ -1,5 +1,5 @@
-// ===============   WENDYs    ===============
-import React, { useState, useEffect } from 'react';
+// ===============   EXPEDIENTES    ===============
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ConfirmModal from '../components/ConfirmModal';
 import '../styles/vista-expedientes.css';
@@ -18,7 +18,8 @@ import {
 import { 
   subirImagen, 
   comprimirImagen,
-  obtenerImagenesPorExpediente
+  obtenerImagenesPorExpediente,
+  eliminarImagen
 } from '../services/imagenesExpedientesService';
 import {
   getEstadoNotificacionExpediente,
@@ -55,8 +56,17 @@ export default function Expedientes() {
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState('fecha_registro');
   const [sortDirection, setSortDirection] = useState('desc');
+  
+  // Estados separados para ordenamiento por flechas
+  const [arrowSortField, setArrowSortField] = useState(null);
+  const [arrowSortDirection, setArrowSortDirection] = useState('asc');
+  const [sortKey, setSortKey] = useState(0); // Clave para forzar re-renderizado
+  
+  // Función para obtener el número de fila
+  const getRowNumber = (index) => startIndex + index + 1;
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [editando, setEditando] = useState(null);
+  const [expedienteId, setExpedienteId] = useState(null);
   const [formData, setFormData] = useState({
     correlativo: '',
     nombre: '',
@@ -81,6 +91,12 @@ export default function Expedientes() {
   const [showConfirmEliminarExpediente, setShowConfirmEliminarExpediente] = useState(false);
   const [expedienteToDelete, setExpedienteToDelete] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  
+  // 🔹 Wrapper para setShowPopup con logging
+  const setShowPopupWithLog = (value) => {
+    console.log('🔍 setShowPopup llamado con:', value, 'desde:', new Error().stack.split('\n')[2]);
+    setShowPopup(value);
+  };
   const [popupMessage, setPopupMessage] = useState('');
   const [popupType, setPopupType] = useState('success'); // "success", "error", "warning", "info"
   
@@ -102,18 +118,107 @@ export default function Expedientes() {
   // Estados para popup personalizado de eliminación de foto
   const [showConfirmEliminarFotoPopup, setShowConfirmEliminarFotoPopup] = useState(false);
   const [fotoToDeleteInfo, setFotoToDeleteInfo] = useState(null);
+  
+  // Estado para forzar re-renderizado de imágenes
+  const [imagenesUpdateKey, setImagenesUpdateKey] = useState(0);
 
   // Estado para notificaciones de expedientes
   const [notificacionesEstado, setNotificacionesEstado] = useState({});
 
   // 🔹 Mostrar popup
   const mostrarPopup = (mensaje, tipo = 'success') => {
+    console.log('🔔 Llamando mostrarPopup:', mensaje, 'tipo:', tipo);
+    
+    // Si hay un popup de confirmación activo, no interferir
+    if (showConfirmUpdate) {
+      console.log('🔔 Popup de confirmación activo, ignorando mostrarPopup');
+      return;
+    }
+    
+    setPopupMessage(mensaje);
+    setPopupType(tipo);
+    setShowPopupWithLog(true);
+    setTimeout(() => {
+      console.log('🔔 Auto-cerrando popup después de 3 segundos');
+      setShowPopupWithLog(false);
+    }, 3000);
+  };
+
+  // 🔹 Mostrar popup de confirmación (sin auto-cerrar)
+  const mostrarPopupConfirmacion = (mensaje, tipo = 'success') => {
     setPopupMessage(mensaje);
     setPopupType(tipo);
     setShowPopup(true);
-    setTimeout(() => {
-      setShowPopup(false);
-    }, 3000);
+    // No se cierra automáticamente - el usuario debe presionar "Aceptar"
+  };
+
+  // 🔹 Estados para popup de confirmación de actualización
+  const [showConfirmUpdate, setShowConfirmUpdate] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState(null);
+
+  // 🔹 Mostrar popup de confirmación de actualización
+  const mostrarConfirmacionActualizacion = (mensaje) => {
+    console.log('🔔 Configurando popup de confirmación:', mensaje);
+    setPopupMessage(mensaje);
+    setPopupType('info');
+    setShowConfirmUpdate(true);
+    setShowPopupWithLog(true);
+    console.log('🔔 Popup configurado - showConfirmUpdate:', true, 'showPopup:', true);
+    console.log('🔔 Estados configurados correctamente');
+  };
+
+  // 🔹 Confirmar actualización
+  const confirmarActualizacion = async () => {
+    console.log('✅ Usuario presionó ACEPTAR - Cerrando popup y volviendo a vista principal');
+    console.log('🔍 Estado ANTES de cerrar - showConfirmUpdate:', showConfirmUpdate, 'showPopup:', showPopup);
+    
+    // Cerrar popup
+    setShowConfirmUpdate(false);
+    setShowPopupWithLog(false);
+    setPendingUpdate(null);
+    
+    // Cerrar formulario de edición y volver a vista principal
+    setEditando(false);
+    setMostrarFormulario(false);
+    setExpedienteId(null);
+    setFormData({
+      correlativo: '',
+      nombre: '',
+      telefono: '',
+      email: '',
+      direccion: '',
+      fecha: new Date().toISOString().split('T')[0],
+      foto: []
+    });
+    
+    console.log('✅ Popup cerrado y formulario reseteado - Volviendo a vista principal');
+  };
+
+  // 🔹 Cancelar actualización
+  const cancelarActualizacion = () => {
+    console.log('❌ Usuario presionó CANCELAR - Cerrando popup y volviendo a vista principal');
+    console.log('🔍 Estado ANTES de cerrar - showConfirmUpdate:', showConfirmUpdate, 'showPopup:', showPopup);
+    
+    // Cerrar popup
+    setShowConfirmUpdate(false);
+    setShowPopupWithLog(false);
+    setPendingUpdate(null);
+    
+    // Cerrar formulario de edición y volver a vista principal
+    setEditando(false);
+    setMostrarFormulario(false);
+    setExpedienteId(null);
+    setFormData({
+      correlativo: '',
+      nombre: '',
+      telefono: '',
+      email: '',
+      direccion: '',
+      fecha: new Date().toISOString().split('T')[0],
+      foto: []
+    });
+    
+    console.log('❌ Popup cerrado y formulario reseteado - Volviendo a vista principal');
   };
 
    // 🔹 Funciones para modal de imágenes
@@ -308,10 +413,6 @@ export default function Expedientes() {
     }
   };
 
-  // 🔹 Monitorear cambios en el ordenamiento
-  useEffect(() => {
-    console.log('🔄 Estados de ordenamiento cambiaron:', { sortField, sortDirection });
-  }, [sortField, sortDirection]);
 
   // 🔹 Cargar sugerencias de correlativo usando el nuevo endpoint
   useEffect(() => {
@@ -324,7 +425,6 @@ export default function Expedientes() {
           const numeroIngresado = parseInt(ultimoCorrelativoIngresado);
           const siguienteSugerencia = (numeroIngresado + 1).toString();
           setSugerenciasCorrelativo([siguienteSugerencia]);
-          console.log('Sugerencia basada en último dato ingresado:', siguienteSugerencia);
           return;
         }
         
@@ -343,8 +443,6 @@ export default function Expedientes() {
             .filter((num) => num > 0) // Solo números válidos
             .sort((a, b) => b - a); // Ordenar de mayor a menor
 
-          console.log('Correlativos numéricos encontrados:', correlativosNumericos);
-
           if (correlativosNumericos.length > 0) {
             // Encontrar el siguiente número consecutivo
             let siguienteNumero = correlativosNumericos[0] + 1;
@@ -354,11 +452,9 @@ export default function Expedientes() {
               siguienteNumero++;
             }
 
-            console.log('Siguiente correlativo consecutivo:', siguienteNumero);
             setSugerenciasCorrelativo([siguienteNumero.toString()]);
           } else {
             // Si no hay correlativos, empezar con 1
-            console.log('No hay correlativos existentes, empezando con 1');
             setSugerenciasCorrelativo(['1']);
           }
         }
@@ -452,12 +548,29 @@ export default function Expedientes() {
   };
 
   // Función para confirmar eliminación de foto
-  const confirmarEliminarFoto = () => {
+  const confirmarEliminarFoto = async () => {
     if (fotoIndexToDelete !== null) {
+      const imagenAEliminar = formData.foto[fotoIndexToDelete];
+      
+      // Si es una imagen existente (tiene ID de la base de datos), eliminarla de la BD
+      if (imagenAEliminar && imagenAEliminar.id && imagenAEliminar.esExistente) {
+        try {
+          console.log('🗑️ Eliminando imagen existente de la base de datos:', imagenAEliminar.id);
+          await eliminarImagen(imagenAEliminar.id);
+          console.log('✅ Imagen eliminada de la base de datos');
+        } catch (error) {
+          console.error('Error al eliminar imagen de la base de datos:', error);
+          mostrarPopup('Error al eliminar imagen de la base de datos', 'error');
+          return;
+        }
+      }
+      
+      // Eliminar la imagen del formulario local
       setFormData((prev) => ({
         ...prev,
         foto: prev.foto.filter((_, i) => i !== fotoIndexToDelete),
       }));
+      
       mostrarPopup('Foto eliminada correctamente', 'success');
       // Desactivar el mensaje de subir otra foto
       setFotoMensaje(false);
@@ -489,25 +602,25 @@ export default function Expedientes() {
       try {
         // Obtener el expediente actual
         const expediente = expedientes.find((exp) => exp.pk_id_expediente === expedienteId);
-        if (expediente && expediente.foto) {
-          // Crear nuevo array sin la foto eliminada
-          const nuevasFotos = expediente.foto.filter((_, i) => i !== fotoIndex);
-          
-          // Actualizar el expediente en el backend
-          const expedienteData = {
-            ...expediente,
-            foto: nuevasFotos,
-          };
-          
-          await updateExpediente(expedienteId, expedienteData);
-          // Actualizar el estado local
-          setExpedientes((prev) =>
-            prev.map((exp) =>
-            exp.pk_id_expediente === expedienteId 
-              ? { ...exp, foto: nuevasFotos, imagenes: nuevasFotos.length > 0 }
-              : exp
-            )
-          );
+        if (expediente && expediente.foto && expediente.foto[fotoIndex]) {
+          // Obtener las imágenes del expediente desde la base de datos
+          const imagenesResponse = await obtenerImagenesPorExpediente(expedienteId);
+          if (imagenesResponse.success && imagenesResponse.imagenes && imagenesResponse.imagenes[fotoIndex]) {
+            const imagenId = imagenesResponse.imagenes[fotoIndex].id;
+            
+            // Eliminar la imagen usando el servicio específico
+            await eliminarImagen(imagenId);
+            
+            // Actualizar el estado local
+            const nuevasFotos = expediente.foto.filter((_, i) => i !== fotoIndex);
+            setExpedientes((prev) =>
+              prev.map((exp) =>
+              exp.pk_id_expediente === expedienteId 
+                ? { ...exp, foto: nuevasFotos, imagenes: nuevasFotos.length > 0 }
+                : exp
+              )
+            );
+          }
           
           mostrarPopup('Foto eliminada correctamente', 'success');
         }
@@ -576,13 +689,11 @@ export default function Expedientes() {
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-    console.log('handleInputChange llamado:', { name, value, files: !!files });
     
     // Validación especial para el campo correlativo - solo números
     if (name === 'correlativo') {
       // Permitir solo números
       const soloNumeros = value.replace(/[^0-9]/g, '');
-      console.log('Campo correlativo:', { original: value, filtrado: soloNumeros });
       
       // Actualizar el último correlativo ingresado
       if (soloNumeros && soloNumeros.length > 0) {
@@ -591,7 +702,6 @@ export default function Expedientes() {
         const numeroIngresado = parseInt(soloNumeros);
         const siguienteSugerencia = (numeroIngresado + 1).toString();
         setSugerenciasCorrelativo([siguienteSugerencia]);
-        console.log('Sugerencia actualizada basada en último dato:', siguienteSugerencia);
       }
       
       setFormData({ ...formData, [name]: soloNumeros });
@@ -602,7 +712,6 @@ export default function Expedientes() {
     if (name === 'nombre') {
        // Permitir solo letras, espacios y acentos
        const soloLetras = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
-       console.log('Campo nombre:', { original: value, filtrado: soloLetras });
        setFormData({ ...formData, [name]: soloLetras });
        return;
      }
@@ -611,12 +720,10 @@ export default function Expedientes() {
     if (name === 'telefono') {
        // Permitir números, +, (), espacios y guiones
        const telefonoFiltrado = value.replace(/[^0-9+\-() ]/g, '');
-       console.log('Campo teléfono:', { original: value, filtrado: telefonoFiltrado });
        setFormData({ ...formData, [name]: telefonoFiltrado });
        return;
      }
     
-     console.log('Actualizando campo:', { name, value });
      setFormData({ ...formData, [name]: value });
   };
 
@@ -628,75 +735,67 @@ export default function Expedientes() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     try {
       if (editando) {
-        // Actualizar expediente (sin fotos en el payload)
-        const expedienteData = { ...formData };
+        // Actualizar expediente directamente sin popup de confirmación
+        console.log('🔄 Actualizando expediente directamente...');
         
-        // Remover el campo foto del objeto principal (no se envía en el payload)
+        // Preparar datos para actualización (sin fotos en el payload)
+        const expedienteData = { ...formData };
         delete expedienteData.foto;
         
-        console.log('=== ACTUALIZANDO EXPEDIENTE ===');
-        console.log('ID:', editando);
-        console.log('Expediente data:', expedienteData);
-        console.log('================================');
+        // Actualizar expediente
+        await updateExpediente(expedienteId, expedienteData);
         
-        await updateExpediente(editando, expedienteData);
-        
-        // Subir imágenes por separado si existen
-        if (formData.foto && formData.foto.length > 0) {
-          console.log('Subiendo imágenes para expediente ID:', editando);
-          
-          try {
-            // Subir cada imagen por separado
-            for (const imagen of formData.foto) {
-              await subirImagen(editando, imagen.file);
-              console.log(`Imagen ${imagen.file.name} subida exitosamente`);
-            }
-            
-            console.log('Todas las imágenes subidas exitosamente');
-          } catch (error) {
-            console.error('Error subiendo imágenes:', error);
-            // Continuar aunque falle la subida de imágenes
+        // Subir nuevas imágenes si las hay
+        const nuevasImagenes = formData.foto.filter(imagen => imagen.file && !imagen.esExistente);
+        if (nuevasImagenes.length > 0) {
+          console.log('📸 Subiendo', nuevasImagenes.length, 'nuevas imágenes...');
+          for (const imagen of nuevasImagenes) {
+            await subirImagen(expedienteId, imagen.file);
           }
+          console.log('📸 Imágenes subidas correctamente');
         }
         
-        setExpedientes(
-          expedientes.map((exp) =>
-            exp.pk_id_expediente === editando ? { ...formData, pk_id_expediente: editando } : exp
-          )
-        );
-        mostrarPopup('Expediente actualizado correctamente', 'success');
-        setEditando(null);
-      } else {
+        // Cerrar formulario y volver a vista principal
+        setEditando(false);
+        setMostrarFormulario(false);
+        setExpedienteId(null);
+        setFormData({
+          correlativo: '',
+          nombre: '',
+          telefono: '',
+          email: '',
+          direccion: '',
+          fecha: new Date().toISOString().split('T')[0],
+          foto: []
+        });
+        
+        // Recargar lista de expedientes
+        const expedientesActualizados = await getExpedientes();
+        setExpedientes(expedientesActualizados);
+        
+        console.log('✅ Expediente actualizado correctamente');
+        return;
+    } else {
         // Crear nuevo expediente (sin fotos en el payload)
         const expedienteData = { ...formData };
         
         // Remover el campo foto del objeto principal (no se envía en el payload)
         delete expedienteData.foto;
         
-        console.log('=== DATOS A ENVIAR AL BACKEND ===');
-        console.log('Expediente data:', expedienteData);
-        console.log('==================================');
         
         const newExp = await createExpediente(expedienteData);
         
         // Subir imágenes por separado si existen
         let imagenesUrls = [];
         if (formData.foto && formData.foto.length > 0) {
-          console.log('Subiendo imágenes para expediente ID:', newExp.pk_id_expediente);
-          
           try {
             // Subir cada imagen por separado
             for (const imagen of formData.foto) {
               await subirImagen(newExp.pk_id_expediente, imagen.file);
-              console.log(`Imagen ${imagen.file.name} subida exitosamente`);
             }
-            
-            console.log('Todas las imágenes subidas exitosamente');
-            
-            // Las imágenes se cargan automáticamente con el expediente
-            console.log('Imágenes subidas exitosamente');
           } catch (error) {
             console.error('Error subiendo imágenes:', error);
             // Continuar aunque falle la subida de imágenes
@@ -719,30 +818,75 @@ export default function Expedientes() {
       });
       setMostrarFormulario(false);
     } catch (err) {
-      console.error(err);
-      mostrarPopup('Error al guardar expediente', 'error');
+      console.error('Error completo:', err);
+      console.error('Error response:', err.response);
+      console.error('Error response data:', err.response?.data);
+      
+      // Mostrar mensaje de error específico del backend
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          'Error al guardar expediente';
+      
+      mostrarPopup(errorMessage, 'error');
     }
   };
 
   const handleEditar = async (exp) => {
-    console.log('Datos del expediente a editar:', exp);
-    console.log('Fecha original:', exp.fecha_registro);
-    console.log('Tipo de fecha:', typeof exp.fecha_registro);
-    
     const fechaFormateada = formatearFechaParaInput(exp.fecha_registro);
-    console.log('Fecha formateada para input:', fechaFormateada);
     
-    setFormData({
-      correlativo: exp.correlativo,
-      nombre: exp.nombre,
-      telefono: exp.telefono,
-      direccion: exp.direccion,
-      email: exp.email,
-      fecha_registro: fechaFormateada,
-      foto: exp.foto || [],
-    });
-    setEditando(exp.pk_id_expediente);
-    setMostrarFormulario(true);
+    // Almacenar el ID del expediente que se está editando
+    setExpedienteId(exp.pk_id_expediente);
+    
+    try {
+      // Cargar imágenes existentes desde la base de datos
+      const imagenesResponse = await obtenerImagenesPorExpediente(exp.pk_id_expediente);
+      let imagenesExistentes = [];
+      
+      if (imagenesResponse.success && imagenesResponse.imagenes) {
+        // Convertir las imágenes de la BD al formato esperado por el formulario
+        imagenesExistentes = imagenesResponse.imagenes.map(imagen => {
+          // Usar la ruta directa del archivo en lugar del endpoint servir
+          const rutaDirecta = imagen.ruta_archivo.startsWith('/') 
+            ? `http://localhost:4000${imagen.ruta_archivo}`
+            : `http://localhost:4000/${imagen.ruta_archivo}`;
+          
+          return {
+            id: imagen.id,
+            nombre: imagen.nombre_archivo,
+            preview: rutaDirecta,
+            url: rutaDirecta,
+            esExistente: true // Marcar como imagen existente
+          };
+        });
+        console.log('🖼️ Imágenes cargadas para edición:', imagenesExistentes);
+      }
+      
+      setFormData({
+        correlativo: exp.correlativo,
+        nombre: exp.nombre,
+        telefono: exp.telefono,
+        direccion: exp.direccion,
+        email: exp.email,
+        fecha_registro: fechaFormateada,
+        foto: imagenesExistentes, // Usar imágenes de la BD
+      });
+      setEditando(exp.pk_id_expediente);
+      setMostrarFormulario(true);
+    } catch (error) {
+      console.error('Error cargando imágenes para edición:', error);
+      // Si falla la carga de imágenes, usar las del estado local como fallback
+      setFormData({
+        correlativo: exp.correlativo,
+        nombre: exp.nombre,
+        telefono: exp.telefono,
+        direccion: exp.direccion,
+        email: exp.email,
+        fecha_registro: fechaFormateada,
+        foto: exp.foto || [],
+      });
+      setEditando(exp.pk_id_expediente);
+      setMostrarFormulario(true);
+    }
   };
 
   const handleEliminar = (id) => {
@@ -784,10 +928,6 @@ export default function Expedientes() {
     setMostrarFormulario(false);
   };
 
-  // Función para mostrar flecha de ordenamiento
-  const renderSortArrow = (field) =>
-    sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
-  
     // Estados para PopUp
     const [popup, setPopup] = useState({
       isOpen: false,
@@ -796,48 +936,60 @@ export default function Expedientes() {
     type: 'success',
     });
 
-  // 🔹 Filtrado y ordenamiento
+  // 🔹 Filtrado y ordenamiento con useMemo
   const filtro = search.trim().toLowerCase();
-  console.log('🔍 Búsqueda activa:', filtro);
-  console.log('📊 Total expedientes:', expedientes.length);
-   
-   // Validar que expedientes sea un array antes de usar spread operator
-  const expedientesFiltrados = Array.isArray(expedientes)
-    ? [...expedientes]
-    : []
-        .filter((exp) => {
-          const match =
-            !filtro ||
-            (exp.nombre || '').toLowerCase().includes(filtro) ||
-            (exp.telefono || '').toLowerCase().includes(filtro) ||
-            (exp.email || '').toLowerCase().includes(filtro) ||
-            (exp.correlativo || '').toLowerCase().includes(filtro) ||
-            (exp.pk_id_expediente || '').toString().toLowerCase().includes(filtro); // ✅ Agregado búsqueda por ID
-        
-        if (filtro && match) {
-          console.log('✅ Expediente encontrado:', {
-            id: exp.pk_id_expediente,
-            nombre: exp.nombre,
-            email: exp.email,
-            telefono: exp.telefono,
-              correlativo: exp.correlativo,
-          });
-        }
-        return match;
-        })
-    .sort((a, b) => {
+  
+  const expedientesFiltrados = useMemo(() => {
+    // Validar que expedientes sea un array antes de usar spread operator
+    const expedientesArray = Array.isArray(expedientes) ? [...expedientes] : [];
+    
+    const filtrados = expedientesArray.filter((exp) => {
+      const match =
+        !filtro ||
+        (exp.nombre || '').toLowerCase().includes(filtro) ||
+        (exp.telefono || '').toLowerCase().includes(filtro) ||
+        (exp.email || '').toLowerCase().includes(filtro) ||
+        (exp.correlativo || '').toLowerCase().includes(filtro) ||
+        (exp.pk_id_expediente || '').toString().toLowerCase().includes(filtro); // ✅ Agregado búsqueda por ID
+      
+      return match;
+    });
+    
+    return filtrados.sort((a, b) => {
+      // Determinar qué ordenamiento usar (flechas tienen prioridad)
+      const currentSortField = arrowSortField !== null ? arrowSortField : sortField;
+      const currentSortDirection = arrowSortField !== null ? arrowSortDirection : sortDirection;
+      
+      // Ordenamiento por ID (columna #)
+      if (currentSortField === 'row_number') {
+        // Para la columna #, ordenamos por ID de la base de datos
+        const idA = parseInt(a.pk_id_expediente) || 0;
+        const idB = parseInt(b.pk_id_expediente) || 0;
+        return currentSortDirection === 'asc' ? idA - idB : idB - idA;
+      }
+      
       // Ordenamiento por Correlativo
-          if (sortField === 'correlativo') {
-        const correlativoA = parseInt(a.correlativo) || 0;
-        const correlativoB = parseInt(b.correlativo) || 0;
-            return sortDirection === 'asc' ? correlativoA - correlativoB : correlativoB - correlativoA;
+          if (currentSortField === 'correlativo') {
+        // Convertir a número, manejar casos donde correlativo puede ser string o número
+        const correlativoA = Number(a.correlativo) || 0;
+        const correlativoB = Number(b.correlativo) || 0;
+        
+        // Si ambos son números válidos, ordenar numéricamente
+        if (!isNaN(correlativoA) && !isNaN(correlativoB)) {
+          return currentSortDirection === 'asc' ? correlativoA - correlativoB : correlativoB - correlativoA;
+        }
+        
+        // Si no son números válidos, ordenar alfabéticamente
+        const strA = String(a.correlativo || '');
+        const strB = String(b.correlativo || '');
+        return currentSortDirection === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA);
       }
       
       // Ordenamiento por Nombre
-          if (sortField === 'nombre') {
+          if (currentSortField === 'nombre') {
             const nombreA = (a.nombre || '').toLowerCase().trim();
             const nombreB = (b.nombre || '').toLowerCase().trim();
-            if (sortDirection === 'asc') {
+            if (currentSortDirection === 'asc') {
               return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' });
             } else {
               return nombreB.localeCompare(nombreA, 'es', { sensitivity: 'base' });
@@ -845,7 +997,7 @@ export default function Expedientes() {
       }
       
       // Ordenamiento por Fecha
-          if (sortField === 'fecha_registro') {
+          if (currentSortField === 'fecha_registro') {
         // Manejar fechas vacías o inválidas
         const fechaA = a.fecha_registro ? new Date(a.fecha_registro) : new Date('1900-01-01');
         const fechaB = b.fecha_registro ? new Date(b.fecha_registro) : new Date('1900-01-01');
@@ -855,14 +1007,15 @@ export default function Expedientes() {
         const fechaBValida = !isNaN(fechaB.getTime());
         
             if (!fechaAValida && !fechaBValida) return 0;
-            if (!fechaAValida) return sortDirection === 'asc' ? 1 : -1;
-            if (!fechaBValida) return sortDirection === 'asc' ? -1 : 1;
+            if (!fechaAValida) return currentSortDirection === 'asc' ? 1 : -1;
+            if (!fechaBValida) return currentSortDirection === 'asc' ? -1 : 1;
 
-            return sortDirection === 'asc' ? fechaA - fechaB : fechaB - fechaA;
+            return currentSortDirection === 'asc' ? fechaA - fechaB : fechaB - fechaA;
           }
 
       return 0;
     });
+  }, [expedientes, search, arrowSortField, arrowSortDirection, sortField, sortDirection, sortKey]);
 
   // 🔹 Paginación
   const totalPages = Math.ceil(expedientesFiltrados.length / pageSize);
@@ -879,6 +1032,23 @@ export default function Expedientes() {
     }
     setCurrentPage(val);
   };
+
+  // Función para manejar clic en flechas de ordenamiento
+  const handleSortClick = (field) => {
+    if (arrowSortField === field) {
+      // Si ya está ordenando por este campo, cambiar dirección
+      setArrowSortDirection(arrowSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Si es un campo diferente, establecer como ascendente por defecto
+      setArrowSortField(field);
+      setArrowSortDirection('asc');
+    }
+    // Forzar re-renderizado
+    setCurrentPage(1);
+    setSortKey(prev => prev + 1);
+  };
+
+
   const handlePageInput = (e) => {
     const val = parseInt(e.currentTarget.value, 10);
     setPageInput(e.currentTarget.value);
@@ -909,7 +1079,8 @@ export default function Expedientes() {
       <h2>Gestión de Expedientes</h2>
 
       {/* 🔹 POPUP DE NOTIFICACIONES - VERSIÓN MEJORADA */}
-{showPopup && (
+      {console.log('🔍 Renderizando popup - showPopup:', showPopup, 'showConfirmUpdate:', showConfirmUpdate)}
+      {showPopup && (
   <div className="popup-overlay">
     <div className="popup-container">
       <div className={`popup-header popup-${popupType}`}>
@@ -925,7 +1096,7 @@ export default function Expedientes() {
                 {popupType === 'warning' && 'Advertencia'}
                 {popupType === 'info' && 'Información'}
         </h3>
-              <button className="popup-close" onClick={() => setShowPopup(false)}>
+              <button className="popup-close" onClick={() => setShowPopupWithLog(false)}>
           ×
         </button>
       </div>
@@ -933,12 +1104,31 @@ export default function Expedientes() {
         <p className="popup-message">{popupMessage}</p>
       </div>
       <div className="popup-footer">
-        <button 
-          className={`popup-btn popup-btn-${popupType}`}
-          onClick={() => setShowPopup(false)}
-        >
-          Aceptar
-        </button>
+        {console.log('🔍 Evaluando showConfirmUpdate:', showConfirmUpdate)}
+        {showConfirmUpdate ? (
+          <>
+            {console.log('🔍 Renderizando botones de confirmación')}
+            <button 
+              className="popup-btn popup-btn-cancel"
+              onClick={cancelarActualizacion}
+            >
+              Cancelar
+            </button>
+            <button 
+              className="popup-btn popup-btn-success"
+              onClick={confirmarActualizacion}
+            >
+              Aceptar
+            </button>
+          </>
+        ) : (
+          <button 
+            className={`popup-btn popup-btn-${popupType}`}
+            onClick={() => setShowPopupWithLog(false)}
+          >
+            Aceptar
+          </button>
+        )}
       </div>
     </div>
   </div>
@@ -970,7 +1160,6 @@ export default function Expedientes() {
               value={sortField + '-' + sortDirection}
               onChange={(e) => {
                 const [field, direction] = e.target.value.split('-');
-                console.log('Cambiando ordenamiento:', field, direction);
                 setSortField(field);
                 setSortDirection(direction);
               }}
@@ -1000,8 +1189,49 @@ export default function Expedientes() {
                       {i === 0 ? (
                         <div className="header-numero">
                           <span className="simbolo-numero">#</span>
-                          <span className="indicador-orden">
-                            {sortField === 'correlativo' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          <span 
+                            className="sort-arrow"
+                            onClick={() => handleSortClick('row_number')}
+                            style={{ cursor: 'pointer', userSelect: 'none', marginLeft: '5px' }}
+                            title="Click para ordenar por número de fila"
+                          >
+                            {arrowSortField === 'row_number' ? (arrowSortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                          </span>
+                        </div>
+                      ) : i === 1 ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{col}</span>
+                          <span 
+                            className="sort-arrow"
+                            onClick={() => handleSortClick('correlativo')}
+                            style={{ cursor: 'pointer', userSelect: 'none', marginLeft: '5px' }}
+                            title="Click para ordenar por correlativo"
+                          >
+                            {arrowSortField === 'correlativo' ? (arrowSortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                          </span>
+                        </div>
+                      ) : i === 2 ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{col}</span>
+                          <span 
+                            className="sort-arrow"
+                            onClick={() => handleSortClick('nombre')}
+                            style={{ cursor: 'pointer', userSelect: 'none', marginLeft: '5px' }}
+                            title="Click para ordenar por nombre"
+                          >
+                            {arrowSortField === 'nombre' ? (arrowSortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                          </span>
+                        </div>
+                      ) : i === 6 ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span>{col}</span>
+                          <span 
+                            className="sort-arrow"
+                            onClick={() => handleSortClick('fecha_registro')}
+                            style={{ cursor: 'pointer', userSelect: 'none', marginLeft: '5px' }}
+                            title="Click para ordenar por fecha"
+                          >
+                            {arrowSortField === 'fecha_registro' ? (arrowSortDirection === 'asc' ? '↑' : '↓') : '↕'}
                           </span>
                         </div>
                       ) : (
@@ -1015,7 +1245,7 @@ export default function Expedientes() {
                 {expedientesPaginados.length > 0 ? (
                   expedientesPaginados.map((exp, index) => (
                     <tr key={exp.pk_id_expediente}>
-                      <td className="celda-numero">{startIndex + index + 1}</td>
+                      <td className="celda-numero">{exp.pk_id_expediente}</td>
                       <td>{exp.correlativo}</td>
                       <td>{exp.nombre}</td>
                       <td>{exp.telefono}</td>
@@ -1027,10 +1257,6 @@ export default function Expedientes() {
                           {(() => {
                             // Usar el campo foto del expediente para mostrar las imágenes
                             const fotosExpediente = exp.foto;
-                            console.log(
-                              `Fotos para expediente ${exp.pk_id_expediente}:`,
-                              fotosExpediente
-                            );
                             return fotosExpediente && fotosExpediente.length > 0 ? (
                               fotosExpediente.map((foto, index) => (
                                 <div key={index} className="foto-tabla-container">
@@ -1052,14 +1278,19 @@ export default function Expedientes() {
                                     }
                                     style={{ cursor: 'pointer' }}
                                     onError={(e) => {
-                                      console.error('Error cargando miniatura:', e);
+                                      // Ocultar la imagen que falló
                                       e.target.style.display = 'none';
-                                      const errorSpan = document.createElement('span');
-                                      errorSpan.textContent = '❌';
-                                      errorSpan.title = 'Imagen no disponible';
-                                      errorSpan.style.cssText =
-                                        'color: #999; font-size: 12px; margin: 2px;';
-                                      e.target.parentNode.appendChild(errorSpan);
+                                      
+                                      // Crear elemento de error solo si no existe ya
+                                      if (!e.target.parentNode.querySelector('.error-placeholder')) {
+                                        const errorSpan = document.createElement('span');
+                                        errorSpan.className = 'error-placeholder';
+                                        errorSpan.textContent = '❌';
+                                        errorSpan.title = 'Imagen no disponible';
+                                        errorSpan.style.cssText =
+                                          'color: #999; font-size: 12px; margin: 2px; display: inline-block;';
+                                        e.target.parentNode.appendChild(errorSpan);
+                                      }
                                     }}
                                   />
                                   <button
@@ -1266,26 +1497,20 @@ export default function Expedientes() {
                         type="button"
                         className="sugerencia-item"
                         onClick={() => {
-                          console.log('Clic en sugerencia:', correlativo);
-                          setFormData((prev) => {
-                            console.log('Estado anterior:', prev);
-                            const nuevoEstado = { ...prev, correlativo: correlativo };
-                            console.log('Nuevo estado:', nuevoEstado);
-                            return nuevoEstado;
-                          });
+                          setFormData((prev) => ({
+                            ...prev,
+                            correlativo: correlativo
+                          }));
                           // Scroll al campo No. Correlativo
                           const correlativoInput = document.querySelector(
                             'input[name="correlativo"]'
                           );
                           if (correlativoInput) {
-                            console.log('Campo encontrado, haciendo scroll...');
                             correlativoInput.scrollIntoView({
                               behavior: 'smooth',
                               block: 'center',
                             });
                             correlativoInput.focus();
-                          } else {
-                            console.log('Campo correlativo no encontrado');
                           }
                         }}
                         title={`Usar correlativo sugerido: ${correlativo}`}
@@ -1404,14 +1629,22 @@ export default function Expedientes() {
 
             {/* Vista previa de fotos en horizontal */}
             {formData.foto.length > 0 && (
-              <div className="vista-previa-fotos-horizontal">
+              <div className="vista-previa-fotos-horizontal" key={`fotos-${imagenesUpdateKey}`}>
               {formData.foto.map((imagen, i) => (
-                  <div key={imagen.id || i} className="foto-miniatura-container">
+                  <div key={`${imagen.id || i}-${imagenesUpdateKey}`} className="foto-miniatura-container">
                 <img
-                  src={imagen.preview} // Usar preview URL para mostrar la imagen
+                  src={imagen.preview || imagen.url} // Usar preview o url para mostrar la imagen
                   alt={`Foto ${i + 1}`}
                       className="foto-miniatura"
-                  onClick={() => setFotoAmpliada(imagen.preview)}
+                  onClick={() => setFotoAmpliada(imagen.preview || imagen.url)}
+                  onError={(e) => {
+                    console.error('Error cargando imagen:', imagen);
+                    e.target.style.display = 'none';
+                    const errorSpan = document.createElement('span');
+                    errorSpan.textContent = '❌ Error cargando imagen';
+                    errorSpan.style.cssText = 'color: #999; font-size: 12px; display: block; text-align: center;';
+                    e.target.parentNode.appendChild(errorSpan);
+                  }}
                 />
                     <button
                       type="button"
@@ -1458,7 +1691,7 @@ export default function Expedientes() {
       <ConfirmModal
         isOpen={showConfirmEliminarFoto}
         title="Eliminar foto"
-        message="¿Está de acuerdo con borrar la foto?"
+        message="¿Desea eliminar esta fotografía?"
         onConfirm={confirmarEliminarFoto}
         onCancel={() => {
           setShowConfirmEliminarFoto(false);
@@ -1486,9 +1719,7 @@ export default function Expedientes() {
             <div className="popup-body">
               <div className="popup-message-container">
                 <p className="popup-message">
-                  ¿Está seguro de que desea eliminar la{' '}
-                  <strong>Foto {fotoToDeleteInfo.fotoNumero}</strong> del expediente de{' '}
-                  <strong>{fotoToDeleteInfo.expedienteNombre}</strong>?
+                  ¿Desea eliminar esta fotografía?
                 </p>
                 <div className="popup-warning-text">
                   <span className="warning-icon">⚠️</span>
@@ -1732,10 +1963,13 @@ export default function Expedientes() {
                 }}
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  const errorDiv = document.createElement('div');
-                  errorDiv.innerHTML = '<p>❌ Error al cargar la imagen</p>';
-                  errorDiv.style.cssText = 'text-align: center; color: #999; padding: 20px;';
-                  e.target.parentNode.appendChild(errorDiv);
+                  if (!e.target.parentNode.querySelector('.error-placeholder')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-placeholder';
+                    errorDiv.innerHTML = '<p>❌ Error al cargar la imagen</p>';
+                    errorDiv.style.cssText = 'text-align: center; color: #999; padding: 20px;';
+                    e.target.parentNode.appendChild(errorDiv);
+                  }
                 }}
               />
             </div>
@@ -1931,10 +2165,13 @@ export default function Expedientes() {
                   }}
                   onError={(e) => {
                     e.target.style.display = 'none';
-                    const errorDiv = document.createElement('div');
-                    errorDiv.innerHTML = '<p>❌ Error al cargar la imagen</p>';
-                    errorDiv.style.cssText = 'text-align: center; color: #999; padding: 20px;';
-                    e.target.parentNode.appendChild(errorDiv);
+                    if (!e.target.parentNode.querySelector('.error-placeholder')) {
+                      const errorDiv = document.createElement('div');
+                      errorDiv.className = 'error-placeholder';
+                      errorDiv.innerHTML = '<p>❌ Error al cargar la imagen</p>';
+                      errorDiv.style.cssText = 'text-align: center; color: #999; padding: 20px;';
+                      e.target.parentNode.appendChild(errorDiv);
+                    }
                   }}
                 />
               </div>

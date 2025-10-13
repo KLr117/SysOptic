@@ -10,28 +10,13 @@ import {
 
 export const listExpedientes = async (req, res) => {
   try {
-    console.log("🔍 Intentando obtener expedientes...");
     const expedientes = await getAllExpedientes();
-    console.log("✅ Expedientes obtenidos:", expedientes.length);
     res.json({ ok: true, expedientes });
   } catch (error) {
-    console.error("❌ Error detallado al obtener expedientes:");
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-    console.error("Error code:", error.code);
-    console.error("Error errno:", error.errno);
-    console.error("Error sqlState:", error.sqlState);
-    console.error("Error sqlMessage:", error.sqlMessage);
-    
+    console.error("Error al obtener expedientes:", error);
     res.status(500).json({ 
       ok: false, 
-      error: error.message,
-      details: {
-        code: error.code,
-        errno: error.errno,
-        sqlState: error.sqlState,
-        sqlMessage: error.sqlMessage
-      }
+      error: error.message
     });
   }
 };
@@ -56,29 +41,25 @@ export const createExpedienteController = async (req, res) => {
   try {
     const expedienteData = req.body;
     
-    console.log('=== DATOS RECIBIDOS EN BACKEND ===');
-    console.log('Correlativo:', expedienteData.correlativo);
-    console.log('Nombre:', expedienteData.nombre);
-    console.log('Teléfono:', expedienteData.telefono);
-    console.log('Dirección:', expedienteData.direccion);
-    console.log('Email:', expedienteData.email);
-    console.log('Fecha Registro:', expedienteData.fecha_registro);
-    console.log('==================================');
-    
     // Validaciones básicas
-    if (!expedienteData.correlativo || !expedienteData.nombre) {
-      console.log('❌ Validación fallida: Correlativo o nombre faltante');
+    if (!expedienteData.correlativo || expedienteData.correlativo.toString().trim() === '') {
       return res.status(400).json({ 
         ok: false, 
-        message: "Correlativo y nombre son requeridos" 
+        message: "El campo correlativo es requerido" 
+      });
+    }
+    
+    if (!expedienteData.nombre || expedienteData.nombre.trim() === '') {
+      return res.status(400).json({ 
+        ok: false, 
+        message: "El campo nombre es requerido" 
       });
     }
 
-    // Validación de email si se proporciona (función isValidEmail debe estar definida)
+    // Validación de email si se proporciona
     if (expedienteData.email && expedienteData.email.trim() !== '') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(expedienteData.email)) {
-        console.log('❌ Validación fallida: Email inválido');
         return res.status(400).json({ 
           ok: false, 
           message: "Formato de email inválido" 
@@ -86,9 +67,7 @@ export const createExpedienteController = async (req, res) => {
       }
     }
 
-    console.log('🚀 Intentando crear expediente...');
     const newExpedienteId = await createExpediente(expedienteData);
-    console.log('✅ Expediente creado con ID:', newExpedienteId);
     
     res.status(201).json({ 
       ok: true, 
@@ -96,23 +75,10 @@ export const createExpedienteController = async (req, res) => {
       pk_id_expediente: newExpedienteId 
     });
   } catch (error) {
-    console.error("❌ Error detallado al crear expediente:");
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-    console.error("Error code:", error.code);
-    console.error("Error errno:", error.errno);
-    console.error("Error sqlState:", error.sqlState);
-    console.error("Error sqlMessage:", error.sqlMessage);
-    
+    console.error("Error al crear expediente:", error);
     res.status(500).json({ 
       ok: false, 
-      error: error.message,
-      details: {
-        code: error.code,
-        errno: error.errno,
-        sqlState: error.sqlState,
-        sqlMessage: error.sqlMessage
-      }
+      error: error.message
     });
   }
 };
@@ -121,20 +87,24 @@ export const updateExpedienteController = async (req, res) => {
   try {
     const { pk_id_expediente } = req.params;
     const expedienteData = req.body;
+    
 
     // Verificar que el expediente existe
     const existingExpediente = await getExpedienteById(pk_id_expediente);
     if (!existingExpediente) {
+      console.log('❌ Expediente no encontrado:', pk_id_expediente);
       return res.status(404).json({ ok: false, message: "Expediente no encontrado" });
     }
 
     // Validación de email si se proporciona
-    if (expedienteData.email && !isValidEmail(expedienteData.email)) {
-      console.log('❌ Validación fallida: Email inválido');
-      return res.status(400).json({ 
-        ok: false, 
-        message: "Formato de email inválido" 
-      });
+    if (expedienteData.email && expedienteData.email.trim() !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(expedienteData.email)) {
+        return res.status(400).json({ 
+          ok: false, 
+          message: "Formato de email inválido" 
+        });
+      }
     }
 
     const success = await updateExpediente(pk_id_expediente, expedienteData);

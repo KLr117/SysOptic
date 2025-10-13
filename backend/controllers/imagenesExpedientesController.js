@@ -186,8 +186,13 @@ class ImagenesExpedientesController {
         const imagenesRestantes = await ImagenesExpedientesModel.contarImagenesPorExpediente(expedienteId);
         const tieneImagenes = imagenesRestantes.count > 0;
         
-        // Actualizar el campo fotos
+      // Actualizar el campo fotos
+      try {
         await updateFotosExpediente(expedienteId, tieneImagenes);
+      } catch (updateError) {
+        console.error('Error actualizando campo fotos:', updateError);
+        // Continuar aunque falle la actualización del campo fotos
+      }
         
         res.json({
           success: true,
@@ -245,11 +250,14 @@ class ImagenesExpedientesController {
   static async servirImagen(req, res) {
     try {
       const { imagenId } = req.params;
+      console.log('🔍 Servir imagen - ID:', imagenId);
       
       // Obtener información de la imagen desde la BD
       const result = await ImagenesExpedientesModel.obtenerImagenPorId(imagenId);
+      console.log('🔍 Resultado BD:', result);
       
       if (!result.success) {
+        console.log('❌ Imagen no encontrada en BD');
         return res.status(404).json({
           success: false,
           message: 'Imagen no encontrada'
@@ -257,10 +265,14 @@ class ImagenesExpedientesController {
       }
 
       const imagen = result.imagen;
+      console.log('🔍 Imagen desde BD:', imagen);
+      
       const rutaCompleta = path.resolve(imagen.ruta_archivo);
+      console.log('🔍 Ruta completa:', rutaCompleta);
       
       // Verificar que el archivo existe físicamente
       if (!fs.existsSync(rutaCompleta)) {
+        console.log('❌ Archivo no existe físicamente:', rutaCompleta);
         return res.status(404).json({
           success: false,
           message: 'Archivo de imagen no encontrado en el servidor'
