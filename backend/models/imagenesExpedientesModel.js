@@ -1,4 +1,8 @@
+import fs from "fs";
+import path from "path";
+import { subirAFtp } from "../controllers/imagenesExpedientesController.js";
 import pool from "../database/db.js";
+import { updateFotosExpediente } from "./ExpedientesModel.js";
 
 class ImagenesExpedientesModel {
   // Crear nueva imagen para expediente
