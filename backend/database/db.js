@@ -8,9 +8,23 @@ const pool = mysql.createPool({
   user: process.env.DB_USER, // "root",
   password: process.env.DB_PASSWORD, // "password",
   database: process.env.DB_NAME, // "Db_name",
+  port: process.env.DB_PORT, // 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
 });
+
+// 🧠 TEST DE CONEXIÓN AUTOMÁTICO (solo al iniciar)
+(async () => {
+  try {
+    const conn = await pool.getConnection();
+    console.log("✅ Conexión MySQL activa desde Render → Hostinger");
+    const [rows] = await conn.query("SELECT NOW() AS fecha_actual");
+    console.log("🕒 Hora del servidor MySQL:", rows[0].fecha_actual);
+    conn.release();
+  } catch (err) {
+    console.error("❌ Error conectando desde Render → Hostinger:", err.code || err.message);
+  }
+})();
 
 export default pool;
