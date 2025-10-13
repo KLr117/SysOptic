@@ -256,7 +256,10 @@ const OrdenTrabajo = () => {
       confirmText: 'Eliminar',
       cancelText: 'Cancelar',
       onConfirm: () => eliminarOrden(id),
-      onCancel: () => setOrdenAEliminar(null),
+      onCancel: () => {
+        setOrdenAEliminar(null);
+        setPopup((prev) => ({ ...prev, isOpen: false }));
+      },
     });
   };
 

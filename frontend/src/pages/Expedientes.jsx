@@ -895,6 +895,27 @@ export default function Expedientes() {
   };
 
   // Función para confirmar eliminación de expediente
+  // Función para limpiar fotos del cache local cuando se elimina un expediente
+  const limpiarFotosDelCache = (expedienteId) => {
+    try {
+      // Limpiar cualquier referencia a fotos en el estado local
+      setExpedientes(prev => 
+        prev.map(exp => 
+          exp.pk_id_expediente === expedienteId 
+            ? { ...exp, foto: [], imagenes: false }
+            : exp
+        )
+      );
+      
+      // Limpiar el key de actualización de imágenes para forzar re-render
+      setImagenesUpdateKey(prev => prev + 1);
+      
+      console.log('🧹 Fotos del cache limpiadas para expediente:', expedienteId);
+    } catch (error) {
+      console.error('Error limpiando fotos del cache:', error);
+    }
+  };
+
   const confirmarEliminarExpediente = async () => {
     if (expedienteToDelete) {
       try {

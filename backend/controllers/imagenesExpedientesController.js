@@ -6,7 +6,7 @@ import fs from 'fs';
 import ftp from 'basic-ftp';
 import dotenv from 'dotenv';
 dotenv.config();
-
+ // ==========================
 // Configuración de multer para subir archivos
 // Configuración de multer (guarda temporalmente en /tmp antes de subir al FTP)
 const storage = multer.diskStorage({
@@ -415,4 +415,4 @@ static async eliminarImagen(req, res) {
   // }
 }
 
-export { ImagenesExpedientesController, upload };
+export { ImagenesExpedientesController, upload, subirAFtp };
