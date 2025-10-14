@@ -11,12 +11,16 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  // 🧩 URL del backend obtenida de las variables de entorno (.env.production)
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      const res = await axios.post('http://localhost:4000/api/login', {
+      // ✅ Ahora la URL se arma dinámicamente desde el entorno
+      const res = await axios.post(`${API_URL}/api/login`, {
         username,
         password,
       });
@@ -49,6 +53,7 @@ export default function Login() {
         setError(res.data.message || 'Usuario o contraseña incorrectos');
       }
     } catch (err) {
+      console.error('Error al conectar con el servidor:', err);
       setError('Error al conectar con el servidor');
     }
   };
