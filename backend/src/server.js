@@ -93,8 +93,8 @@ app.use("/uploads", express.static(path.join(__dirname, "../public/uploads")));
 app.use("/public", express.static(path.join(__dirname, "../public")));
 
 
-app.listen(PORT, () => {
-  console.log(`✅ Backend corriendo en http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Backend corriendo en http://localhost:${PORT} y escuchando en todas las interfaces`);
 
   // ==========================
   // 🕒 CRON DE PROMOCIONES SYSOPTIC
