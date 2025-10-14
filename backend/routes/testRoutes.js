@@ -3,33 +3,41 @@ import axios from "axios";
 
 const router = express.Router();
 
-router.get("/ping-hostinger", async (req, res) => {
+/**
+ * ✅ Ruta 1: Confirmar que el backend está vivo
+ * URL: https://TU_BACKEND/api/test/ping
+ */
+router.get("/ping", (req, res) => {
+  res.json({
+    success: true,
+    message: "🚀 Backend activo y respondiendo desde Railway",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+/**
+ * 🌐 Ruta 2: Obtener la IP pública del servidor en Railway
+ * (para agregar en Hostinger > MySQL remoto)
+ * URL: https://TU_BACKEND/api/test/ip
+ */
+router.get("/ip", async (req, res) => {
   try {
-    // 1️⃣ Obtener IP pública del servidor Render
-    const ipResponse = await axios.get("https://api64.ipify.org?format=json");
-    const renderIP = ipResponse.data.ip;
-
-    // 2️⃣ Hacer el ping a tu hosting (forzará log en Hostinger)
-    const target = "https://lightsteelblue-termite-871777.hostingersite.com/";
-    await axios.get(target);
-
-    // 3️⃣ Responder con info útil para soporte
+    const response = await axios.get("https://api64.ipify.org?format=json");
     res.json({
       success: true,
-      message: "Solicitud enviada — revisa los logs de Hostinger Analytics",
-      render_ip: renderIP,
-      target,
+      message: "IP pública obtenida exitosamente",
+      public_ip: response.data.ip,
     });
   } catch (error) {
-    console.error("🔍 Error al hacer GET a Hostinger:", error.message);
-    res.json({
-      success: true,
-      message: "Solicitud enviada — revisa los logs de Hostinger Analytics",
+    res.status(500).json({
+      success: false,
+      message: "Error al obtener IP pública",
       error: error.message,
     });
   }
 });
 
 export default router;
+
 
 
