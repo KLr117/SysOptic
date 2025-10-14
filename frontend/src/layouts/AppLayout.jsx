@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import '../styles/applayout.css';
 import '../styles/theme.css';
 import '../styles/theme-switch.css';
+import logo from "../assets/logo.jpg";
 
 export default function AppLayout() {
   const user = getUser();
@@ -27,7 +28,7 @@ export default function AppLayout() {
     <div className="app-layout">
       <aside className="app-sidebar">
         <div className="app-logo">
-          <img src="/src/assets/logo.jpg" alt="Fundación Visual Óptica" className="logo-image" />
+          <img src={logo} alt="Fundación Visual Óptica" className="logo-image" />
         </div>
         <nav className="app-nav">
           {user?.permisos?.includes('control_admin') && <Item to="/dashboard" label="Dashboard" />}
