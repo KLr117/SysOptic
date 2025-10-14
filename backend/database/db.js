@@ -23,7 +23,7 @@ const pool = mysql.createPool({
     console.log("🕒 Hora del servidor MySQL:", rows[0].fecha_actual);
     conn.release();
   } catch (err) {
-    console.error("❌ Error conectando desde Render → Hostinger:", err.code || err.message);
+    console.error("❌ Error conectando desde Railway → Hostinger:", err.code || err.message);
   }
 })();
 
