@@ -1,19 +1,10 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const MAIL_ENABLED = process.env.MAIL_ENABLED === "true";
-
-const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST || "smtp.gmail.com",
-  port: Number(process.env.MAIL_PORT || 465),
-  secure: process.env.MAIL_SECURE !== "false", // true para 465
-  auth: {
-    user: process.env.MAIL_USER, // ej: tu correo personal o del negocio
-    pass: process.env.MAIL_PASS, // App Password (solo si es Gmail)
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
- * Envía un correo con configuración SMTP
+ * Envía un correo usando Resend (compatible con la interfaz anterior)
  * @param {Object} options
  * @param {string} options.to - Destinatario
  * @param {string} options.subject - Asunto
@@ -27,17 +18,28 @@ export const sendEmail = async ({ to, subject, html, replyTo, fromName }) => {
     return { simulated: true };
   }
 
-  const fromAddress = process.env.MAIL_USER;
+  const fromAddress = "fundacionvisualoptica@resend.dev"; // ⚠️ Cambia esto si tienes dominio verificado
   const from = `${fromName || "Fundación Visual Óptica"} <${fromAddress}>`;
 
-  await transporter.sendMail({
-    from,
-    to,
-    subject,
-    html,
-    replyTo: replyTo || undefined,
-  });
+  try {
+    const response = await resend.emails.send({
+      from,
+      to,
+      subject,
+      html,
+      reply_to: replyTo || "rl62138@gmail.com",
+    });
 
-  console.log(`📨 Correo enviado a ${to} | Asunto: ${subject}`);
-  return { sent: true };
+    if (response.error) {
+      console.error("❌ Error al enviar correo:", response.error);
+      throw new Error(response.error.message || "Error desconocido en Resend");
+    }
+
+    console.log(`📨 Correo enviado a ${to} | Asunto: ${subject}`);
+    return { sent: true };
+  } catch (error) {
+    console.error("❌ Error al enviar correo (Resend):", error.message);
+    return { sent: false, error: error.message };
+  }
 };
+
