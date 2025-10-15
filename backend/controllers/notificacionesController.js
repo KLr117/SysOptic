@@ -245,32 +245,37 @@ export const procesarRecordatoriosActivos = async (req, res) => {
     for (const noti of notificaciones) {
       console.log("🔍 Analizando notificación:", noti.pk_id_notificacion, "| módulo:", noti.fk_id_modulo_notificacion);
 
-      // 🔹 Obtener correos candidatos según módulo / intervalo
+      // 🔹 Correos candidatos
       const candidatos = await notificacionesModel.getCorreosRecordatorioPorNotificacion(noti);
 
       if (!candidatos || candidatos.length === 0) {
         console.log("⚪ Sin candidatos para:", noti.titulo);
-        resumen.push({
-          id_notificacion: noti.pk_id_notificacion,
-          modulo: noti.fk_id_modulo_notificacion,
-          pendientes: 0,
-          insertados: 0,
-        });
         continue;
       }
 
-      // 🧾 Registrar envíos (evita duplicados con INSERT IGNORE)
+      // 🧩 Obtener correos ya enviados
+      const enviados = await notificacionesEnviadasModel.getCorreosYaEnviados(noti.pk_id_notificacion);
+
+      // 🔎 Filtrar solo los nuevos
+      const nuevos = candidatos.filter(c => !enviados.includes(c.toLowerCase()));
+
+      if (nuevos.length === 0) {
+        console.log(`⚪ Todos los correos ya fueron enviados para ${noti.titulo}`);
+        continue;
+      }
+
+      // 🧾 Registrar solo los nuevos
       const insertados = await notificacionesEnviadasModel.insertEnviosBatch(
         noti.pk_id_notificacion,
-        candidatos
+        nuevos
       );
       totalInsertados += insertados;
 
-      console.log(`✅ Registrados ${insertados}/${candidatos.length} correos para ${noti.titulo}`);
+      console.log(`✅ Registrados ${insertados}/${nuevos.length} nuevos correos para ${noti.titulo}`);
 
-      // 📧 Enviar correos reales si está activo
+      // 📧 Enviar solo a los nuevos
       if (noti.enviar_email) {
-        for (const correo of candidatos) {
+        for (const correo of nuevos) {
           try {
             const html = buildEmailTemplate({
               titulo: noti.titulo,
@@ -279,10 +284,7 @@ export const procesarRecordatoriosActivos = async (req, res) => {
 
             await sendEmail({
               to: correo,
-              subject:
-                noti.asunto_email ||
-                noti.titulo ||
-                "Recordatorio - Fundación Visual Óptica",
+              subject: noti.asunto_email || noti.titulo || "Recordatorio - Fundación Visual Óptica",
               html,
               fromName: "Fundación Visual Óptica",
             });
@@ -294,13 +296,15 @@ export const procesarRecordatoriosActivos = async (req, res) => {
         }
       }
 
+      // Resumen por notificación
       resumen.push({
-        id_notificacion: noti.pk_id_notificacion,
-        modulo: noti.fk_id_modulo_notificacion,
-        pendientes: candidatos.length,
-        insertados,
-      });
+      id_notificacion: noti.pk_id_notificacion,
+      modulo: noti.fk_id_modulo_notificacion,
+      pendientes: nuevos.length,
+      insertados,
+    });
     }
+
 
     const resultado = {
       success: true,

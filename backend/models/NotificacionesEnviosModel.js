@@ -1,5 +1,13 @@
 import pool from "../database/db.js";
 
+export const getCorreosYaEnviados = async (notificacionId) => {
+  const [rows] = await pool.query(
+    "SELECT correo_destino FROM tbl_notificaciones_enviadas WHERE fk_id_notificacion = ?",
+    [notificacionId]
+  );
+  return rows.map(r => r.correo_destino.toLowerCase());
+};
+
 export const insertEnviosBatch = async (notificacionId, correos /* array */) => {
   if (!correos || correos.length === 0) return 0;
 

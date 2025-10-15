@@ -280,3 +280,6 @@ CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 ALTER TABLE tbl_imagenes_expedientes
 ADD INDEX expediente_id (expediente_id);
 SELECT * FROM tbl_imagenes_expedientes;
+
+ALTER TABLE tbl_expedientes 
+CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
