@@ -171,10 +171,10 @@ export default function Dashboard() {
             <div className="grid-optical optical-3">🔍</div>
             <div className="grid-optical optical-4">👁️</div>
           </div>
-          <Card title="Expedientes" value={stats.expedientes} type="expedientes" onClick={navegarAExpedientes} />
-          <Card title="Órdenes de Trabajo" value={stats.ordenes} type="ordenes" onClick={navegarAOrdenesTrabajo} />
-          <Card title="Notificaciones" value={stats.notificaciones} type="notificaciones" onClick={navegarANotificaciones} />
           <Card title="Panel Administrativo" value="" type="admin" onClick={navegarAPanelAdmin} />
+          <Card title="Órdenes de Trabajo" value={stats.ordenes} type="ordenes" onClick={navegarAOrdenesTrabajo} />
+          <Card title="Expedientes" value={stats.expedientes} type="expedientes" onClick={navegarAExpedientes} />
+          <Card title="Notificaciones" value={stats.notificaciones} type="notificaciones" onClick={navegarANotificaciones} />
         </div>
           
           <div className="dashboard-date">
