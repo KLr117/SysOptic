@@ -757,35 +757,37 @@ const OrdenTrabajo = () => {
                   </td>
 
                   <td className="text-center">
-                    {(() => {
-                      const estado = notificacionesEstado[orden.pk_id_orden];
-                      if (!estado || !estado.tieneNotificacion) {
-                        return <span style={{ color: '#666', fontStyle: 'italic' }}>—</span>;
-                      }
-                      return estado.estado === 'activa' ? (
-                        <span style={{ 
-                          color: '#22c55e', 
-                          fontWeight: 'bold',
-                          backgroundColor: '#dcfce7',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          display: 'inline-block'
-                        }}>
-                          Activa
-                        </span>
-                      ) : (
-                        <span style={{ 
-                          color: '#ef4444', 
-                          fontWeight: 'bold',
-                          backgroundColor: '#fef2f2',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          display: 'inline-block'
-                        }}>
-                          Inactiva
-                        </span>
-                      );
-                    })()}
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                      {(() => {
+                        const estado = notificacionesEstado[orden.pk_id_orden];
+                        if (!estado || !estado.tieneNotificacion) {
+                          return <span style={{ color: '#666', fontStyle: 'italic' }}>—</span>;
+                        }
+                        return estado.estado === 'activa' ? (
+                          <span style={{ 
+                            color: '#22c55e', 
+                            fontWeight: 'bold',
+                            backgroundColor: '#dcfce7',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            display: 'inline-block'
+                          }}>
+                            Activa
+                          </span>
+                        ) : (
+                          <span style={{ 
+                            color: '#ef4444', 
+                            fontWeight: 'bold',
+                            backgroundColor: '#fef2f2',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            display: 'inline-block'
+                          }}>
+                            Inactiva
+                          </span>
+                        );
+                      })()}
+                    </div>
                   </td>
                 </tr>
               ))

@@ -1409,7 +1409,15 @@ export default function Expedientes() {
                           if (!estado || !estado.tieneNotificacion) {
                             return '—';
                           }
-                          return estado.estado === 'activa' ? 'Activa' : 'Inactiva';
+                          return (
+                            <span 
+                              className={`estado-notificacion ${
+                                estado.estado === 'activa' ? 'estado-activa' : 'estado-inactiva'
+                              }`}
+                            >
+                              {estado.estado === 'activa' ? 'Activa' : 'Inactiva'}
+                            </span>
+                          );
                         })()}
                       </td>
                     </tr>
