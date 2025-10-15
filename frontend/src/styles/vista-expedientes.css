@@ -70,10 +70,11 @@
 .campo-formulario {
   display: flex;
   flex-direction: column;
-  border: 1px solid #890D0F;
-  border-radius: 6px;
-  padding: 0.75rem;
-  background-color: var(--color-bg-secondary);
+  border: none;
+  border-radius: 0;
+  padding: 0.5rem 0;
+  background: none;
+  gap: 0.25rem;
 }
 .campo-formulario.ancho-completo {
   grid-column: 1 / -1;
@@ -114,16 +115,16 @@
   color: var(--color-text) !important;
 }
 
-/* Estilos para las etiquetas con borde rojo */
+/* Estilos para las etiquetas SIN borde - solo texto */
 .campo-formulario label {
   color: var(--color-text);
   font-weight: 500;
-  margin: 0; /* Quitar margen */
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #890D0F;
-  border-radius: 4px;
-  background-color: var(--color-bg-secondary);
-  text-align: left; /* nombres de los campos al lado izquierdo */
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 0.9rem;
 }
 
 /* Labels específicos alineados a la izquierda */
@@ -726,15 +727,19 @@
   background-clip: text;
 }
 
-/* Contenedor de acciones */
-.expedientes-table-actions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* Título igual que notificaciones */
+h2 {
+  text-align: center;
   margin-bottom: 20px;
-  gap: 20px;
-  flex-wrap: wrap;
+  color: var(--color-text);
+  background: linear-gradient(135deg, #890D0F 0%, #A01A1C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2rem;
+  font-weight: 800;
   position: relative;
+  z-index: 1;
 }
 
 /* Caja de búsqueda */

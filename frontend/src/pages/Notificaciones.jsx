@@ -48,39 +48,40 @@ const Notificaciones = () => {
     setSortOption(option);
     switch (option) {
       case '':
-        // No hacer nada cuando se selecciona "Seleccione"
+        // Restaurar filtro original cuando se selecciona "Seleccione"
+        setFiltered(notificaciones);
         break;
-      case 'titulo':
-        setSortField('titulo');
-        setSortDirection('asc');
-        break;
-      case 'descripcion':
-        setSortField('descripcion');
-        setSortDirection('asc');
-        break;
-      case 'tipo':
-        setSortField('tipo');
-        setSortDirection('asc');
-        break;
-      case 'categoria':
-        setSortField('categoria');
-        setSortDirection('asc');
-        break;
-      case 'modulos':
-        setSortField('modulo');
-        setSortDirection('asc');
-        break;
-      case 'id':
+      case 'id_asc':
         setSortField('id');
         setSortDirection('asc');
         break;
-      case 'fecha_reciente':
-        setSortField('fecha_creacion');
+      case 'id_desc':
+        setSortField('id');
         setSortDirection('desc');
         break;
-      case 'fecha_antigua':
+      case 'titulo_asc':
+        setSortField('titulo');
+        setSortDirection('asc');
+        break;
+      case 'titulo_desc':
+        setSortField('titulo');
+        setSortDirection('desc');
+        break;
+      case 'modulo_asc':
+        setSortField('modulo');
+        setSortDirection('asc');
+        break;
+      case 'modulo_desc':
+        setSortField('modulo');
+        setSortDirection('desc');
+        break;
+      case 'fecha_creacion_asc':
         setSortField('fecha_creacion');
         setSortDirection('asc');
+        break;
+      case 'fecha_creacion_desc':
+        setSortField('fecha_creacion');
+        setSortDirection('desc');
         break;
       default:
         setSortField('fecha_creacion');
@@ -356,14 +357,14 @@ const Notificaciones = () => {
             data-tooltip="Selecciona una ordenación rápida"
           >
             <option value="" disabled>Seleccione</option>
-            <option value="titulo">Título</option>
-            <option value="descripcion">Descripción</option>
-            <option value="tipo">Tipo</option>
-            <option value="categoria">Categoría</option>
-            <option value="modulos">Módulo</option>
-            <option value="id">ID</option>
-            <option value="fecha_reciente">Más reciente</option>
-            <option value="fecha_antigua">Más antiguo</option>
+            <option value="id_asc">ID - Ascendente</option>
+            <option value="id_desc">ID - Descendente</option>
+            <option value="titulo_asc">Título A-Z</option>
+            <option value="titulo_desc">Título Z-A</option>
+            <option value="modulo_asc">Módulo A-Z</option>
+            <option value="modulo_desc">Módulo Z-A</option>
+            <option value="fecha_creacion_asc">Fecha Creación - Ascendente</option>
+            <option value="fecha_creacion_desc">Fecha Creación - Descendente</option>
           </select>
         </div>
       </div>
