@@ -10,7 +10,7 @@ import '../styles/alerts.css';
 import '../styles/form-errors.css';
 import '../styles/pagination-tooltips.css';
 import '../styles/tables.css';
-import ConfirmModal from '../components/confirmModal.jsx';
+import ConfirmModal from '../components/ConfirmModal.jsx';
 import { FaAngleDoubleLeft, FaAngleLeft, FaAngleRight, FaAngleDoubleRight } from 'react-icons/fa';
 
 const intervaloLabels = {
