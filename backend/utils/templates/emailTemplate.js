@@ -5,7 +5,8 @@ export const buildEmailTemplate = ({ cuerpo }) => {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
   // Logo desde URL
-const logoUrl = `file://${path.resolve("./public/images/logo.jpg")}`;
+// const logoUrl = `file://${path.resolve("./public/images/logo.jpg")}`;
+const logoUrl = process.env.MAIL_LOGO_URL || `file://${path.resolve(__dirname, "./public/images/logo.jpg")}`;
  // logo accesible localmente - Desplegado cambiar a ruta pública
 
   // 📋 Datos de contacto
