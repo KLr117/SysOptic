@@ -1509,8 +1509,54 @@ export default function Expedientes() {
             <h3>{editando ? 'Editar Expediente' : 'Crear Nuevo Expediente'}</h3>
           </div>
 
+          {/* Sugerencias de correlativo - arriba del campo No. Correlativo */}
+          {!editando && sugerenciasCorrelativo.length > 0 && (
+            <div className="sugerencias-correlativo" style={{textAlign: 'right', marginBottom: '10px', marginRight: '150px'}}>
+              <div className="sugerencias-header" style={{marginBottom: '8px'}}>
+                <span className="sugerencias-icon">💡</span>
+                <span className="sugerencias-title">Sugerencia correlativo</span>
+              </div>
+              <div className="sugerencias-list">
+                {sugerenciasCorrelativo.map((correlativo, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className="sugerencia-item"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        correlativo: correlativo
+                      }));
+                      // Scroll al campo No. Correlativo
+                      const correlativoInput = document.querySelector(
+                        'input[name="correlativo"]'
+                      );
+                      if (correlativoInput) {
+                        correlativoInput.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'center',
+                        });
+                        correlativoInput.focus();
+                      }
+                    }}
+                    title={`Usar correlativo sugerido: ${correlativo}`}
+                  >
+                    #{correlativo}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {!editando && loadingSugerencias && (
+            <div className="sugerencias-loading" style={{textAlign: 'right', marginBottom: '10px', marginRight: '150px'}}>
+              <span className="loading-spinner"></span>
+              <span>Cargando...</span>
+            </div>
+          )}
+
           <div className="fila-formulario">
-            <div className="campo-formulario fecha-ancha">
+            <div className="campo-formulario">
               <label>Fecha *</label>
               <input
                 type="date"
@@ -1520,53 +1566,7 @@ export default function Expedientes() {
                 required
               />
             </div>
-            <div className="campo-formulario campo-correlativo">
-              {/* Sugerencias de correlativo */}
-              {!editando && sugerenciasCorrelativo.length > 0 && (
-                <div className="sugerencias-correlativo">
-                  <div className="sugerencias-header">
-                    <span className="sugerencias-icon">💡</span>
-                    <span className="sugerencias-title">Sugerencia: Ingrese el correlativo</span>
-                  </div>
-                  <div className="sugerencias-list">
-                    {sugerenciasCorrelativo.map((correlativo, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        className="sugerencia-item"
-                        onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            correlativo: correlativo
-                          }));
-                          // Scroll al campo No. Correlativo
-                          const correlativoInput = document.querySelector(
-                            'input[name="correlativo"]'
-                          );
-                          if (correlativoInput) {
-                            correlativoInput.scrollIntoView({
-                              behavior: 'smooth',
-                              block: 'center',
-                            });
-                            correlativoInput.focus();
-                          }
-                        }}
-                        title={`Usar correlativo sugerido: ${correlativo}`}
-                      >
-                        #{correlativo}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {!editando && loadingSugerencias && (
-                <div className="sugerencias-loading">
-                  <span className="loading-spinner"></span>
-                  <span>Cargando sugerencias...</span>
-                </div>
-              )}
-              
+            <div className="campo-formulario">
               <label>No. Correlativo *</label>
               <input
                 type="text"
