@@ -106,9 +106,6 @@ export default function Login() {
             required
           />
 
-          <a href="#" className="login-link">
-            ¿Olvidaste tu contraseña?
-          </a>
 
           <button type="submit" className="login-button">
             Iniciar sesión

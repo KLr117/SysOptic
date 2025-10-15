@@ -103,7 +103,6 @@ export default function Expedientes() {
    // Estados para sugerencias de correlativo
   const [sugerenciasCorrelativo, setSugerenciasCorrelativo] = useState([]);
   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
-  const [ultimoCorrelativoIngresado, setUltimoCorrelativoIngresado] = useState(null);
    
   // Estados para modal de zoom
    const [showZoomModal, setShowZoomModal] = useState(false);
@@ -414,61 +413,70 @@ export default function Expedientes() {
   };
 
 
-  // 🔹 Cargar sugerencias de correlativo usando el nuevo endpoint
-  useEffect(() => {
-    const cargarSugerenciasCorrelativo = async () => {
-      try {
-        setLoadingSugerencias(true);
+  // 🔹 Función para cargar sugerencias de correlativo basado en el último ID ingresado
+  const cargarSugerenciasCorrelativo = async () => {
+    try {
+      setLoadingSugerencias(true);
+      
+      // Obtener expedientes de la BD para encontrar el último por ID
+      const data = await getExpedientes();
+      if (Array.isArray(data) && data.length > 0) {
+        // Ordenar por ID descendente para obtener el último ingresado
+        const expedientesOrdenados = data.sort((a, b) => b.pk_id_expediente - a.pk_id_expediente);
+        const ultimoExpediente = expedientesOrdenados[0];
         
-        // Si hay un último correlativo ingresado, usarlo como base
-        if (ultimoCorrelativoIngresado) {
-          const numeroIngresado = parseInt(ultimoCorrelativoIngresado);
-          const siguienteSugerencia = (numeroIngresado + 1).toString();
-          setSugerenciasCorrelativo([siguienteSugerencia]);
-          return;
-        }
-        
-        // Si no hay último dato ingresado, usar la lógica original
-        const data = await getExpedientes();
-        if (Array.isArray(data)) {
-          // Obtener todos los correlativos numéricos para encontrar el siguiente consecutivo
-          const correlativosNumericos = data
-            .map((exp) => exp.correlativo)
-            .filter((correlativo) => correlativo)
-            .map((correlativo) => {
-              // Extraer solo números del correlativo
-              const numeros = correlativo.replace(/\D/g, '');
-              return numeros ? parseInt(numeros) : 0;
-            })
-            .filter((num) => num > 0) // Solo números válidos
-            .sort((a, b) => b - a); // Ordenar de mayor a menor
-
-          if (correlativosNumericos.length > 0) {
-            // Encontrar el siguiente número consecutivo
-            let siguienteNumero = correlativosNumericos[0] + 1;
-
-            // Verificar si el siguiente número ya existe
-            while (correlativosNumericos.includes(siguienteNumero)) {
-              siguienteNumero++;
-            }
-
-            setSugerenciasCorrelativo([siguienteNumero.toString()]);
+        if (ultimoExpediente && ultimoExpediente.correlativo) {
+          // Extraer solo números del correlativo del último expediente
+          const numeros = ultimoExpediente.correlativo.replace(/\D/g, '');
+          const numeroCorrelativo = numeros ? parseInt(numeros) : 0;
+          
+          if (numeroCorrelativo > 0) {
+            // El siguiente número será el correlativo del último + 1
+            const siguienteNumero = numeroCorrelativo + 1;
+            
+            // Mantener el formato original del correlativo (con los mismos ceros)
+            const correlativoOriginal = ultimoExpediente.correlativo;
+            const siguienteFormateado = siguienteNumero.toString().padStart(correlativoOriginal.length, '0');
+            setSugerenciasCorrelativo([siguienteFormateado]);
           } else {
-            // Si no hay correlativos, empezar con 1
+            // Si no hay correlativo válido, empezar con 1
             setSugerenciasCorrelativo(['1']);
           }
+        } else {
+          // Si no hay correlativo, empezar con 1
+          setSugerenciasCorrelativo(['1']);
         }
-       } catch (error) {
-         console.error('Error cargando sugerencias de correlativo:', error);
-         // En caso de error, sugerir 1
-         setSugerenciasCorrelativo(['1']);
-       } finally {
-        setLoadingSugerencias(false);
+      } else {
+        // Si no hay expedientes en la BD, empezar con 1
+        setSugerenciasCorrelativo(['1']);
       }
-    };
-    
-     cargarSugerenciasCorrelativo();
-   }, [ultimoCorrelativoIngresado]);
+     } catch (error) {
+       console.error('Error cargando sugerencias de correlativo:', error);
+       // En caso de error, sugerir 1
+       setSugerenciasCorrelativo(['1']);
+     } finally {
+      setLoadingSugerencias(false);
+    }
+  };
+
+  // 🔹 Función para actualizar sugerencias basada en el último correlativo ingresado
+  const actualizarSugerenciasPorCorrelativo = (correlativoIngresado) => {
+    if (correlativoIngresado && correlativoIngresado.trim() !== '') {
+      const numeroIngresado = parseInt(correlativoIngresado.replace(/\D/g, ''));
+      if (!isNaN(numeroIngresado) && numeroIngresado > 0) {
+        const siguienteNumero = numeroIngresado + 1;
+        
+        // Mantener el formato original del correlativo ingresado
+        const siguienteFormateado = siguienteNumero.toString().padStart(correlativoIngresado.length, '0');
+        setSugerenciasCorrelativo([siguienteFormateado]);
+      }
+    }
+  };
+
+  // 🔹 Cargar sugerencias al montar el componente
+  useEffect(() => {
+    cargarSugerenciasCorrelativo();
+  }, []); // Solo se ejecuta una vez al cargar el componente
 
    // 🔹 Función para formatear fecha para input type="date" (YYYY-MM-DD)
    const formatearFechaParaInput = (fecha) => {
@@ -694,17 +702,10 @@ export default function Expedientes() {
     if (name === 'correlativo') {
       // Permitir solo números
       const soloNumeros = value.replace(/[^0-9]/g, '');
-      
-      // Actualizar el último correlativo ingresado
-      if (soloNumeros && soloNumeros.length > 0) {
-        setUltimoCorrelativoIngresado(soloNumeros);
-        // Generar sugerencia basada en el último dato ingresado
-        const numeroIngresado = parseInt(soloNumeros);
-        const siguienteSugerencia = (numeroIngresado + 1).toString();
-        setSugerenciasCorrelativo([siguienteSugerencia]);
-      }
-      
       setFormData({ ...formData, [name]: soloNumeros });
+      
+      // Actualizar sugerencias basadas en lo que el usuario está escribiendo
+      actualizarSugerenciasPorCorrelativo(soloNumeros);
       return;
     }
      
@@ -805,6 +806,10 @@ export default function Expedientes() {
         // Recargar expedientes para obtener las imágenes actualizadas
         const expedientesActualizados = await getExpedientes();
         setExpedientes(expedientesActualizados);
+        
+        // Actualizar sugerencias de correlativo después de crear expediente
+        await cargarSugerenciasCorrelativo();
+        
         mostrarPopup('Expediente guardado correctamente', 'success');
       }
       setFormData({
@@ -967,11 +972,20 @@ export default function Expedientes() {
     const filtrados = expedientesArray.filter((exp) => {
       const match =
         !filtro ||
-        (exp.nombre || '').toLowerCase().includes(filtro) ||
-        (exp.telefono || '').toLowerCase().includes(filtro) ||
-        (exp.email || '').toLowerCase().includes(filtro) ||
+        // Búsqueda por No. Correlativo
         (exp.correlativo || '').toLowerCase().includes(filtro) ||
-        (exp.pk_id_expediente || '').toString().toLowerCase().includes(filtro); // ✅ Agregado búsqueda por ID
+        // Búsqueda por Nombre
+        (exp.nombre || '').toLowerCase().includes(filtro) ||
+        // Búsqueda por Teléfono
+        (exp.telefono || '').toLowerCase().includes(filtro) ||
+        // Búsqueda por Dirección
+        (exp.direccion || '').toLowerCase().includes(filtro) ||
+        // Búsqueda por Email
+        (exp.email || '').toLowerCase().includes(filtro) ||
+        // Búsqueda por Fecha de Registro (formato DD/MM/YYYY)
+        (exp.fecha_registro ? formatearFecha(exp.fecha_registro).toLowerCase() : '').includes(filtro) ||
+        // Búsqueda por ID
+        (exp.pk_id_expediente || '').toString().toLowerCase().includes(filtro);
       
       return match;
     });
@@ -1157,45 +1171,48 @@ export default function Expedientes() {
 
       {/* 🔹 MOSTRAR CONTROLES SOLO CUANDO NO ESTÉ EN MODO FORMULARIO */}
       {!mostrarFormulario && (
-        <div className="expedientes-table-actions">
-          <button onClick={() => setMostrarFormulario(true)} className="expedientes-btn-agregar">
-            ➕ Crear Expediente
-          </button>
+        <>
 
-          <input
-            type="text"
-            placeholder="🔍 Buscar..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="expedientes-search-box"
-            data-tooltip="Filtra por ID, nombre, correo, teléfono o correlativo"
-          />
+          {/* Barra de acciones - igual que notificaciones */}
+          <div className="table-actions">
+            <button className="btn-agregar" onClick={() => setMostrarFormulario(true)}>
+              ➕ Crear Expediente
+            </button>
 
-          <div className="expedientes-sort-container">
-            <label htmlFor="expedientesSortSelect" className="expedientes-sort-label">
-              Ordenar por:
-            </label>
-           
-            <select
-              id="expedientesSortSelect"
-              value={sortField + '-' + sortDirection}
-              onChange={(e) => {
-                const [field, direction] = e.target.value.split('-');
-                setSortField(field);
-                setSortDirection(direction);
-              }}
-              className="expedientes-sort-combobox"
-              data-tooltip="Selecciona una ordenación"
-            >
-              <option value="fecha_registro-desc">Fecha - Más reciente</option>
-              <option value="fecha_registro-asc">Fecha - Más antiguo</option>
-              <option value="correlativo-asc">Correlativo - Menor a Mayor</option>
-              <option value="correlativo-desc">Correlativo - Mayor a Menor</option>
-              <option value="nombre-asc">Nombre A-Z</option>
-              <option value="nombre-desc">Nombre Z-A</option>
-            </select>
+            <input
+              type="text"
+              placeholder="🔍 Buscar por nombre, teléfono, dirección..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="search-box"
+              data-tooltip="Filtra por ID, nombre, correo, teléfono o correlativo"
+            />
+
+            <div className="sort-container">
+              <label htmlFor="expedientesSortSelect" className="sort-label">
+                Ordenar por:
+              </label>
+              <select
+                id="expedientesSortSelect"
+                value={sortField + '-' + sortDirection}
+                onChange={(e) => {
+                  const [field, direction] = e.target.value.split('-');
+                  setSortField(field);
+                  setSortDirection(direction);
+                }}
+                className="sort-combobox"
+                data-tooltip="Selecciona una ordenación"
+              >
+                <option value="fecha_registro-desc">Fecha - Más reciente</option>
+                <option value="fecha_registro-asc">Fecha - Más antiguo</option>
+                <option value="correlativo-asc">Correlativo - Menor a Mayor</option>
+                <option value="correlativo-desc">Correlativo - Mayor a Menor</option>
+                <option value="nombre-asc">Nombre A-Z</option>
+                <option value="nombre-desc">Nombre Z-A</option>
+              </select>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* 🔹 Tabla de expedientes - SOLO SE MUESTRA CUANDO NO ESTÉ EN MODO FORMULARIO */}
