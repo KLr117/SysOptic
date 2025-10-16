@@ -56,7 +56,7 @@ const logoUrl = process.env.MAIL_LOGO_URL || `file://${path.resolve(__dirname, "
 
       <!-- Cuerpo -->
       <div style="padding:24px; text-align:center; font-size:15px; line-height:1.6;">
-        ${cuerpo}
+        <pre style="font-family: Arial, sans-serif; white-space: pre-wrap; margin: 0;">${cuerpo}</pre>
       </div>
 
       <!-- Pie de página -->

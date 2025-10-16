@@ -26,6 +26,9 @@ import {
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Configurar zona horaria para Node.js
+process.env.TZ = 'America/Guatemala';
+
 app.use(cors());
 app.use(express.json());
 
