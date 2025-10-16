@@ -234,16 +234,28 @@ export const procesarPromocionesActivas = async (req, res) => {
 // 🧠 Procesar recordatorios automáticos (Expedientes y Órdenes)
 export const procesarRecordatoriosActivos = async (req, res) => {
   try {
-    const notificaciones = await notificacionesModel.getRecordatoriosActivos();
+ const notificaciones = await notificacionesModel.getRecordatoriosActivos();
     const hoy = new Date().toISOString().slice(0, 10);
 
     let totalInsertados = 0;
     const resumen = [];
 
     console.log("📅 [CRON] Procesando recordatorios activos — Fecha:", hoy);
+    console.log(`Total recordatorios encontrados: ${notificaciones.length}`);
 
     for (const noti of notificaciones) {
-      console.log("🔍 Analizando notificación:", noti.pk_id_notificacion, "| módulo:", noti.fk_id_modulo_notificacion);
+      console.log('\nProcesando notificación:', {
+        id: noti.pk_id_notificacion,
+         tipo: 'Recordatorio',
+        especifica: {
+          expediente: noti.fk_id_expediente,
+          orden: noti.fk_id_orden
+        },
+        intervalo: {
+          dias: noti.intervalo_dias,
+          tipo: noti.tipo_intervalo
+        }
+      });
 
       // 🔹 Correos candidatos
       const candidatos = await notificacionesModel.getCorreosRecordatorioPorNotificacion(noti);
@@ -253,12 +265,17 @@ export const procesarRecordatoriosActivos = async (req, res) => {
         continue;
       }
 
+       // Log después de obtener candidatos
+      console.log(`Candidatos encontrados: ${candidatos.length}`);
+
       // 🧩 Obtener correos ya enviados
       const enviados = await notificacionesEnviadasModel.getCorreosYaEnviados(noti.pk_id_notificacion);
 
       // 🔎 Filtrar solo los nuevos
       const nuevos = candidatos.filter(c => !enviados.includes(c.toLowerCase()));
 
+      // Log después de filtrar nuevos
+      console.log(`Nuevos correos a procesar: ${nuevos.length}`);
       if (nuevos.length === 0) {
         console.log(`⚪ Todos los correos ya fueron enviados para ${noti.titulo}`);
         continue;

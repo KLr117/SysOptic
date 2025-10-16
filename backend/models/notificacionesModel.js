@@ -167,8 +167,39 @@ export const getPromosActivasHoy = async (hoyISO /* 'YYYY-MM-DD' */) => {
   return rows;
 };
 
+// Para promociones
 // 📧 Correos pendientes (aún no registrados en tbl_notificaciones_enviadas) por módulo
 export const getPendingEmailsForPromo = async (notificacionId, moduloId) => {
+const [notificacion] = await pool.query(
+    "SELECT * FROM tbl_notificaciones WHERE pk_id_notificacion = ?",
+    [notificacionId]
+  );
+
+  // Verificar si es notificación específica
+  if (notificacion[0].fk_id_expediente) {
+    const sql = `
+      SELECT DISTINCT LOWER(TRIM(email)) as email 
+      FROM tbl_expedientes 
+      WHERE pk_id_expediente = ? 
+      AND email IS NOT NULL AND email != ''
+    `;
+    const [rows] = await pool.query(sql, [notificacion[0].fk_id_expediente]);
+    return rows.map(r => r.email);
+  }
+
+  if (notificacion[0].fk_id_orden) {
+    const sql = `
+      SELECT DISTINCT LOWER(TRIM(correo)) as email 
+      FROM tbl_ordenes 
+      WHERE pk_id_orden = ? 
+      AND correo IS NOT NULL AND correo != ''
+    `;
+    const [rows] = await pool.query(sql, [notificacion[0].fk_id_orden]);
+    return rows.map(r => r.email);
+  }
+
+  // Si no es específica, mantener lógica actual para notificaciones generales
+
   if (moduloId === 1) {
     // Expedientes: campo de email = 'email'
     const sql = `
@@ -208,13 +239,33 @@ export const getPendingEmailsForPromo = async (notificacionId, moduloId) => {
 // 🔁 Obtener notificaciones activas tipo RECORDATORIO (no promociones)
 export const getRecordatoriosActivos = async () => {
   const query = `
-    SELECT *
-    FROM tbl_notificaciones
-    WHERE fk_id_categoria_notificacion != 2
-      AND fk_id_estado_notificacion = 1
-      AND fk_id_tipo_notificacion = 1
-      AND enviar_email = 1
-  `;
+    SELECT n.*, 
+           e.fecha_registro as fecha_expediente,
+           o.fecha_recepcion, 
+           o.fecha_entrega
+    FROM tbl_notificaciones n
+    LEFT JOIN tbl_expedientes e ON n.fk_id_expediente = e.pk_id_expediente
+    LEFT JOIN tbl_ordenes o ON n.fk_id_orden = o.pk_id_orden
+    WHERE n.fk_id_categoria_notificacion = 1  -- Recordatorios
+      AND n.fk_id_estado_notificacion = 1     -- Activa
+      AND n.enviar_email = 1
+      AND (
+        -- Para notificaciones específicas de expedientes
+        (n.fk_id_expediente IS NOT NULL AND 
+         DATE_ADD(e.fecha_registro, INTERVAL n.intervalo_dias DAY) = CURDATE())
+        OR
+        -- Para notificaciones específicas de órdenes
+        (n.fk_id_orden IS NOT NULL AND 
+         CASE 
+           WHEN n.tipo_intervalo = 'despues_recepcion' 
+           THEN DATE_ADD(o.fecha_recepcion, INTERVAL n.intervalo_dias DAY) = CURDATE()
+           ELSE DATE_SUB(o.fecha_entrega, INTERVAL n.intervalo_dias DAY) = CURDATE()
+         END)
+        OR
+        -- Para notificaciones generales
+        (n.fk_id_expediente IS NULL AND n.fk_id_orden IS NULL)
+      )`;
+
   const [rows] = await pool.query(query);
   return rows;
 };
@@ -252,6 +303,34 @@ export const registrarEnvio = async (idNotificacion, correo) => {
 
 // 📅 Obtener correos de recordatorios según módulo y tipo_intervalo
 export const getCorreosRecordatorioPorNotificacion = async (noti) => {
+
+  if (!noti) return [];
+  // Primero verificar si es una notificación específica
+    // Para notificaciones específicas de expedientes
+  if (noti.fk_id_expediente) {
+    const sql = `
+      SELECT DISTINCT LOWER(TRIM(email)) as email
+      FROM tbl_expedientes
+      WHERE pk_id_expediente = ?
+      AND email IS NOT NULL AND email != ''`;
+    
+    const [rows] = await pool.query(sql, [noti.fk_id_expediente]);
+    return rows.map(r => r.email);
+  }
+
+  // Para notificaciones específicas de órdenes
+  if (noti.fk_id_orden) {
+    const sql = `
+      SELECT DISTINCT LOWER(TRIM(correo)) as email
+      FROM tbl_ordenes
+      WHERE pk_id_orden = ?
+      AND correo IS NOT NULL AND correo != ''`;
+    
+    const [rows] = await pool.query(sql, [noti.fk_id_orden]);
+    return rows.map(r => r.email);
+  }
+  
+// Si no es específica, mantener la lógica existente para notificaciones generales
   if (noti.fk_id_modulo_notificacion === 1) {
     // 🩺 EXPEDIENTES → después de registro
     const sql = `
@@ -263,7 +342,6 @@ export const getCorreosRecordatorioPorNotificacion = async (noti) => {
     const [rows] = await pool.query(sql, [noti.intervalo_dias]);
     return rows.map((r) => r.correo);
   }
-
   if (noti.fk_id_modulo_notificacion === 2) {
     // 📦 ÓRDENES → después de recepción o antes de entrega
     let sql = "";
