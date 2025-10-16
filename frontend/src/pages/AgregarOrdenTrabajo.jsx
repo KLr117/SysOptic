@@ -268,26 +268,21 @@ const AgregarOrdenTrabajo = () => {
 
 
   const validarFechas = (fechaRecepcion, fechaEntrega) => {
-    if (!fechaRecepcion || !fechaEntrega) return { valido: true }; // Si no hay fechas, no validar
+    // Si no hay fecha de recepción, no validar
+    if (!fechaRecepcion) return { valido: true };
+    
+    // Si no hay fecha de entrega, es válido (fecha de entrega es opcional)
+    if (!fechaEntrega) return { valido: true };
     
     // Convertir las fechas a objetos Date para comparar
     const fechaRec = new Date(fechaRecepcion);
     const fechaEnt = new Date(fechaEntrega);
     
-    // Verificar si las fechas son iguales
-    if (fechaRec.getTime() === fechaEnt.getTime()) {
-      return { 
-        valido: false, 
-        mensaje: 'Las fechas no pueden ser iguales.',
-        titulo: 'Fechas Iguales'
-      };
-    }
-    
     // Verificar si la fecha de entrega es anterior a la de recepción
-    if (fechaEnt <= fechaRec) {
+    if (fechaEnt < fechaRec) {
       return { 
         valido: false, 
-        mensaje: 'La fecha de entrega debe ser posterior a la fecha de recepción.',
+        mensaje: 'La fecha de entrega no puede ser anterior a la fecha de recepción.',
         titulo: 'Fecha de Entrega Inválida'
       };
     }
@@ -328,6 +323,19 @@ const AgregarOrdenTrabajo = () => {
         isOpen: true,
         title: 'Campo Requerido',
         message: 'El campo "Teléfono" es obligatorio.',
+        type: 'warning',
+        showButtons: true,
+        confirmText: 'Aceptar',
+        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      });
+      return false;
+    }
+
+    if (!formData.fecha_recepcion) {
+      setPopup({
+        isOpen: true,
+        title: 'Campo Requerido',
+        message: 'El campo "Fecha Recepción" es obligatorio.',
         type: 'warning',
         showButtons: true,
         confirmText: 'Aceptar',
@@ -404,7 +412,7 @@ const AgregarOrdenTrabajo = () => {
         correo: formData.correo,
         telefono: formData.telefono,
         fecha_recepcion: formData.fecha_recepcion,
-        fecha_entrega: formData.fecha_entrega,
+        fecha_entrega: formData.fecha_entrega || null, // Enviar null si está vacío
         total: parseFloat(formData.total) || 0,
         adelanto: parseFloat(formData.adelanto) || 0,
         saldo: parseFloat(formData.saldo) || 0,
@@ -419,6 +427,8 @@ const AgregarOrdenTrabajo = () => {
       console.log('Correlativo a enviar:', orderData.correlativo);
       console.log('Tipo:', typeof orderData.correlativo);
       console.log('Longitud:', orderData.correlativo.length);
+      console.log('Fecha recepción:', orderData.fecha_recepcion);
+      console.log('Fecha entrega:', orderData.fecha_entrega);
       console.log('========================');
 
       const response = await createOrden(orderData);
@@ -601,25 +611,23 @@ const AgregarOrdenTrabajo = () => {
             />
           </div>
           <div className="orden-field">
-            <label>Fecha Recepción</label>
+            <label>Fecha Recepción *</label>
             <input 
               type="date" 
               name="fecha_recepcion"
               value={formData.fecha_recepcion}
               onChange={handleInputChange}
+              required
             />
           </div>
           <div className="orden-field">
-            <label>Fecha Entrega</label>
-            <div className="tooltip">
-              <input 
-                type="date" 
-                name="fecha_entrega"
-                value={formData.fecha_entrega}
-                onChange={handleInputChange}
-              />
-              <span className="tooltiptext">La fecha de entrega debe ser posterior a la fecha de recepción</span>
-            </div>
+            <label>Fecha Entrega (Opcional)</label>
+            <input 
+              type="date" 
+              name="fecha_entrega"
+              value={formData.fecha_entrega}
+              onChange={handleInputChange}
+            />
           </div>
         </div>
       </div>
