@@ -176,8 +176,11 @@ const NotificacionForm = ({ mode = 'create' }) => {
   const handleChange = (e) => {
   const { name, value, type, checked } = e.target;
 
+  // solo activar validación si estamos editando una notificación existente (con id)
+  const isEditing = (mode === 'edit' || mode === 'editEspecifica') && !!id;
+
     // 🟡 Validación especial para cambio de categoría si hay correos enviados
-    if (name === 'categoria'|| name === 'modulo' && (mode === 'edit' || mode === 'editEspecifica') && correosEnviados) {
+    if ((name === 'categoria' || name === 'modulo') && isEditing && correosEnviados) {
       const isModuleChange = name === 'modulo' && value !== moduloOriginal;
       const isCategoryChange = name === 'categoria' && value !== categoriaOriginal;
 
@@ -194,7 +197,7 @@ const NotificacionForm = ({ mode = 'create' }) => {
     // 🟡 Validación especial para cambio de fecha de inicio si hay correos enviados
     if (
       name === 'fechaInicioProm' &&
-      (mode === 'edit' || mode === 'editEspecifica') &&
+      isEditing &&
       correosEnviados
     ) {
       if (value !== fechaInicioOriginal) {
@@ -596,9 +599,10 @@ const NotificacionForm = ({ mode = 'create' }) => {
                       value={formData.modulo}
                       onChange={(e) => {
                         const value = e.target.value;
-                        
-                        // Validación para correos enviados
-                        if ((mode === 'edit' || mode === 'editEspecifica') && correosEnviados && value !== moduloOriginal) {
+                        const isEditing = (mode === 'edit' || mode === 'editEspecifica') && !!id;
+
+                        // Validación para correos enviados (solo si estamos editando esa notificación y ya hubo envíos)
+                        if (isEditing && correosEnviados && value !== moduloOriginal) {
                           setPendingConfigChange({
                             field: 'modulo',
                             value: value

@@ -175,29 +175,41 @@ const [notificacion] = await pool.query(
     [notificacionId]
   );
 
-  // Verificar si es notificación específica
-  if (notificacion[0].fk_id_expediente) {
+  const n = notificacion[0];
+  if (!n) return [];
+
+  // 🩺 Si es promoción específica de expediente
+  if (n.fk_id_expediente) {
     const sql = `
-      SELECT DISTINCT LOWER(TRIM(email)) as email 
-      FROM tbl_expedientes 
-      WHERE pk_id_expediente = ? 
-      AND email IS NOT NULL AND email != ''
+      SELECT DISTINCT LOWER(TRIM(e.email)) AS email
+      FROM tbl_expedientes e
+      LEFT JOIN tbl_notificaciones_enviadas ne
+        ON ne.correo_destino = LOWER(TRIM(e.email))
+       AND ne.fk_id_notificacion = ?
+      WHERE e.pk_id_expediente = ?
+        AND e.email IS NOT NULL AND e.email <> ''
+        AND ne.pk_id_envio IS NULL
     `;
-    const [rows] = await pool.query(sql, [notificacion[0].fk_id_expediente]);
+    const [rows] = await pool.query(sql, [notificacionId, n.fk_id_expediente]);
     return rows.map(r => r.email);
   }
 
-  if (notificacion[0].fk_id_orden) {
+   // 📋 Si es promoción específica de orden
+  if (n.fk_id_orden) {
     const sql = `
-      SELECT DISTINCT LOWER(TRIM(correo)) as email 
-      FROM tbl_ordenes 
-      WHERE pk_id_orden = ? 
-      AND correo IS NOT NULL AND correo != ''
+      SELECT DISTINCT LOWER(TRIM(o.correo)) AS email
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_notificaciones_enviadas ne
+        ON ne.correo_destino = LOWER(TRIM(o.correo))
+       AND ne.fk_id_notificacion = ?
+      WHERE o.pk_id_orden = ?
+        AND o.correo IS NOT NULL AND o.correo <> ''
+        AND ne.pk_id_envio IS NULL
     `;
-    const [rows] = await pool.query(sql, [notificacion[0].fk_id_orden]);
+    const [rows] = await pool.query(sql, [notificacionId, n.fk_id_orden]);
     return rows.map(r => r.email);
   }
-
+  
   // Si no es específica, mantener lógica actual para notificaciones generales
 
   if (moduloId === 1) {
@@ -309,25 +321,33 @@ export const getCorreosRecordatorioPorNotificacion = async (noti) => {
     // Para notificaciones específicas de expedientes
   if (noti.fk_id_expediente) {
     const sql = `
-      SELECT DISTINCT LOWER(TRIM(email)) as email
-      FROM tbl_expedientes
-      WHERE pk_id_expediente = ?
-      AND email IS NOT NULL AND email != ''`;
+      SELECT DISTINCT LOWER(TRIM(e.email)) AS email
+      FROM tbl_expedientes e
+      LEFT JOIN tbl_notificaciones_enviadas ne
+        ON ne.correo_destino = LOWER(TRIM(e.email))
+      AND ne.fk_id_notificacion = ?
+      WHERE e.pk_id_expediente = ?
+        AND e.email IS NOT NULL AND e.email != ''
+        AND ne.pk_id_envio IS NULL`;
     
-    const [rows] = await pool.query(sql, [noti.fk_id_expediente]);
+    const [rows] = await pool.query(sql, [noti.pk_id_notificacion, noti.fk_id_expediente]);
     return rows.map(r => r.email);
   }
 
   // Para notificaciones específicas de órdenes
   if (noti.fk_id_orden) {
     const sql = `
-      SELECT DISTINCT LOWER(TRIM(correo)) as email
-      FROM tbl_ordenes
-      WHERE pk_id_orden = ?
-      AND correo IS NOT NULL AND correo != ''`;
-    
-    const [rows] = await pool.query(sql, [noti.fk_id_orden]);
-    return rows.map(r => r.email);
+      SELECT DISTINCT LOWER(TRIM(o.correo)) AS email
+      FROM tbl_ordenes o
+      LEFT JOIN tbl_notificaciones_enviadas ne
+        ON ne.correo_destino = LOWER(TRIM(o.correo))
+      AND ne.fk_id_notificacion = ?
+      WHERE o.pk_id_orden = ?
+        AND o.correo IS NOT NULL AND o.correo != ''
+        AND ne.pk_id_envio IS NULL`;
+  
+  const [rows] = await pool.query(sql, [noti.pk_id_notificacion, noti.fk_id_orden]);
+  return rows.map(r => r.email);
   }
   
 // Si no es específica, mantener la lógica existente para notificaciones generales
