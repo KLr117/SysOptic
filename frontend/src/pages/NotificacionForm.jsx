@@ -56,6 +56,9 @@ const NotificacionForm = ({ mode = 'create' }) => {
   const [fechaInicioOriginal, setFechaInicioOriginal] = useState('');
   const [showCambiarFechaModal, setShowCambiarFechaModal] = useState(false);
   const [pendingFechaInicioChange, setPendingFechaInicioChange] = useState(null);
+  const [moduloOriginal, setModuloOriginal] = useState('');
+  const [showCambiarConfigModal, setShowCambiarConfigModal] = useState(false);
+  const [pendingConfigChange, setPendingConfigChange] = useState(null);
 
 
   // ✅ Cargar datos según modo
@@ -84,6 +87,7 @@ const NotificacionForm = ({ mode = 'create' }) => {
             // Detectar si hay correos enviados
             setCorreosEnviados(res.correos_enviados > 0 || res.envios_registrados > 0);
             setCategoriaOriginal(res.fk_id_categoria_notificacion?.toString() || '');
+            setModuloOriginal(res.fk_id_modulo_notificacion?.toString() || '');
             setFechaInicioOriginal(toInputDate(res.fecha_objetivo) || '');
           } else {
             console.warn('Respuesta inesperada de la API:', res);
@@ -108,6 +112,7 @@ const NotificacionForm = ({ mode = 'create' }) => {
           // Detectar si hay correos enviados
           setCorreosEnviados(data.correos_enviados > 0 || data.envios_registrados > 0);
           setCategoriaOriginal(data.fk_id_categoria_notificacion?.toString() || '');
+          setModuloOriginal(data.fk_id_modulo_notificacion?.toString() || '');
           setFechaInicioOriginal(toInputDate(data.fecha_objetivo) || '');
         } else if (mode === 'createExpediente') {
           setFormData((prev) => ({
@@ -172,11 +177,17 @@ const NotificacionForm = ({ mode = 'create' }) => {
   const { name, value, type, checked } = e.target;
 
     // 🟡 Validación especial para cambio de categoría si hay correos enviados
-    if (name === 'categoria' && (mode === 'edit' || mode === 'editEspecifica') && correosEnviados) {
-      if (value !== categoriaOriginal) {
-        setPendingCategoriaChange(value);
-        setShowCambiarCategoriaModal(true);
-        return; // No aplicar el cambio hasta confirmar
+    if (name === 'categoria'|| name === 'modulo' && (mode === 'edit' || mode === 'editEspecifica') && correosEnviados) {
+      const isModuleChange = name === 'modulo' && value !== moduloOriginal;
+      const isCategoryChange = name === 'categoria' && value !== categoriaOriginal;
+
+      if (isModuleChange || isCategoryChange) {
+        setPendingConfigChange({
+          field: name,
+          value: value
+        });
+        setShowCambiarConfigModal(true);
+        return;
       }
     }
 
@@ -213,6 +224,22 @@ const NotificacionForm = ({ mode = 'create' }) => {
   const cancelarCambiarCategoria = () => {
     setShowCambiarCategoriaModal(false);
     setPendingCategoriaChange(null);
+  };
+
+  const confirmarCambiarConfig = () => {
+  setFormData(prev => ({
+    ...prev,
+    [pendingConfigChange.field]: pendingConfigChange.value,
+    // Si cambia el módulo, resetear tipoIntervalo
+    ...(pendingConfigChange.field === 'modulo' ? { tipoIntervalo: '' } : {})
+    }));
+    setShowCambiarConfigModal(false);
+    setPendingConfigChange(null);
+  };
+
+  const cancelarCambiarConfig = () => {
+    setShowCambiarConfigModal(false);
+    setPendingConfigChange(null);
   };
 
   const confirmarCambiarFecha = () => {
@@ -429,8 +456,8 @@ const NotificacionForm = ({ mode = 'create' }) => {
   }, [formData.modulo]);
 
   const getFormTitle = () => {
-    if (mode === 'createExpediente') return '🔔 Crear Notificación para Expediente';
-    if (mode === 'createOrden') return '🔔 Crear Notificación para Orden';
+    if (mode === 'createExpediente') return '🔔 Crear Notificación para Expediente Específico';
+    if (mode === 'createOrden') return '🔔 Crear Notificación para Orden Específica';
     if (mode === 'editEspecifica') return '✏️ Editar Notificación Específica';
     if (mode === 'edit') return '✏️ Editar Notificación';
     return '🔔 Crear Nueva Notificación General';
@@ -569,6 +596,18 @@ const NotificacionForm = ({ mode = 'create' }) => {
                       value={formData.modulo}
                       onChange={(e) => {
                         const value = e.target.value;
+                        
+                        // Validación para correos enviados
+                        if ((mode === 'edit' || mode === 'editEspecifica') && correosEnviados && value !== moduloOriginal) {
+                          setPendingConfigChange({
+                            field: 'modulo',
+                            value: value
+                          });
+                          setShowCambiarConfigModal(true);
+                          return;
+                        }
+
+                        // Si no hay correos enviados o se confirmó el cambio, actualizar normalmente
                         setFormData({
                           ...formData,
                           modulo: value,
@@ -859,15 +898,14 @@ const NotificacionForm = ({ mode = 'create' }) => {
             message={
               <>
                 <p>
-                  Ya fue enviado un correo a este cliente con esta configuración.
+                  Ya fue enviado al menos un correo con esta configuración.
                   <br />
                   <strong>¿Está seguro que desea cambiar la categoría de esta notificación?</strong>
                 </p>
                 <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#666' }}>
-                  Si la cambia, no se enviará un nuevo correo.
+                  Si la cambia, no se enviará un nuevo correo a quienes ya lo recibieron.
                   <br />
-                  Si desea reenviar una notificación, elimínela y cree una nueva con la categoría
-                  deseada.
+                  Si desea reenviar una notificación, elimínela y cree una nueva con la configuracion deseada.
                 </p>
               </>
             }
@@ -899,6 +937,33 @@ const NotificacionForm = ({ mode = 'create' }) => {
             onCancel={cancelarCambiarFecha}
           />
           {/* Fin Modal de advertencia de cambio de categoría */}
+
+          {/* Modal de advertencia de cambio de configuración */}
+          <ConfirmModal
+            isOpen={showCambiarConfigModal}
+            title="⚠️ Advertencia: Cambio de Configuración"
+            message={
+              <>
+                <p>
+                  Ya fue enviado al menos un correo con esta configuración.
+                  <br />
+                  <strong>
+                    ¿Está seguro que desea cambiar {
+                      pendingConfigChange?.field === 'modulo' ? 'módulo' : 'categoría'
+                    } de esta notificación?
+                  </strong>
+                </p>
+                <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#666' }}>
+                  Si realiza el cambio, no se enviará un nuevo correo a los registros que ya recibieron uno bajo la configuración anterior.
+                  <br />
+                  Si necesita reenviar notificaciones, le sugerimos crear una nueva notificación con la configuración deseada.
+                </p>
+              </>
+            }
+            onConfirm={confirmarCambiarConfig}
+            onCancel={cancelarCambiarConfig}
+          />
+          {/* Fin Modal de advertencia de cambio de configuración */}
         </>
       )}
     </div>
