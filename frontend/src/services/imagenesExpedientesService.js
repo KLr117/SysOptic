@@ -60,7 +60,7 @@ export const contarImagenesPorExpediente = async (expedienteId) => {
 };
 
 // Función para comprimir imagen antes de subir
-export const comprimirImagen = (file, maxWidth = 600, quality = 0.6) => {
+export const comprimirImagen = (file, maxWidth = 1080, quality = 0.85) => {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');

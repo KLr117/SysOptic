@@ -108,4 +108,36 @@ try {
 } catch (Exception $e) {
   echo json_encode(['success' => false, 'message' => 'Error al procesar imagen: ' . $e->getMessage()]);
 }
+
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $headers = getallheaders();
+    $upload_token = $headers['Authorization'] ?? '';
+    $expected_token = getenv('UPLOAD_TOKEN') ?: 'TU_TOKEN_SEGURO_AQUI';
+
+    // Validar token
+    if ($upload_token !== 'Bearer ' . $expected_token) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Acceso no autorizado']);
+        exit;
+    }
+
+    // Leer cuerpo JSON
+    $input = json_decode(file_get_contents("php://input"), true);
+    $ruta = $input['ruta'] ?? null;
+
+    if (!$ruta || !file_exists($ruta)) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Archivo no encontrado']);
+        exit;
+    }
+
+    // Intentar eliminar archivo
+    if (unlink($ruta)) {
+        echo json_encode(['success' => true, 'message' => 'Archivo eliminado correctamente']);
+    } else {
+        http_response_code(500);
+        echo json_encode(['error' => 'No se pudo eliminar el archivo']);
+    }
+}
+
 ?>
