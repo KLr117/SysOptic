@@ -1,120 +1,122 @@
-import ImagenesExpedientesModel from '../models/imagenesExpedientesModel.js';
-import { updateFotosExpediente } from '../models/ExpedientesModel.js';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import ftp from 'basic-ftp';
-import dotenv from 'dotenv';
+import ImagenesExpedientesModel from "../models/imagenesExpedientesModel.js";
+import { updateFotosExpediente } from "../models/ExpedientesModel.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import FormData from "form-data";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
 dotenv.config();
- // ==========================
-// Configuración de multer para subir archivos
-// Configuración de multer (guarda temporalmente en /tmp antes de subir al FTP)
+
+// ==========================
+// Configuración de multer (temporal en /tmp)
+// ==========================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const tempDir = process.env.TEMP || '/tmp';
+    const tempDir = process.env.TEMP || "/tmp";
     cb(null, tempDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `expediente_${req.body.expediente_id}_${uniqueSuffix}${path.extname(file.originalname)}`);
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      `expediente_${req.body.expediente_id}_${uniqueSuffix}${path.extname(
+        file.originalname
+      )}`
+    );
   },
 });
 
-// Configuración de multer con límites y filtros
 const upload = multer({
   storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB máximo por archivo
-  },
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    // Solo permitir tipos de imagen específicos
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const extname = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
     const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (mimetype && extname) {
-      return cb(null, true); // Aceptar archivo
-    } else {
-      cb(new Error('Solo se permiten archivos de imagen (JPEG, JPG, PNG, GIF, WEBP)'));
-    }
-  }
+    if (mimetype && extname) return cb(null, true);
+    cb(new Error("Solo se permiten imágenes (JPEG, JPG, PNG, GIF, WEBP)"));
+  },
 });
 
-// 🔧 Nueva función auxiliar para subir al FTP
-async function subirAFtp(localPath, remoteFileName, subcarpeta) {
-  const client = new ftp.Client();
-  client.ftp.verbose = false;
+// ==========================
+// 🔧 Subir imagen a Hostinger por HTTP (en lugar de FTP)
+// ==========================
+async function subirAHostinger(localPath, subcarpeta) {
+  const form = new FormData();
+  form.append("folder", subcarpeta);
+  form.append("file", fs.createReadStream(localPath));
+  form.append("token", process.env.UPLOAD_TOKEN || "sysoptic_secret");
+
   try {
-    await client.access({
-      host: process.env.FTP_HOST,
-      user: process.env.FTP_USER,
-      password: process.env.FTP_PASS,
-      secure: true,
-    });
-    await client.ensureDir(`/public_html/uploads/${subcarpeta}`);
-    await client.uploadFrom(localPath, `${remoteFileName}`);
-    client.close();
-    return true;
+    const response = await fetch(
+      "https://lightsteelblue-termite-871777.hostingersite.com/upload-handler.php",
+      { method: "POST", body: form }
+    );
+
+    const data = await response.json();
+    if (!data.success) throw new Error(data.message || "Error en subida");
+    return data.url; // URL pública de la imagen
   } catch (err) {
-    console.error("❌ Error al subir al FTP:", err);
-    client.close();
-    return false;
+    console.error("❌ Error al subir a Hostinger:", err.message);
+    return null;
   }
 }
 
 class ImagenesExpedientesController {
-  // Subir imagen para expediente
+  // 🔼 Subir imagen
   static async subirImagen(req, res) {
     try {
       const { expediente_id } = req.body;
-      if (!expediente_id) {
-        return res.status(400).json({ success: false, message: 'ID de expediente es requerido' });
-      }
+      if (!expediente_id)
+        return res
+          .status(400)
+          .json({ success: false, message: "ID de expediente es requerido" });
+      if (!req.file)
+        return res
+          .status(400)
+          .json({ success: false, message: "No se proporcionó archivo" });
 
-      if (!req.file) {
-        return res.status(400).json({ success: false, message: 'No se proporcionó archivo' });
-      }
-
-      // Subir al FTP Hostinger
       const localPath = req.file.path;
-      const remoteFileName = req.file.filename;
-      const subidaExitosa = await subirAFtp(localPath, remoteFileName, "expedientes");
 
-      if (!subidaExitosa) {
+      // 🔄 Subir al Hostinger
+      const publicUrl = await subirAHostinger(localPath, "expedientes");
+      if (!publicUrl)
         return res.status(500).json({
           success: false,
-          message: 'Error al subir imagen al servidor remoto',
+          message: "Error al subir imagen a Hostinger",
         });
-      }
 
-      // Guardar metadatos en BD (con ruta pública)
+      // 💾 Guardar metadatos en BD
       const imagenData = {
         expediente_id: parseInt(expediente_id),
         nombre_archivo: req.file.originalname,
-        ruta_archivo: `/uploads/expedientes/${remoteFileName}`,
+        ruta_archivo: publicUrl,
       };
 
       const result = await ImagenesExpedientesModel.crearImagen(imagenData);
-
       if (result.success) {
         await updateFotosExpediente(parseInt(expediente_id), true);
+        fs.unlinkSync(localPath); // eliminar temporal
         res.status(201).json({
           success: true,
-          message: 'Imagen subida exitosamente',
+          message: "Imagen subida exitosamente",
           imagen: { id: result.id, ...imagenData },
         });
       } else {
         res.status(500).json({
           success: false,
-          message: 'Error al guardar imagen en la base de datos',
+          message: "Error al guardar imagen en la base de datos",
           error: result.error,
         });
       }
     } catch (error) {
-      console.error('Error en subirImagen:', error);
+      console.error("Error en subirImagen:", error);
       res.status(500).json({
         success: false,
-        message: 'Error interno del servidor',
+        message: "Error interno del servidor",
         error: error.message,
       });
     }
@@ -231,85 +233,6 @@ class ImagenesExpedientesController {
     }
   }
 
-  // ==========================
-// 🗑️ ELIMINAR IMAGEN (FTP + BD)
-// ==========================
-static async eliminarImagen(req, res) {
-  try {
-    const { imagenId } = req.params;
-
-    // Obtener la información de la imagen
-    const imagenInfo = await ImagenesExpedientesModel.obtenerImagenPorId(imagenId);
-    if (!imagenInfo.success || !imagenInfo.imagen) {
-      return res.status(404).json({
-        success: false,
-        message: 'Imagen no encontrada'
-      });
-    }
-
-    const expedienteId = imagenInfo.imagen.expediente_id;
-    const remotePath = `/public_html${imagenInfo.imagen.ruta_archivo}`; // Ruta completa en Hostinger
-
-    // ==========================
-    // 🔌 Conexión FTP para eliminar el archivo remoto
-    // ==========================
-    const client = new ftp.Client();
-    client.ftp.verbose = false;
-    try {
-      await client.access({
-        host: process.env.FTP_HOST,
-        user: process.env.FTP_USER,
-        password: process.env.FTP_PASS,
-        secure: false,
-      });
-
-      await client.remove(remotePath);
-      console.log(`🧹 Archivo eliminado del FTP: ${remotePath}`);
-      client.close();
-    } catch (ftpErr) {
-      console.error("⚠️ Error eliminando archivo del FTP:", ftpErr.message);
-      client.close();
-      // No detenemos el proceso si falla el FTP
-    }
-
-    // ==========================
-    // 🗑️ Eliminar registro en la base de datos
-    // ==========================
-    const result = await ImagenesExpedientesModel.eliminarImagen(imagenId);
-
-    if (result.success) {
-      // Verificar si quedan imágenes para este expediente
-      const imagenesRestantes = await ImagenesExpedientesModel.contarImagenesPorExpediente(expedienteId);
-      const tieneImagenes = imagenesRestantes.count > 0;
-
-      // Actualizar campo fotos
-      await updateFotosExpediente(expedienteId, tieneImagenes);
-
-      res.json({
-        success: true,
-        message: 'Imagen eliminada correctamente (FTP + BD)',
-        affectedRows: result.affectedRows,
-        tieneImagenes
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'Error al eliminar imagen en la base de datos',
-        error: result.error
-      });
-    }
-
-  } catch (error) {
-    console.error('Error en eliminarImagen:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor',
-      error: error.message
-    });
-  }
-}
-
-
   // Contar imágenes por expediente
   static async contarImagenesPorExpediente(req, res) {
     try {
@@ -409,10 +332,6 @@ static async eliminarImagen(req, res) {
     }
   }
 
-  // Servir imagen por ruta directa (alternativa) - TEMPORALMENTE DESHABILITADA
-  // static async servirImagenPorRuta(req, res) {
-  //   // Función comentada para evitar errores de ruta
-  // }
 }
 
-export { ImagenesExpedientesController, upload, subirAFtp };
+export { ImagenesExpedientesController, upload};

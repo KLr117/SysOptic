@@ -1,81 +1,70 @@
-import ImagenesOrdenesModel from '../models/imagenesOrdenesModel.js';
-import { updateImagenes } from '../models/OrdenTrabajoModel.js';
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
-import ftp from 'basic-ftp';
-import dotenv from 'dotenv';
+import ImagenesOrdenesModel from "../models/imagenesOrdenesModel.js";
+import { updateImagenes } from "../models/OrdenTrabajoModel.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import FormData from "form-data";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
 dotenv.config();
 
 let currentOrdenId = null;
-// Middleware para capturar orden_id antes de procesar el archivo
+
 export const setOrdenIdMiddleware = (req, res, next) => {
-  currentOrdenId = req.body?.orden_id || req.query?.orden_id || 'sinID';
+  currentOrdenId = req.body?.orden_id || req.query?.orden_id || "sinID";
   next();
 };
 
-
-// Configuración de multer para subir archivos
-// =====================================================
-// ⚙️ Configuración de Multer (local temporal)
-// =====================================================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'ordenes');
-    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-    cb(null, uploadsDir);
+    const tempDir = process.env.TEMP || "/tmp";
+    cb(null, tempDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `orden_${currentOrdenId}_${uniqueSuffix}${path.extname(file.originalname)}`);
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      `orden_${currentOrdenId}_${uniqueSuffix}${path.extname(
+        file.originalname
+      )}`
+    );
   },
 });
-
 
 export const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const extname = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
     const mimetype = allowedTypes.test(file.mimetype);
     if (mimetype && extname) return cb(null, true);
-    cb(new Error('Solo se permiten archivos de imagen (JPEG, JPG, PNG, GIF, WEBP)'));
+    cb(new Error("Solo se permiten imágenes (JPEG, JPG, PNG, GIF, WEBP)"));
   },
 });
 
-// ===============================
-// 🔧 Función auxiliar para subir al FTP
-// ===============================
-async function subirAFtp(localPath, remoteFileName, subcarpeta) {
-  const client = new ftp.Client();
-  client.ftp.verbose = false;
+// ==========================
+// 🔧 Subir imagen a Hostinger
+// ==========================
+async function subirAHostinger(localPath, subcarpeta) {
+  const form = new FormData();
+  form.append("folder", subcarpeta);
+  form.append("file", fs.createReadStream(localPath));
+  form.append("token", process.env.UPLOAD_TOKEN || "sysoptic_secret");
 
   try {
-    await client.access({
-      host: process.env.FTP_HOST,
-      user: process.env.FTP_USER,
-      password: process.env.FTP_PASS,
-      secure: process.env.NODE_ENV === 'production', // 🔐 solo usa TLS en producción
-      secureOptions: { rejectUnauthorized: false },
-    });
-
-    // 🧭 Determina carpeta FTP correcta
-    const remoteDir =
-      process.env.NODE_ENV === 'production'
-        ? `/public_html/uploads/${subcarpeta}` // Hostinger
-        : `/uploads/${subcarpeta}`; // local (FileZilla)
-
-    await client.ensureDir(remoteDir);
-    await client.uploadFrom(localPath, remoteFileName);
-
-    console.log(`✅ Imagen subida: ${remoteDir}/${remoteFileName}`);
-    client.close();
-    return true;
+    const response = await fetch(
+      "https://lightsteelblue-termite-871777.hostingersite.com/upload-handler.php",
+      { method: "POST", body: form }
+    );
+    const data = await response.json();
+    if (!data.success) throw new Error(data.message || "Error en subida");
+    return data.url;
   } catch (err) {
-    console.error('❌ Error al subir al FTP:', err.message);
-    client.close();
-    return false;
+    console.error("❌ Error al subir a Hostinger:", err.message);
+    return null;
   }
 }
 
@@ -85,44 +74,54 @@ class ImagenesOrdenesController {
   static async subirImagen(req, res) {
     try {
       const { orden_id } = req.body;
-      if (!orden_id) return res.status(400).json({ success: false, message: 'ID de orden es requerido' });
-      if (!req.file) return res.status(400).json({ success: false, message: 'No se proporcionó archivo' });
+      if (!orden_id)
+        return res
+          .status(400)
+          .json({ success: false, message: "ID de orden es requerido" });
+      if (!req.file)
+        return res
+          .status(400)
+          .json({ success: false, message: "No se proporcionó archivo" });
 
       const localPath = req.file.path;
-      const remoteFileName = req.file.filename;
-      const subidaExitosa = await subirAFtp(localPath, remoteFileName, 'ordenes');
 
-      if (!subidaExitosa) {
-        return res.status(500).json({ success: false, message: 'Error al subir imagen al servidor remoto' });
-      }
+      // 🔄 Subir al Hostinger
+      const publicUrl = await subirAHostinger(localPath, "ordenes");
+      if (!publicUrl)
+        return res.status(500).json({
+          success: false,
+          message: "Error al subir imagen a Hostinger",
+        });
 
-      // 💾 Guardar datos en BD
       const imagenData = {
         orden_id: parseInt(orden_id),
         nombre_archivo: req.file.originalname,
-        ruta_archivo: `/uploads/ordenes/${remoteFileName}`,
+        ruta_archivo: publicUrl,
       };
 
       const result = await ImagenesOrdenesModel.crearImagen(imagenData);
       if (result.success) {
         await updateImagenes(parseInt(orden_id), true);
-        // 🧹 Eliminar copia local temporal
-        if (fs.existsSync(localPath)) fs.unlinkSync(localPath);
-
+        fs.unlinkSync(localPath);
         return res.status(201).json({
           success: true,
-          message: 'Imagen subida exitosamente',
+          message: "Imagen subida exitosamente",
           imagen: { id: result.id, ...imagenData },
         });
       }
 
-      res.status(500).json({ success: false, message: 'Error al guardar imagen en la base de datos' });
+      res
+        .status(500)
+        .json({ success: false, message: "Error al guardar imagen en BD" });
     } catch (error) {
-      console.error('Error en subirImagen:', error);
-      res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
+      console.error("Error en subirImagen:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error interno del servidor",
+        error: error.message,
+      });
     }
   }
-
 
   // 📋 Obtener imágenes por orden
   static async obtenerImagenesPorOrden(req, res) {
@@ -164,48 +163,59 @@ class ImagenesOrdenesController {
     }
   }
 
-// 🗑️ Eliminar imagen del FTP y BD
-  static async eliminarImagen(req, res) {
-    try {
-      const { imagenId } = req.params;
-      const result = await ImagenesOrdenesModel.obtenerImagenPorId(imagenId);
-      if (!result.success || !result.imagen)
-        return res.status(404).json({ success: false, message: 'Imagen no encontrada' });
+// 🗑️ Eliminar imagen (solo BD y actualización lógica)
+static async eliminarImagen(req, res) {
+  try {
+    const { imagenId } = req.params;
 
-      const imagen = result.imagen;
-      const remotePath =
-        process.env.NODE_ENV === 'production'
-          ? `/public_html${imagen.ruta_archivo}`
-          : `${imagen.ruta_archivo}`;
+    // Obtener info de la imagen
+    const imagenInfo = await ImagenesOrdenesModel.obtenerImagenPorId(imagenId);
+    if (!imagenInfo.success) {
+      return res.status(404).json({
+        success: false,
+        message: "Imagen no encontrada",
+      });
+    }
 
-      const client = new ftp.Client();
-      client.ftp.verbose = false;
+    const ordenId = imagenInfo.imagen.orden_id;
+
+    // Eliminar registro en BD
+    const result = await ImagenesOrdenesModel.eliminarImagen(imagenId);
+
+    if (result.success) {
+      // Verificar si quedan imágenes
+      const restantes = await ImagenesOrdenesModel.contarImagenesPorOrden(ordenId);
+      const tieneImagenes = restantes.total > 0;
+
+      // Actualizar flag en la tabla ordenes
       try {
-        await client.access({
-          host: process.env.FTP_HOST,
-          user: process.env.FTP_USER,
-          password: process.env.FTP_PASS,
-          secure: process.env.NODE_ENV === 'production',
-          secureOptions: { rejectUnauthorized: false },
-        });
-        await client.remove(remotePath);
-        console.log(`🧹 Archivo eliminado del FTP: ${remotePath}`);
-        client.close();
-      } catch (ftpErr) {
-        console.error('⚠️ Error eliminando archivo del FTP:', ftpErr.message);
-        client.close();
+        await updateImagenes(ordenId, tieneImagenes);
+      } catch (updateErr) {
+        console.warn("⚠️ Error actualizando flag de imágenes:", updateErr.message);
       }
 
-      const deleteResult = await ImagenesOrdenesModel.eliminarImagen(imagenId);
-      if (deleteResult.success)
-        res.json({ success: true, message: 'Imagen eliminada correctamente (FTP + BD)' });
-      else
-        res.status(500).json({ success: false, message: 'Error al eliminar imagen en BD', error: deleteResult.error });
-    } catch (error) {
-      console.error('Error en eliminarImagen:', error);
-      res.status(500).json({ success: false, message: 'Error interno del servidor', error: error.message });
+      return res.json({
+        success: true,
+        message: "Imagen eliminada correctamente de la base de datos",
+        tieneImagenes,
+      });
     }
+
+    res.status(500).json({
+      success: false,
+      message: "Error al eliminar imagen en BD",
+      error: result.error,
+    });
+  } catch (error) {
+    console.error("Error en eliminarImagen:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: error.message,
+    });
   }
+}
+
   
   // Contar imágenes por orden
   static async contarImagenesPorOrden(req, res) {
