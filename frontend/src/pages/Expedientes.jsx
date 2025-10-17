@@ -1369,7 +1369,7 @@ export default function Expedientes() {
                       <td>
                         <select
                           className="acciones-select"
-                          defaultValue="Acciones"
+                          defaultValue="🔔"
                           onChange={(e) => {
                             const valor = e.target.value;
                             const estado = notificacionesEstado[exp.pk_id_expediente];
@@ -1388,10 +1388,10 @@ export default function Expedientes() {
                               handleDeleteNotificacion(estado.id, exp.pk_id_expediente);
                             }
 
-                            e.target.value = 'Acciones';
+                            e.target.value = '🔔';
                           }}
                         >
-                          <option disabled>Acciones</option>
+                          <option disabled>🔔</option>
                           {!notificacionesEstado[exp.pk_id_expediente]?.tieneNotificacion && (
                             <option value="Crear">Crear</option>
                           )}
