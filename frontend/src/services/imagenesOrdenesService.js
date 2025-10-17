@@ -22,8 +22,9 @@ export const obtenerImagenesPorOrden = async (ordenId) => {
   if (res.data.success && res.data.imagenes) {
     res.data.imagenes = res.data.imagenes.map((imagen) => ({
       ...imagen,
-      url: `${API_URL}/api/imagenes-ordenes/servir/${imagen.id}`,
-      urlPorRuta: `${API_URL}/api/imagenes-ordenes/servir-ruta/${encodeURIComponent(imagen.ruta_archivo)}`,
+      url: imagen.ruta_archivo?.startsWith('http')
+  ? imagen.ruta_archivo
+  : `${import.meta.env.VITE_ASSET_URL}${imagen.ruta_archivo}`,
     }));
   }
 

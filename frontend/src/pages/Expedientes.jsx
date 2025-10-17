@@ -851,9 +851,10 @@ export default function Expedientes() {
         // Convertir las imágenes de la BD al formato esperado por el formulario
         imagenesExistentes = imagenesResponse.imagenes.map(imagen => {
           // Usar la ruta directa del archivo en lugar del endpoint servir
-          const rutaDirecta = imagen.ruta_archivo.startsWith('/') 
-            ? `http://localhost:4000${imagen.ruta_archivo}`
-            : `http://localhost:4000/${imagen.ruta_archivo}`;
+          // Construir ruta correcta, compatible con local o producción
+          const rutaDirecta = imagen.ruta_archivo?.startsWith('http')
+            ? imagen.ruta_archivo
+            : `${import.meta.env.VITE_ASSET_URL}${imagen.ruta_archivo}`;
           
           return {
             id: imagen.id,
@@ -1299,7 +1300,7 @@ export default function Expedientes() {
                               fotosExpediente.map((foto, index) => (
                                 <div key={index} className="foto-tabla-container">
                                   <img 
-                                    src={foto} 
+                                    src={foto?.startsWith('http') ? foto : `${import.meta.env.VITE_ASSET_URL}${foto}`}
                                     alt={`Foto ${index + 1}`}
                                     title={`Foto ${index + 1} - ${exp.nombre} - Click para zoom`}
                                     className="imagen-miniatura"

@@ -164,8 +164,8 @@ const OrdenTrabajo = () => {
             imagenesAgrupadas[imagen.orden_id].push({
               id: imagen.id,
               nombre: imagen.nombre_archivo,
-              preview: imagen.url, // URL del servidor
-              url: imagen.url, // URL completa para el modal
+              preview: imagen.ruta_archivo, // URL del servidor
+              url: imagen.ruta_archivo, // URL completa para el modal
             });
           });
           setImagenesOrdenes(imagenesAgrupadas);

@@ -25,7 +25,7 @@ export const obtenerImagenesPorExpediente = async (expedienteId) => {
     res.data.imagenes = res.data.imagenes.map((imagen) => ({
       ...imagen,
       // URL para servir la imagen por ID
-      url: `${API_URL}/api/imagenes-expedientes/servir/${imagen.id}`,
+      url: imagen.ruta_archivo,
     }));
   }
 
