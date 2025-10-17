@@ -593,9 +593,9 @@ const OrdenTrabajo = () => {
           </label>
           <select
             id="sortSelect"
+            className="acciones-select"
             value={sortOption}
             onChange={(e) => handleSortChange(e.target.value)}
-            className="sort-combobox"
             style={{ width: '200px', fontSize: '12px' }}
             data-tooltip="Selecciona una ordenación rápida"
           >
@@ -714,10 +714,11 @@ const OrdenTrabajo = () => {
                     {orden.observaciones ? (
                       <div 
                         style={{
-                          backgroundColor: '#f8f9fa',
+                          backgroundColor: 'var(--color-bg-secondary)',
+                          color: 'var(--color-text)',
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          border: '1px solid #e9ecef',
+                          border: '1px solid var(--color-border)',
                           maxHeight: '60px',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
@@ -727,13 +728,13 @@ const OrdenTrabajo = () => {
                         }}
                         onClick={() => openObservacionesModal(orden.observaciones, orden)}
                         onMouseEnter={(e) => {
-                          e.target.style.backgroundColor = '#e9ecef';
-                          e.target.style.borderColor = '#007bff';
+                          e.target.style.backgroundColor = 'var(--color-bg)';
+                          e.target.style.borderColor = 'var(--color-primary)';
                           e.target.style.transform = 'scale(1.02)';
                         }}
                         onMouseLeave={(e) => {
-                          e.target.style.backgroundColor = '#f8f9fa';
-                          e.target.style.borderColor = '#e9ecef';
+                          e.target.style.backgroundColor = 'var(--color-bg-secondary)';
+                          e.target.style.borderColor = 'var(--color-border)';
                           e.target.style.transform = 'scale(1)';
                         }}
                         title="Hacer clic para ver observaciones completas"
@@ -770,7 +771,7 @@ const OrdenTrabajo = () => {
                               key={index}
                               src={imagen.preview}
                               alt={`Imagen ${index + 1}`}
-                              title={imagen.nombre}
+                              title="Hacer clic para ver imagen completa"
                               className="imagen-miniatura"
                               onClick={() => openImageModal(imagen, orden.pk_id_orden)}
                               style={{ cursor: 'pointer' }}
@@ -795,6 +796,7 @@ const OrdenTrabajo = () => {
 
                   <td>
                     <select
+                      className="acciones-select"
                       defaultValue="Acciones"
                       onChange={(e) => {
                         const accion = e.target.value;
@@ -807,7 +809,7 @@ const OrdenTrabajo = () => {
                       }}
                     >
                       <option disabled>Acciones</option>
-                      <option value="Ver">Ver</option>
+                      <option value="Ver">Visualizar</option>
                       <option value="Editar">Editar</option>
                       <option value="Eliminar">Eliminar</option>
                     </select>
@@ -816,13 +818,13 @@ const OrdenTrabajo = () => {
                   <td>
                     <select
                       className="acciones-select"
-                      defaultValue="Acciones"
+                      defaultValue="🔔"
                       onChange={(e) => {
                         handleNotificacionChange(orden, e.target.value);
-                        e.target.value = 'Acciones';
+                        e.target.value = '🔔';
                       }}
                     >
-                      <option disabled>Acciones</option>
+                      <option disabled>🔔</option>
                       {!notificacionesEstado[orden.pk_id_orden]?.tieneNotificacion && (
                         <option value="Crear">Crear</option>
                       )}
@@ -892,6 +894,7 @@ const OrdenTrabajo = () => {
           <label htmlFor="pageSize">Mostrar</label>
           <select
             id="pageSize"
+            className="acciones-select"
             value={pageSize}
             onChange={(e) => setPageSize(Number(e.target.value))}
           >
@@ -1022,8 +1025,9 @@ const OrdenTrabajo = () => {
             <div className="modal-body">
               <div style={{
                 padding: '16px',
-                backgroundColor: '#f8f9fa',
-                border: '1px solid #e9ecef',
+                backgroundColor: 'var(--color-bg-secondary)',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '6px',
                 whiteSpace: 'pre-wrap',
                 wordWrap: 'break-word',
