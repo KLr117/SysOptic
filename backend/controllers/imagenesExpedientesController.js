@@ -196,6 +196,23 @@ class ImagenesExpedientesController {
       
       // Eliminar la imagen
       const result = await ImagenesExpedientesModel.eliminarImagen(imagenId);
+
+      if (imagenInfo.imagen?.ruta_archivo) {
+        try {
+          const response = await fetch(process.env.HOSTINGER_UPLOAD_URL, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${process.env.UPLOAD_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ ruta: imagenInfo.imagen.ruta_archivo }),
+          });
+          const resultDelete = await response.json();
+          console.log("🗑️ Resultado eliminación archivo Hostinger:", resultDelete);
+        } catch (error) {
+          console.error("⚠️ No se pudo eliminar archivo físico:", error.message);
+        }
+      }
       
       if (result.success) {
         // Verificar si quedan imágenes para este expediente

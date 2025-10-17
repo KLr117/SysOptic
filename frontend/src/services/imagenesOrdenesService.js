@@ -60,7 +60,7 @@ export const contarImagenesPorOrden = async (ordenId) => {
 };
 
 // Función para comprimir imagen
-export const comprimirImagen = (file, maxWidth = 800, quality = 0.8) => {
+export const comprimirImagen = (file, maxWidth = 1080, quality = 0.85) => {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
