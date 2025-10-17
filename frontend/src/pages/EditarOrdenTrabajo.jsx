@@ -24,7 +24,8 @@ const EditarOrdenTrabajo = () => {
     fecha_entrega: '',
     total: '',
     adelanto: '',
-    saldo: ''
+    saldo: '',
+    observaciones: ''
   });
 
   const [loading, setLoading] = useState(true);
@@ -74,7 +75,8 @@ const EditarOrdenTrabajo = () => {
             fecha_entrega: formatDateForInput(orden.fecha_entrega),
             total: orden.total || '',
             adelanto: orden.adelanto || '',
-            saldo: orden.saldo || ''
+            saldo: orden.saldo || '',
+            observaciones: orden.observaciones || ''
           });
 
           // Cargar imágenes existentes
@@ -328,7 +330,8 @@ const EditarOrdenTrabajo = () => {
         fecha_entrega: formData.fecha_entrega,
         total: parseFloat(formData.total) || 0,
         adelanto: parseFloat(formData.adelanto) || 0,
-        saldo: parseFloat(formData.saldo) || 0
+        saldo: parseFloat(formData.saldo) || 0,
+        observaciones: formData.observaciones
       };
 
       const response = await updateOrden(id, orderData);
@@ -540,6 +543,45 @@ const EditarOrdenTrabajo = () => {
             className="bg-gray-300 text-gray-600 cursor-not-allowed"
             style={{ backgroundColor: '#d1d5db', color: '#4b5563' }}
             placeholder="0.00" 
+          />
+        </div>
+      </div>
+
+      {/* Campo de Observaciones */}
+      <div className="orden-observaciones" style={{ position: 'relative', zIndex: 5 }}>
+        <div className="orden-field observaciones-field" style={{ position: 'relative', zIndex: 6 }}>
+          <label>Observaciones</label>
+          <textarea 
+            name="observaciones"
+            value={formData.observaciones}
+            onChange={handleInputChange}
+            placeholder="Ingrese cualquier comentario o observación adicional..."
+            rows="4"
+            style={{
+              width: '100%',
+              padding: '8px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              resize: 'vertical',
+              minHeight: '80px',
+              position: 'relative',
+              zIndex: 10,
+              backgroundColor: 'white',
+              cursor: 'text',
+              pointerEvents: 'auto',
+              outline: 'none',
+              fontFamily: 'inherit',
+              fontSize: '14px',
+              lineHeight: '1.4'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = '#007bff';
+              e.target.style.boxShadow = '0 0 0 2px rgba(0, 123, 255, 0.25)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#ccc';
+              e.target.style.boxShadow = 'none';
+            }}
           />
         </div>
       </div>
