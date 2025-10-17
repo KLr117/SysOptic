@@ -14,6 +14,7 @@ export const getAllOrders = async () => {
       total,
       adelanto,
       saldo,
+      observaciones,
       imagenes
     FROM tbl_ordenes
     ORDER BY fecha_recepcion DESC
@@ -35,6 +36,7 @@ export const getOrderById = async (id) => {
       total,
       adelanto,
       saldo,
+      observaciones,
       imagenes
     FROM tbl_ordenes
     WHERE pk_id_orden = ?
@@ -54,6 +56,7 @@ export const createOrder = async (orderData) => {
     total,
     adelanto,
     saldo,
+    observaciones,
     imagenes
   } = orderData;
 
@@ -74,11 +77,11 @@ export const createOrder = async (orderData) => {
   console.log('🚀 Ejecutando query INSERT...');
   const [result] = await pool.query(`
     INSERT INTO tbl_ordenes 
-    (correlativo, paciente, direccion, correo, telefono, fecha_recepcion, fecha_entrega, total, adelanto, saldo, imagenes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (correlativo, paciente, direccion, correo, telefono, fecha_recepcion, fecha_entrega, total, adelanto, saldo, observaciones, imagenes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
     correlativo, paciente, direccion, correo, telefono, fecha_recepcion, fecha_entrega,
-    total, adelanto, saldo, tieneImagenes
+    total, adelanto, saldo, observaciones, tieneImagenes
   ]);
 
   console.log('✅ Query ejecutada exitosamente. ID insertado:', result.insertId);
@@ -107,18 +110,19 @@ export const updateOrder = async (id, orderData) => {
     fecha_entrega,
     total,
     adelanto,
-    saldo
+    saldo,
+    observaciones
   } = orderData;
 
   const [result] = await pool.query(`
     UPDATE tbl_ordenes 
     SET paciente = ?, direccion = ?, correo = ?, telefono = ?, 
         fecha_recepcion = ?, fecha_entrega = ?, total = ?, adelanto = ?, 
-        saldo = ?
+        saldo = ?, observaciones = ?
     WHERE pk_id_orden = ?
   `, [
     paciente, direccion, correo, telefono, fecha_recepcion, fecha_entrega,
-    total, adelanto, saldo, id
+    total, adelanto, saldo, observaciones, id
   ]);
 
   return result.affectedRows > 0;

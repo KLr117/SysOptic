@@ -35,6 +35,7 @@ const OrdenTrabajo = () => {
     'Total',
     'Adelanto',
     'Saldo',
+    'Observaciones',
     'Imágenes',
     'Acciones',
     'Notificación',
@@ -133,6 +134,10 @@ const OrdenTrabajo = () => {
   // Estado para modal de imagen
   const [modalImage, setModalImage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Estado para modal de observaciones
+  const [modalObservaciones, setModalObservaciones] = useState(null);
+  const [isModalObservacionesOpen, setIsModalObservacionesOpen] = useState(false);
 
   // Función para simular guardado de imágenes
   const guardarImagenesOrden = (ordenId, imagenes) => {
@@ -243,6 +248,21 @@ const OrdenTrabajo = () => {
   const closeImageModal = () => {
     setModalImage(null);
     setIsModalOpen(false);
+  };
+
+  // Funciones para modal de observaciones
+  const openObservacionesModal = (observaciones, orden) => {
+    setModalObservaciones({
+      texto: observaciones,
+      ordenId: orden.pk_id_orden,
+      correlativo: orden.correlativo
+    });
+    setIsModalObservacionesOpen(true);
+  };
+
+  const closeObservacionesModal = () => {
+    setModalObservaciones(null);
+    setIsModalObservacionesOpen(false);
   };
 
   const confirmarEliminacion = (id) => {
@@ -443,6 +463,11 @@ const OrdenTrabajo = () => {
         const busquedaTotal = (orden.total || '').toString().includes(filtro);
         const busquedaAdelanto = (orden.adelanto || '').toString().includes(filtro);
         const busquedaSaldo = (orden.saldo || '').toString().includes(filtro);
+        
+        // Búsqueda en observaciones
+        const busquedaObservaciones = normalizarTexto(orden.observaciones || '').includes(
+          normalizarTexto(filtro)
+        );
 
         return (
           busquedaPaciente ||
@@ -455,7 +480,8 @@ const OrdenTrabajo = () => {
           busquedaFechaEntrega ||
           busquedaTotal ||
           busquedaAdelanto ||
-          busquedaSaldo
+          busquedaSaldo ||
+          busquedaObservaciones
         );
       })
       .sort((a, b) => {
@@ -554,11 +580,11 @@ const OrdenTrabajo = () => {
 
         <input
           type="text"
-          placeholder="🔍 Buscar por paciente, teléfono, correo, fechas, totales..."
+          placeholder="🔍 Buscar por paciente, teléfono, correo, fechas, totales, observaciones..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="search-box"
-          data-tooltip="Filtra por paciente, teléfono, correo, fechas, totales"
+          data-tooltip="Filtra por paciente, teléfono, correo, fechas, totales, observaciones"
         />
 
         <div className="sort-container">
@@ -634,6 +660,7 @@ const OrdenTrabajo = () => {
               <th>Total</th>
               <th>Adelanto</th>
               <th>Saldo</th>
+              <th>Observaciones</th>
               <th>Imágenes</th>
               <th>Acciones</th>
               <th>Notificación</th>
@@ -676,6 +703,59 @@ const OrdenTrabajo = () => {
                   <td className="text-right">Q{parseFloat(orden.adelanto || 0).toFixed(2)}</td>
                   <td className="text-right font-semibold saldo-cell">
                     Q{parseFloat(orden.saldo || 0).toFixed(2)}
+                  </td>
+                  <td className="observaciones-cell" style={{
+                    maxWidth: '200px',
+                    wordWrap: 'break-word',
+                    whiteSpace: 'pre-wrap',
+                    fontSize: '12px',
+                    lineHeight: '1.3'
+                  }}>
+                    {orden.observaciones ? (
+                      <div 
+                        style={{
+                          backgroundColor: '#f8f9fa',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          border: '1px solid #e9ecef',
+                          maxHeight: '60px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          position: 'relative'
+                        }}
+                        onClick={() => openObservacionesModal(orden.observaciones, orden)}
+                        onMouseEnter={(e) => {
+                          e.target.style.backgroundColor = '#e9ecef';
+                          e.target.style.borderColor = '#007bff';
+                          e.target.style.transform = 'scale(1.02)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.backgroundColor = '#f8f9fa';
+                          e.target.style.borderColor = '#e9ecef';
+                          e.target.style.transform = 'scale(1)';
+                        }}
+                        title="Hacer clic para ver observaciones completas"
+                      >
+                        {orden.observaciones.length > 100 
+                          ? `${orden.observaciones.substring(0, 100)}...` 
+                          : orden.observaciones
+                        }
+                        <span style={{
+                          position: 'absolute',
+                          top: '2px',
+                          right: '4px',
+                          fontSize: '10px',
+                          color: '#007bff',
+                          fontWeight: 'bold'
+                        }}>
+                          👁️
+                        </span>
+                      </div>
+                    ) : (
+                      <span style={{ color: '#999', fontStyle: 'italic' }}>—</span>
+                    )}
                   </td>
 
                   <td>
@@ -916,6 +996,54 @@ const OrdenTrabajo = () => {
             : []
         }
       />
+
+      {/* Modal para visualizar observaciones */}
+      {isModalObservacionesOpen && modalObservaciones && (
+        <div className="modal" onClick={closeObservacionesModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">
+                <span className="modal-icon">📝</span>
+                Observaciones - Orden #{modalObservaciones.correlativo}
+              </h3>
+              <button 
+                onClick={closeObservacionesModal}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  color: '#666'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div style={{
+                padding: '16px',
+                backgroundColor: '#f8f9fa',
+                border: '1px solid #e9ecef',
+                borderRadius: '6px',
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                fontSize: '14px',
+                lineHeight: '1.6',
+                maxHeight: '400px',
+                overflowY: 'auto'
+              }}>
+                {modalObservaciones.texto}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button onClick={closeObservacionesModal} className="btn-primary">
+                <span className="btn-icon">✅</span>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal para visualizar notificación */}
       {modalVisible && notificacionSeleccionada && (

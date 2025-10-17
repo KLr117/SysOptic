@@ -283,3 +283,10 @@ SELECT * FROM tbl_imagenes_expedientes;
 
 ALTER TABLE tbl_expedientes 
 CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+-- ==============================================
+-- AGREGAR CAMPO OBSERVACIONES A TABLA ÓRDENES
+-- ==============================================
+ALTER TABLE tbl_ordenes 
+ADD COLUMN observaciones TEXT NULL AFTER saldo;

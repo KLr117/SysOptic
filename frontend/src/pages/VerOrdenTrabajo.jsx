@@ -164,6 +164,44 @@ const VerOrdenTrabajo = () => {
     </div>
   </div>
 
+  {/* Observaciones */}
+  {orden.observaciones && (
+    <div className="orden-observaciones" style={{ 
+      width: '100%', 
+      maxWidth: '100%',
+      marginBottom: '20px'
+    }}>
+      <div className="orden-field observaciones-field" style={{ 
+        width: '100%',
+        maxWidth: '100%'
+      }}>
+        <label style={{ 
+          display: 'block', 
+          marginBottom: '8px', 
+          fontWeight: 'bold',
+          fontSize: '16px'
+        }}>Observaciones</label>
+        <div className="observaciones-content" style={{
+          padding: '16px',
+          backgroundColor: '#f8f9fa',
+          border: '1px solid #e9ecef',
+          borderRadius: '6px',
+          whiteSpace: 'pre-wrap',
+          wordWrap: 'break-word',
+          minHeight: '80px',
+          maxHeight: '300px',
+          overflowY: 'auto',
+          fontSize: '14px',
+          lineHeight: '1.6',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
+          {orden.observaciones}
+        </div>
+      </div>
+    </div>
+  )}
+
 
   {/* Botón cerrar */}
   <div className="agregarorden-actions">
