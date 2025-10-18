@@ -151,19 +151,6 @@ const EditarOrdenTrabajo = () => {
   const handleImageUpload = async (files) => {
     const fileArray = Array.from(files);
     console.log('Archivos seleccionados para edición:', fileArray.length);
-    
-    if (fileArray.length > 3) {
-      setPopup({
-        isOpen: true,
-        title: 'Máximo 3 imágenes',
-        message: 'Solo puedes subir máximo 3 fotografías.',
-        type: 'warning',
-        showButtons: true,
-        confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
-      });
-      return;
-    }
 
     // Comprimir imágenes
     const compressedImages = [];
@@ -187,7 +174,7 @@ const EditarOrdenTrabajo = () => {
       }
     }
 
-    setNuevasImagenes(prev => [...prev, ...compressedImages].slice(0, 3));
+    setNuevasImagenes(prev => [...prev, ...compressedImages]);
   };
 
   // Función para manejar input de archivos
@@ -493,6 +480,7 @@ const EditarOrdenTrabajo = () => {
               name="fecha_recepcion"
               value={formData.fecha_recepcion}
               onChange={handleInputChange}
+              onFocus={(e) => e.target.showPicker()}
             />
           </div>
           <div className="orden-field">
@@ -502,6 +490,7 @@ const EditarOrdenTrabajo = () => {
               name="fecha_entrega"
               value={formData.fecha_entrega}
               onChange={handleInputChange}
+              onFocus={(e) => e.target.showPicker()}
             />
           </div>
         </div>
@@ -650,7 +639,7 @@ const EditarOrdenTrabajo = () => {
                 >
                   Seleccionar Imágenes
                 </button>
-                <p className="upload-hint">Máximo 3 imágenes adicionales</p>
+                <p className="upload-hint">Selecciona las imágenes que deseas agregar</p>
               </div>
             </label>
           </div>

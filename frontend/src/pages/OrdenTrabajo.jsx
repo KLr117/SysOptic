@@ -615,7 +615,7 @@ const OrdenTrabajo = () => {
       </div>
 
       {/* TABLA CON SCROLL HORIZONTAL */}
-      <div className="table-container">
+      <div className="table-container" id="table-container">
         <table className="table orden-table">
           <thead>
             <tr>
@@ -886,6 +886,7 @@ const OrdenTrabajo = () => {
           </tbody>
         </table>
       </div>
+
 
       {/* 📑 Paginación (copiado de notificaciones) */}
       <div className="pagination-container">
