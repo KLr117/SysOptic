@@ -17,7 +17,6 @@ import {
 } from '../services/expedientesService';
 import { 
   subirImagen, 
-  comprimirImagen,
   obtenerImagenesPorExpediente,
   eliminarImagen
 } from '../services/imagenesExpedientesService';
@@ -26,6 +25,34 @@ import {
   getNotificacionEspecificaById,
   deleteNotificacionEspecifica,
 } from '../services/notificacionesService';
+
+// 🔧 Función auxiliar para obtener URL completa (sin modificar services)
+// 🔧 Función auxiliar para obtener URL completa (sin modificar services)
+const getImageUrl = (path) => {
+  if (!path) return '';
+
+  // Si accidentalmente viene duplicado (ej: localhost + hostinger), limpiamos
+  path = path.replace(/https?:\/\/localhost:\d+/i, '').replace(/^\/+/, '');
+
+  // Verifica si ya es absoluta
+  const isAbsolute = /^https?:\/\//i.test(path);
+
+  console.log('🧩 getImageUrl input (limpio):', path);
+  console.log('   ↳ Es absoluta?', isAbsolute);
+  console.log('   ↳ VITE_API_URL:', import.meta.env.VITE_API_URL);
+  console.log('   ↳ VITE_ASSET_URL:', import.meta.env.VITE_ASSET_URL);
+
+  if (isAbsolute) {
+    console.log('✅ Usando URL completa:', path);
+    return path;
+  }
+
+  const baseUrl = import.meta.env.VITE_ASSET_URL?.replace(/\/$/, '') || '';
+  const finalUrl = `${baseUrl}/${path.replace(/^\//, '')}`;
+  console.log('🔗 URL final construida:', finalUrl);
+  return finalUrl;
+};
+
 
 export default function Expedientes() {
   const navigate = useNavigate();
@@ -664,9 +691,8 @@ export default function Expedientes() {
     }
     
     try {
-      // Comprimir imagen usando el nuevo servicio (600px, calidad 0.6)
-      const compressedBlob = await comprimirImagen(file, 600, 0.6);
-      const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
+      // Usar el archivo original sin comprimir (el servidor ya optimiza)
+      const compressedFile = file;
       
       // Crear objeto con archivo y preview para vista previa
       const imagenData = {
@@ -845,19 +871,17 @@ export default function Expedientes() {
       
       if (imagenesResponse.success && imagenesResponse.imagenes) {
         // Convertir las imágenes de la BD al formato esperado por el formulario
-        imagenesExistentes = imagenesResponse.imagenes.map(imagen => {
-          // Usar la ruta directa del archivo en lugar del endpoint servir
-          // Construir ruta correcta, compatible con local o producción
-          const rutaDirecta = imagen.ruta_archivo?.startsWith('http')
-            ? imagen.ruta_archivo
-            : `${import.meta.env.VITE_ASSET_URL}${imagen.ruta_archivo}`;
-          
+        imagenesExistentes = imagenesResponse.imagenes.map((imagen) => {
+          // 🧩 Limpiar posibles prefijos locales mal formados
+          const rutaLimpia = imagen.ruta_archivo?.replace(/https?:\/\/localhost:\d+/i, '').replace(/^\/+/, '');
+          const rutaDirecta = getImageUrl(rutaLimpia);
+
           return {
             id: imagen.id,
             nombre: imagen.nombre_archivo,
             preview: rutaDirecta,
             url: rutaDirecta,
-            esExistente: true // Marcar como imagen existente
+            esExistente: true,
           };
         });
         console.log('🖼️ Imágenes cargadas para edición:', imagenesExistentes);
@@ -1295,28 +1319,36 @@ export default function Expedientes() {
                             return fotosExpediente && fotosExpediente.length > 0 ? (
                               fotosExpediente.map((foto, index) => (
                                 <div key={index} className="foto-tabla-container">
-                                  <img 
-                                    src={foto?.startsWith('http') ? foto : `${import.meta.env.VITE_ASSET_URL}${foto}`}
+                                  {console.log('🖼️ Renderizando imagen de expediente:', foto)}
+                                    <img
+                                    src={getImageUrl(
+                                      typeof foto === 'string'
+                                        ? foto
+                                        : foto.ruta_archivo || foto.url || foto.preview || ''
+                                    )}
                                     alt={`Foto ${index + 1}`}
                                     title={`Foto ${index + 1} - ${exp.nombre} - Click para zoom`}
                                     className="imagen-miniatura"
-                                    onClick={() =>
+                                    onClick={() => {
+                                      const ruta = getImageUrl(
+                                        typeof foto === 'string'
+                                          ? foto
+                                          : foto.ruta_archivo || foto.url || foto.preview || ''
+                                      );
+                                      // 🧩 Asegurar siempre un formato uniforme al abrir el modal
                                       openZoomModal(
                                         {
-                                      url: foto,
-                                      preview: foto,
-                                          nombre: `Foto ${index + 1} - ${exp.nombre}`,
-                                          id: `${exp.pk_id_expediente}_${index}`,
+                                          ...foto,
+                                          url: ruta,
+                                          preview: ruta,
+                                          nombre: foto.nombre_archivo || foto.nombre || `Foto ${index + 1}`,
                                         },
                                         exp.pk_id_expediente
-                                      )
-                                    }
+                                      );
+                                    }}
                                     style={{ cursor: 'pointer' }}
                                     onError={(e) => {
-                                      // Ocultar la imagen que falló
                                       e.target.style.display = 'none';
-                                      
-                                      // Crear elemento de error solo si no existe ya
                                       if (!e.target.parentNode.querySelector('.error-placeholder')) {
                                         const errorSpan = document.createElement('span');
                                         errorSpan.className = 'error-placeholder';
@@ -1328,6 +1360,7 @@ export default function Expedientes() {
                                       }
                                     }}
                                   />
+                                  
                                   <button
                                     type="button"
                                     className="btn-eliminar-foto-tabla"
@@ -1694,7 +1727,7 @@ export default function Expedientes() {
                     </button>
                   </div>
               ))}
-            </div>
+              </div>
             )}
           </div>
 
@@ -2192,7 +2225,7 @@ export default function Expedientes() {
                 onWheel={handleWheelZoom}
               >
                 <img
-                  src={zoomImage.url || zoomImage.preview}
+                  src={getImageUrl(zoomImage.url || zoomImage.preview || zoomImage.ruta_archivo || '')}
                   alt={zoomImage.nombre || 'Imagen'}
                   className="zoom-image"
                   style={{

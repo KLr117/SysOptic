@@ -122,59 +122,18 @@ const EditarOrdenTrabajo = () => {
     navigate("/ordenes");
   };
 
-
-  // Función para comprimir imagen
-  const compressImage = (file, maxWidth = 800, quality = 0.8) => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      img.onload = () => {
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob(resolve, 'image/jpeg', quality);
-      };
-      
-      img.src = URL.createObjectURL(file);
-    });
-  };
-
   // Función para manejar subida de nuevas imágenes
   const handleImageUpload = async (files) => {
     const fileArray = Array.from(files);
     console.log('Archivos seleccionados para edición:', fileArray.length);
 
-    // Comprimir imágenes
-    const compressedImages = [];
-    for (const file of fileArray) {
-      try {
-        const compressedBlob = await compressImage(file);
-        const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
-        
-        compressedImages.push({
-          id: Date.now() + Math.random(),
-          file: compressedFile,
-          preview: URL.createObjectURL(compressedFile)
-        });
-      } catch (error) {
-        console.error('Error comprimiendo imagen:', error);
-        compressedImages.push({
-          id: Date.now() + Math.random(),
-          file: file,
-          preview: URL.createObjectURL(file)
-        });
-      }
-    }
+    const nuevas = fileArray.map((file) => ({
+      id: Date.now() + Math.random(),
+      file,
+      preview: URL.createObjectURL(file),
+    }));
 
-    setNuevasImagenes(prev => [...prev, ...compressedImages]);
+    setNuevasImagenes((prev) => [...prev, ...nuevas]);
   };
 
   // Función para manejar input de archivos
