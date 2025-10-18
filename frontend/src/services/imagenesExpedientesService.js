@@ -16,21 +16,39 @@ export const subirImagen = async (expedienteId, imagenFile) => {
   return res.data;
 };
 
-// Obtener imágenes de un expediente específico
+// ✅ Obtener imágenes de un expediente específico
 export const obtenerImagenesPorExpediente = async (expedienteId) => {
-  const res = await apiClient.get(`/api/imagenes-expedientes/expediente/${expedienteId}`);
+  try {
+    const res = await apiClient.get(`/api/imagenes-expedientes/expediente/${expedienteId}`);
+    console.log("📸 Imágenes recibidas del backend:", res.data.imagenes);
 
-  // Agregar URL completa para cada imagen para poder mostrarlas
-  if (res.data.success && res.data.imagenes) {
-    res.data.imagenes = res.data.imagenes.map((imagen) => ({
-      ...imagen,
-      // URL para servir la imagen por ID
-      url: imagen.ruta_archivo,
-    }));
+
+    if (res.data.success && res.data.imagenes) {
+      const BASE_URL = import.meta.env.VITE_ASSET_URL || '';
+
+      res.data.imagenes = res.data.imagenes.map((imagen) => {
+        let ruta = imagen.ruta_archivo || '';
+        console.log("➡️ Procesando imagen:", imagen.ruta_archivo);
+
+        // ✅ Solo anteponer dominio si NO es una URL completa
+        if (!/^https?:\/\//i.test(ruta)) {
+          ruta = `${BASE_URL.replace(/\/$/, '')}/${ruta.replace(/^\//, '')}`;
+        }
+
+        return {
+          ...imagen,
+          url: ruta,
+        };
+      });
+    }
+
+    return res.data;
+  } catch (error) {
+    console.error("❌ Error obteniendo imágenes del expediente:", error);
+    return { success: false, imagenes: [] };
   }
-
-  return res.data;
 };
+
 
 // Obtener todas las imágenes (para administración)
 export const obtenerTodasLasImagenes = async () => {

@@ -1,12 +1,53 @@
 <?php
 header('Content-Type: application/json');
+error_reporting(E_ERROR | E_PARSE);
 
 // === CONFIGURACIÓN ===
 $upload_base = __DIR__ . '/uploads/';
 $allowed_ext = ['jpg','jpeg','png','gif','webp'];
-$token_env = 'sysoptic_secret'; // debe coincidir con UPLOAD_TOKEN del .env
-$max_width = 1920; // tamaño máximo de redimensionado
-$jpeg_quality = 85; // calidad de compresión
+$token_env = 'b1017f1d-f000-4843-a8f9-902441573ad6'; // cambiar porque debe coincidir con UPLOAD_TOKEN del .env
+$max_width = 2560; // tamaño máximo de redimensionado
+$jpeg_quality = 95; // calidad de compresión
+
+if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+    $headers = getallheaders();
+    $authHeader = $headers['Authorization'] ?? '';
+    $expectedToken = 'Bearer ' . $token_env;
+
+    if (trim($authHeader) !== $expectedToken) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'Acceso no autorizado.']);
+        exit;
+    }
+
+    // Leer cuerpo JSON
+    $input = json_decode(file_get_contents("php://input"), true);
+    $ruta = $input['ruta'] ?? null;
+    if (!$ruta) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Ruta no especificada.']);
+        exit;
+    }
+
+    // Convertir URL completa en ruta real del servidor
+    $rutaLocal = str_replace('https://' . $_SERVER['HTTP_HOST'] . '/', __DIR__ . '/', $ruta);
+
+    if (!file_exists($rutaLocal)) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Archivo no encontrado.']);
+        exit;
+    }
+
+    if (unlink($rutaLocal)) {
+        echo json_encode(['success' => true, 'message' => 'Archivo eliminado correctamente.']);
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'No se pudo eliminar el archivo.']);
+    }
+
+    exit;
+}
+
 
 // === VALIDAR TOKEN ===
 if (!isset($_POST['token']) || $_POST['token'] !== $token_env) {
@@ -107,37 +148,6 @@ try {
   ]);
 } catch (Exception $e) {
   echo json_encode(['success' => false, 'message' => 'Error al procesar imagen: ' . $e->getMessage()]);
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
-    $headers = getallheaders();
-    $upload_token = $headers['Authorization'] ?? '';
-    $expected_token = getenv('UPLOAD_TOKEN') ?: 'TU_TOKEN_SEGURO_AQUI';
-
-    // Validar token
-    if ($upload_token !== 'Bearer ' . $expected_token) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Acceso no autorizado']);
-        exit;
-    }
-
-    // Leer cuerpo JSON
-    $input = json_decode(file_get_contents("php://input"), true);
-    $ruta = $input['ruta'] ?? null;
-
-    if (!$ruta || !file_exists($ruta)) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Archivo no encontrado']);
-        exit;
-    }
-
-    // Intentar eliminar archivo
-    if (unlink($ruta)) {
-        echo json_encode(['success' => true, 'message' => 'Archivo eliminado correctamente']);
-    } else {
-        http_response_code(500);
-        echo json_encode(['error' => 'No se pudo eliminar el archivo']);
-    }
 }
 
 ?>

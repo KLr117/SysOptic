@@ -7,7 +7,7 @@ import logo from "../assets/logo.jpg"; // Importamos el logo desde src
 import Titulo from "../components/Titulo"; // Importamos el nuevo componente Titulo
 import PopUp from "../components/PopUp";
 import { createOrden, getOrdenes, getLastCorrelativo } from "../services/ordenTrabajoService";
-import { subirImagen, comprimirImagen } from "../services/imagenesOrdenesService";
+import { subirImagen } from "../services/imagenesOrdenesService";
 
 
 const AgregarOrdenTrabajo = () => {
@@ -70,64 +70,19 @@ const AgregarOrdenTrabajo = () => {
     }
   };
 
-  // Función para comprimir imagen
-  const compressImage = (file, maxWidth = 800, quality = 0.8) => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      img.onload = () => {
-        // Calcular nuevas dimensiones manteniendo proporción
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        // Dibujar imagen redimensionada
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // Convertir a blob comprimido
-        canvas.toBlob(resolve, 'image/jpeg', quality);
-      };
-      
-      img.src = URL.createObjectURL(file);
-    });
-  };
-
   // Función para manejar subida de imágenes
   const handleImageUpload = async (files) => {
     const fileArray = Array.from(files);
     console.log('Archivos seleccionados:', fileArray.length);
 
-    // Comprimir imágenes
-    const compressedImages = [];
-    for (const file of fileArray) {
-      try {
-        const compressedBlob = await compressImage(file);
-        const compressedFile = new File([compressedBlob], file.name, { type: 'image/jpeg' });
-        
-        compressedImages.push({
-          id: Date.now() + Math.random(),
-          file: compressedFile,
-          preview: URL.createObjectURL(compressedFile)
-        });
-      } catch (error) {
-        console.error('Error comprimiendo imagen:', error);
-        // Si falla la compresión, usar imagen original
-        compressedImages.push({
-          id: Date.now() + Math.random(),
-          file: file,
-          preview: URL.createObjectURL(file)
-        });
-      }
-    }
+    // No comprimir: usar archivos originales
+    const nuevasImagenes = fileArray.map((file) => ({
+      id: Date.now() + Math.random(),
+      file,
+      preview: URL.createObjectURL(file),
+    }));
 
-    setImagenes(prev => [...prev, ...compressedImages]);
+    setImagenes((prev) => [...prev, ...nuevasImagenes]);
   };
 
   // Función para manejar input de archivos
@@ -434,12 +389,7 @@ const AgregarOrdenTrabajo = () => {
           try {
             // Subir cada imagen a la base de datos
             for (const imagen of imagenes) {
-              const imagenComprimida = await comprimirImagen(imagen.file);
-              const imagenFile = new File([imagenComprimida], imagen.file.name, {
-                type: 'image/jpeg'
-              });
-
-              await subirImagen(ordenId, imagenFile);
+              await subirImagen(ordenId, imagen.file);
               console.log(`Imagen ${imagen.file.name} subida exitosamente`);
             }
             
