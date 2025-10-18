@@ -615,7 +615,7 @@ const OrdenTrabajo = () => {
       </div>
 
       {/* TABLA CON SCROLL HORIZONTAL */}
-      <div className="table-container" id="table-container">
+      <div className="overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500" id="table-container">
         <table className="table orden-table">
           <thead>
             <tr>
