@@ -374,7 +374,7 @@ const Notificaciones = () => {
         <div className="loader">⏳ Cargando notificaciones...</div>
       ) : (
         <>
-          <div className="table-wrapper">
+          <div className="overflow-x-auto overflow-y-hidden scrollbar scrollbar-thumb-gray-500 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-600">
             <table className="table table-notificaciones">
               <thead>
                 <tr>

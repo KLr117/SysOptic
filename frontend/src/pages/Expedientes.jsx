@@ -1215,7 +1215,7 @@ export default function Expedientes() {
       {/* 🔹 Tabla de expedientes - SOLO SE MUESTRA CUANDO NO ESTÉ EN MODO FORMULARIO */}
       {!mostrarFormulario && (
         <>
-          <div className="table-scroll-container">
+          <div className="overflow-x-auto overflow-y-hidden scrollbar scrollbar-thumb-gray-500 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-600">
             <table className="table table-expedientes">
               <thead>
                 <tr>
