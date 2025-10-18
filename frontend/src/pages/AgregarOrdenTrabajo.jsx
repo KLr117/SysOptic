@@ -103,16 +103,6 @@ const AgregarOrdenTrabajo = () => {
   const handleImageUpload = async (files) => {
     const fileArray = Array.from(files);
     console.log('Archivos seleccionados:', fileArray.length);
-    
-    if (fileArray.length > 3) {
-      setPopup({
-        isOpen: true,
-        title: 'Máximo 3 imágenes',
-        message: 'Solo puedes subir máximo 3 fotografías.',
-        type: 'warning'
-      });
-      return;
-    }
 
     // Comprimir imágenes
     const compressedImages = [];
@@ -137,7 +127,7 @@ const AgregarOrdenTrabajo = () => {
       }
     }
 
-    setImagenes(prev => [...prev, ...compressedImages].slice(0, 3));
+    setImagenes(prev => [...prev, ...compressedImages]);
   };
 
   // Función para manejar input de archivos
@@ -520,7 +510,6 @@ const AgregarOrdenTrabajo = () => {
                   name="numero_orden"
                   value={formData.numero_orden}
                   onChange={handleInputChange}
-                  placeholder="Ej: 003"
                   className="numero-orden-input"
                   style={{
                     backgroundColor: 'var(--color-bg)',
@@ -619,6 +608,7 @@ const AgregarOrdenTrabajo = () => {
               name="fecha_recepcion"
               value={formData.fecha_recepcion}
               onChange={handleInputChange}
+              onFocus={(e) => e.target.showPicker()}
               required
             />
           </div>
@@ -629,6 +619,7 @@ const AgregarOrdenTrabajo = () => {
               name="fecha_entrega"
               value={formData.fecha_entrega}
               onChange={handleInputChange}
+              onFocus={(e) => e.target.showPicker()}
             />
           </div>
         </div>
@@ -724,7 +715,7 @@ const AgregarOrdenTrabajo = () => {
             onDrop={handleDrop}
           >
             <label htmlFor="fotografias" className="fotografias-label">
-              📷 Añadir 3 Imágenes
+              📷 Añadir Imágenes
             </label>
             <input
               id="fotografias"
@@ -735,7 +726,7 @@ const AgregarOrdenTrabajo = () => {
               style={{ display: 'none' }}
             />
             <p className="fotografias-help">
-              Máximo 3 imágenes • Arrastra y suelta o haz clic para seleccionar
+              Arrastra y suelta o haz clic para seleccionar imágenes
             </p>
             <p className="fotografias-compression">
               Las imágenes se comprimirán automáticamente para optimizar el tamaño
@@ -745,7 +736,7 @@ const AgregarOrdenTrabajo = () => {
           {/* Vista previa de imágenes */}
           {imagenes.length > 0 && (
             <div className="fotografias-preview">
-              <h4>Vista previa ({imagenes.length}/3):</h4>
+              <h4>Vista previa ({imagenes.length} imágenes):</h4>
               <div className="imagenes-grid">
                 {imagenes.map((imagen) => (
                   <div key={imagen.id} className="imagen-item">

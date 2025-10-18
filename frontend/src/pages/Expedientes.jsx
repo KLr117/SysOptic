@@ -647,10 +647,6 @@ export default function Expedientes() {
     const files = e.target.files;
     if (!files || !files[0]) return;
 
-    if (formData.foto.length >= 2) {
-      mostrarPopup('Solo se permiten máximo 2 fotos', 'warning');
-      return;
-    }
     
     const file = files[0];
     
@@ -1572,6 +1568,7 @@ export default function Expedientes() {
                 name="fecha_registro"
                 value={formData.fecha_registro}
                 onChange={handleInputChange}
+                onFocus={(e) => e.target.showPicker()}
                 required
               />
             </div>
@@ -1582,7 +1579,6 @@ export default function Expedientes() {
                 name="correlativo"
                 value={formData.correlativo}
                 onChange={handleInputChange}
-                placeholder="Ej: 003"
                 required
                 autoComplete="off"
                 inputMode="numeric"
@@ -1601,7 +1597,6 @@ export default function Expedientes() {
                 name="nombre"
                 value={formData.nombre}
                 onChange={handleInputChange}
-                placeholder="Ej: Juan Pérez"
                 required
               />
             </div>
@@ -1613,7 +1608,6 @@ export default function Expedientes() {
                 name="telefono"
                 value={formData.telefono}
                 onChange={handleInputChange}
-                placeholder="Ej: +(502) 9900-9999"
                 pattern="^\+?[0-9\s\-\(\)]+$"
                 title="Formato: +(502) 9900-9999"
                 required
@@ -1628,7 +1622,6 @@ export default function Expedientes() {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-               placeholder="Ej: usuario@email.com"
             />
           </div>
 
@@ -1639,7 +1632,6 @@ export default function Expedientes() {
               name="direccion"
               value={formData.direccion}
               onChange={handleInputChange}
-               placeholder="Ej: Calle Principal #123"
             />
           </div>
 
@@ -1659,9 +1651,8 @@ export default function Expedientes() {
                 type="button"
                 className="btn-subir-foto"
                 onClick={() => document.getElementById('photo-upload').click()}
-                disabled={formData.foto.length >= 2}
               >
-                📷 Subir Foto ({formData.foto.length}/2)
+                📷 Subir Foto ({formData.foto.length})
               </button>
             </div>
 
@@ -1669,7 +1660,7 @@ export default function Expedientes() {
             {formData.foto.length > 0 && (
               <div className="contador-fotos">
                 <span className="contador-texto">
-                  {formData.foto.length} foto{formData.foto.length !== 1 ? 's' : ''} de 2
+                  {formData.foto.length} foto{formData.foto.length !== 1 ? 's' : ''}
                 </span>
               </div>
             )}
