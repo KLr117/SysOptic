@@ -484,49 +484,52 @@ export default function Expedientes() {
     }
   };
 
-  // 🔹 Función para cargar sugerencias de correlativo basado en el último registro ingresado
+  // 🔹 Función para cargar sugerencias de correlativo basado en el correlativo máximo
   const cargarSugerenciasCorrelativo = async () => {
     try {
       setLoadingSugerencias(true);
 
-      // Obtener expedientes de la BD para encontrar el último registro ingresado
+      // Obtener expedientes de la BD para encontrar el correlativo máximo
       const data = await getExpedientes();
       console.log('🔍 Datos de expedientes recibidos:', data);
 
       if (Array.isArray(data) && data.length > 0) {
-        // Ordenar por ID descendente para obtener el último registro ingresado
-        const expedientesOrdenados = data.sort((a, b) => b.pk_id_expediente - a.pk_id_expediente);
-        const ultimoExpediente = expedientesOrdenados[0];
-        console.log('🔍 Último expediente ingresado (por ID):', ultimoExpediente);
+        // Encontrar el correlativo máximo (el más grande numéricamente)
+        let correlativoMaximo = 0;
+        let longitudCorrelativo = 1;
 
-        if (ultimoExpediente && ultimoExpediente.correlativo) {
-          // Extraer solo números del correlativo del último expediente
-          const numeros = ultimoExpediente.correlativo.replace(/\D/g, '');
-          const numeroCorrelativo = numeros ? parseInt(numeros) : 0;
+        data.forEach((expediente) => {
+          if (expediente.correlativo) {
+            // Extraer solo números del correlativo
+            const numeros = expediente.correlativo.replace(/\D/g, '');
+            const numeroCorrelativo = numeros ? parseInt(numeros) : 0;
 
-          if (numeroCorrelativo > 0) {
-            // El siguiente número será el correlativo del último + 1
-            const siguienteNumero = numeroCorrelativo + 1;
-
-            // Mantener el formato original del correlativo (con los mismos ceros)
-            const correlativoOriginal = ultimoExpediente.correlativo;
-            const siguienteFormateado = siguienteNumero
-              .toString()
-              .padStart(correlativoOriginal.length, '0');
-            console.log(
-              '🔍 Sugerencia generada:',
-              siguienteFormateado,
-              'basada en correlativo:',
-              numeroCorrelativo
-            );
-            setSugerenciasCorrelativo([siguienteFormateado]);
-          } else {
-            // Si no hay correlativo válido, empezar con 1
-            console.log('🔍 No hay correlativo válido, sugiriendo 1');
-            setSugerenciasCorrelativo(['1']);
+            // Si este correlativo es mayor al máximo actual, actualizarlo
+            if (numeroCorrelativo > correlativoMaximo) {
+              correlativoMaximo = numeroCorrelativo;
+              longitudCorrelativo = expediente.correlativo.length;
+            }
           }
+        });
+
+        console.log('🔍 Correlativo máximo encontrado:', correlativoMaximo);
+
+        if (correlativoMaximo > 0) {
+          // El siguiente número será el correlativo máximo + 1
+          const siguienteNumero = correlativoMaximo + 1;
+
+          // Mantener el formato con ceros a la izquierda
+          const siguienteFormateado = siguienteNumero.toString().padStart(longitudCorrelativo, '0');
+          console.log(
+            '🔍 Sugerencia generada:',
+            siguienteFormateado,
+            'basada en correlativo máximo:',
+            correlativoMaximo
+          );
+          setSugerenciasCorrelativo([siguienteFormateado]);
         } else {
-          // Si no hay correlativo, empezar con 1
+          // Si no hay correlativo válido, empezar con 1
+          console.log('🔍 No hay correlativo válido, sugiriendo 1');
           setSugerenciasCorrelativo(['1']);
         }
       } else {
