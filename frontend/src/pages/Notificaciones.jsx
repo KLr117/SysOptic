@@ -12,6 +12,7 @@ import '../styles/pagination-tooltips.css';
 import '../styles/tables.css';
 import ConfirmModal from '../components/ConfirmModal.jsx';
 import { FaAngleDoubleLeft, FaAngleLeft, FaAngleRight, FaAngleDoubleRight } from 'react-icons/fa';
+import { getNotificacionEspecificaById } from '../services/notificacionesService';
 
 const intervaloLabels = {
   despues_registro: 'Días después de la fecha de registro',
@@ -263,10 +264,22 @@ const Notificaciones = () => {
     }
   };
 
-  const handleView = (notificacion) => {
+const handleView = async (notificacion) => {
+  try {
+    // Pide el detalle enriquecido por id
+    const det = await getNotificacionEspecificaById(notificacion.pk_id_notificacion);
+
+    // Si el endpoint devuelve algo, úsalo; si no, cae al objeto original
+    setNotificacionSeleccionada(det?.pk_id_notificacion ? det : notificacion);
+    setModalVisible(true);
+  } catch (err) {
+    console.error('Error al cargar detalle:', err);
+    // Fallback: muestra al menos lo básico
     setNotificacionSeleccionada(notificacion);
     setModalVisible(true);
-  };
+  }
+};
+
 
   // Ordenar encabezado
   const toggleSort = (field) => {
@@ -542,6 +555,51 @@ const Notificaciones = () => {
             </div>
 
             <div className="modal-body">
+
+            {/* Información del Registro Asociado (Expediente u Orden) */}
+            {(notificacionSeleccionada.correlativo_expediente ||
+              notificacionSeleccionada.nombre_expediente ||
+              notificacionSeleccionada.correlativo_orden ||
+              notificacionSeleccionada.nombre_orden) && (
+              <div className="modal-section">
+                <h4 className="section-title">
+                  <span className="section-icon">📁</span>
+                  {notificacionSeleccionada.correlativo_expediente || notificacionSeleccionada.nombre_expediente
+                    ? 'Expediente Asociado'
+                    : 'Orden Asociada'}
+                </h4>
+                <div className="info-grid">
+                  {/* Datos del expediente */}
+                  {notificacionSeleccionada.correlativo_expediente && (
+                    <div className="info-item">
+                      <span className="info-label">Correlativo:</span>
+                      <span className="info-value">{notificacionSeleccionada.correlativo_expediente}</span>
+                    </div>
+                  )}
+                  {notificacionSeleccionada.nombre_expediente && (
+                    <div className="info-item">
+                      <span className="info-label">Nombre:</span>
+                      <span className="info-value">{notificacionSeleccionada.nombre_expediente}</span>
+                    </div>
+                  )}
+
+                  {/* Datos de la orden */}
+                  {notificacionSeleccionada.correlativo_orden && (
+                    <div className="info-item">
+                      <span className="info-label">No. Orden:</span>
+                      <span className="info-value">{notificacionSeleccionada.correlativo_orden}</span>
+                    </div>
+                  )}
+                  {notificacionSeleccionada.nombre_orden && (
+                    <div className="info-item">
+                      <span className="info-label">Paciente:</span>
+                      <span className="info-value">{notificacionSeleccionada.nombre_orden}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )} 
+
               {/* Sección: Información Básica */}
               <div className="modal-section">
                 <h4 className="section-title">
@@ -562,7 +620,7 @@ const Notificaciones = () => {
                     <span className="info-value">{notificacionSeleccionada.descripcion}</span>
                   </div>
                 </div>
-              </div>
+              </div>   
 
               {/* Sección: Configuración */}
               <div className="modal-section">

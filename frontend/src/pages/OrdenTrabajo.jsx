@@ -401,7 +401,14 @@ const OrdenTrabajo = () => {
     const estado = notificacionesEstado[orden.pk_id_orden];
 
     if (action === 'Crear' && !estado?.tieneNotificacion) {
-      navigate(`/notificaciones-especificas/orden/${orden.pk_id_orden}`);
+      navigate(`/notificaciones-especificas/orden/${orden.pk_id_orden}`, {
+        state: {
+          registro: {
+            correlativo: orden.correlativo,
+            paciente: orden.paciente,
+          },
+        },
+      });
     } else if (action === 'Mostrar' && estado?.tieneNotificacion) {
       handleViewNotificacion(orden);
     } else if (action === 'Editar' && estado?.tieneNotificacion) {
@@ -1073,6 +1080,31 @@ const OrdenTrabajo = () => {
             </div>
 
             <div className="modal-body">
+
+              {/* Información de la Orden Asociada */}
+              {(notificacionSeleccionada.correlativo_orden || notificacionSeleccionada.nombre_orden) && (
+                <div className="modal-section">
+                  <h4 className="section-title">
+                    <span className="section-icon">📋</span>
+                    Orden Asociada
+                  </h4>
+                  <div className="info-grid">
+                    {notificacionSeleccionada.correlativo_orden && (
+                      <div className="info-item">
+                        <span className="info-label">No. Orden:</span>
+                        <span className="info-value">{notificacionSeleccionada.correlativo_orden}</span>
+                      </div>
+                    )}
+                    {notificacionSeleccionada.nombre_orden && (
+                      <div className="info-item">
+                        <span className="info-label">Paciente:</span>
+                        <span className="info-value">{notificacionSeleccionada.nombre_orden}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}    
+
               {/* Información Básica */}
               <div className="modal-section">
                 <h4 className="section-title">

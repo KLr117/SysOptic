@@ -78,20 +78,49 @@ export const obtenerPorId = async (id) => {
     `
     SELECT 
       n.*,
+      c.nombre_categoria,
+      t.nombre_tipo,
+      m.nombre_modulo,
+      e.nombre_estado,
+
+      -- Datos del expediente vinculado
+      ex.correlativo AS correlativo_expediente,
+      ex.nombre AS nombre_expediente,
+
+      -- Datos de la orden vinculada
+      o.correlativo AS correlativo_orden,
+      o.paciente AS nombre_orden,
+
       (
         SELECT COUNT(*) 
         FROM tbl_notificaciones_enviadas ne 
         WHERE ne.fk_id_notificacion = n.pk_id_notificacion
       ) AS correos_enviados
+
     FROM tbl_notificaciones n
+    LEFT JOIN tbl_categorias_notificacion c 
+      ON n.fk_id_categoria_notificacion = c.pk_id_categoria_notificacion
+    LEFT JOIN tbl_tipos_notificacion t 
+      ON n.fk_id_tipo_notificacion = t.pk_id_tipo_notificacion
+    LEFT JOIN tbl_modulos_notificacion m 
+      ON n.fk_id_modulo_notificacion = m.pk_id_modulo_notificacion
+    LEFT JOIN tbl_estados_notificacion e 
+      ON n.fk_id_estado_notificacion = e.pk_id_estado_notificacion
+    LEFT JOIN tbl_expedientes ex 
+      ON ex.pk_id_expediente = n.fk_id_expediente
+    LEFT JOIN tbl_ordenes o 
+      ON o.pk_id_orden = n.fk_id_orden
+
     WHERE n.pk_id_notificacion = ?
-      AND (n.fk_id_expediente IS NOT NULL OR n.fk_id_orden IS NOT NULL)
     LIMIT 1
     `,
     [id]
   );
+
+  console.log("🧩 obtenerPorId resultado:", rows[0]);
   return rows[0] || null;
 };
+
 
 // ==============================
 // ✏️ EDITAR Y ELIMINAR
