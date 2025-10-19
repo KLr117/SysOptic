@@ -65,8 +65,8 @@ export const createUser = async (
 // 🧾 Registrar acción en bitácora
 export const addBitacoraEntry = async (userId, action, targetUserId = null) => {
   await pool.query(
-    `INSERT INTO tbl_bitacora (fk_id_user, accion, fk_id_user_objetivo)
-     VALUES (?, ?, ?)`,
+    `INSERT INTO tbl_bitacora (fk_id_user, accion, fk_id_user_objetivo, fecha_accion)
+     VALUES (?, ?, ?, NOW())`,
     [userId, action, targetUserId]
   );
 };
