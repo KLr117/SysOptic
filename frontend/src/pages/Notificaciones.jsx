@@ -36,6 +36,20 @@ const Notificaciones = () => {
   const [notificaciones, setNotificaciones] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Estado para fila seleccionada
+  const [filaSeleccionada, setFilaSeleccionada] = useState(null);
+
+  // Función para manejar la selección de filas
+  const handleSeleccionarFila = (notificacion) => {
+    if (filaSeleccionada === notificacion.pk_id_notificacion) {
+      // Si ya está seleccionada, deseleccionar
+      setFilaSeleccionada(null);
+    } else {
+      // Seleccionar nueva fila
+      setFilaSeleccionada(notificacion.pk_id_notificacion);
+    }
+  };
 
   const [search, setSearch] = useState('');
 
@@ -413,7 +427,14 @@ const handleView = async (notificacion) => {
 
               <tbody>
                 {currentData.map((n) => (
-                  <tr key={n.pk_id_notificacion}>
+                  <tr 
+                    key={n.pk_id_notificacion}
+                    className={filaSeleccionada === n.pk_id_notificacion ? 'fila-seleccionada' : ''}
+                    onClick={() => handleSeleccionarFila(n)}
+                    style={{ 
+                      cursor: 'pointer'
+                    }}
+                  >
                     <td>{n.pk_id_notificacion}</td>
                     <td>{n.titulo}</td>
                     <td>{n.descripcion}</td>

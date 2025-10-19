@@ -1919,3 +1919,52 @@ h2 {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
 }
+
+/* =============== ESTILOS PARA SELECCIÓN DE FILAS =============== */
+
+/* Fila seleccionada */
+.fila-seleccionada {
+  background: linear-gradient(135deg, 
+    rgba(137, 13, 15, 0.15) 0%, 
+    rgba(160, 26, 28, 0.1) 50%, 
+    rgba(137, 13, 15, 0.15) 100%
+  ) !important;
+  border: 2px solid #890D0F !important;
+  box-shadow: 
+    0 0 0 1px rgba(137, 13, 15, 0.3),
+    inset 0 2px 4px rgba(137, 13, 15, 0.2) !important;
+  position: relative;
+}
+
+/* Hover effect para filas no seleccionadas */
+.table-expedientes tbody tr:not(.fila-seleccionada):hover {
+  background: linear-gradient(135deg, 
+    rgba(137, 13, 15, 0.08) 0%, 
+    rgba(160, 26, 28, 0.05) 50%, 
+    rgba(137, 13, 15, 0.08) 100%
+  ) !important;
+  border: 1px solid rgba(137, 13, 15, 0.3) !important;
+}
+
+/* Indicador visual de fila seleccionada */
+.fila-seleccionada td {
+  font-weight: 600;
+  color: #890D0F;
+}
+
+/* Dark mode para fila seleccionada */
+.dark-mode .fila-seleccionada {
+  background: linear-gradient(135deg, 
+    rgba(137, 13, 15, 0.25) 0%, 
+    rgba(160, 26, 28, 0.2) 50%, 
+    rgba(137, 13, 15, 0.25) 100%
+  ) !important;
+  border: 2px solid #A01A1C !important;
+  box-shadow: 
+    0 0 0 1px rgba(160, 26, 28, 0.4),
+    inset 0 2px 4px rgba(160, 26, 28, 0.3) !important;
+}
+
+.dark-mode .fila-seleccionada td {
+  color: #A01A1C;
+}
