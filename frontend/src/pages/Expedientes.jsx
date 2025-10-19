@@ -440,17 +440,20 @@ export default function Expedientes() {
   };
 
 
-  // 🔹 Función para cargar sugerencias de correlativo basado en el último ID ingresado
+  // 🔹 Función para cargar sugerencias de correlativo basado en el último registro ingresado
   const cargarSugerenciasCorrelativo = async () => {
     try {
       setLoadingSugerencias(true);
       
-      // Obtener expedientes de la BD para encontrar el último por ID
+      // Obtener expedientes de la BD para encontrar el último registro ingresado
       const data = await getExpedientes();
+      console.log('🔍 Datos de expedientes recibidos:', data);
+      
       if (Array.isArray(data) && data.length > 0) {
-        // Ordenar por ID descendente para obtener el último ingresado
+        // Ordenar por ID descendente para obtener el último registro ingresado
         const expedientesOrdenados = data.sort((a, b) => b.pk_id_expediente - a.pk_id_expediente);
         const ultimoExpediente = expedientesOrdenados[0];
+        console.log('🔍 Último expediente ingresado (por ID):', ultimoExpediente);
         
         if (ultimoExpediente && ultimoExpediente.correlativo) {
           // Extraer solo números del correlativo del último expediente
@@ -464,9 +467,11 @@ export default function Expedientes() {
             // Mantener el formato original del correlativo (con los mismos ceros)
             const correlativoOriginal = ultimoExpediente.correlativo;
             const siguienteFormateado = siguienteNumero.toString().padStart(correlativoOriginal.length, '0');
+            console.log('🔍 Sugerencia generada:', siguienteFormateado, 'basada en correlativo:', numeroCorrelativo);
             setSugerenciasCorrelativo([siguienteFormateado]);
           } else {
             // Si no hay correlativo válido, empezar con 1
+            console.log('🔍 No hay correlativo válido, sugiriendo 1');
             setSugerenciasCorrelativo(['1']);
           }
         } else {
@@ -486,19 +491,6 @@ export default function Expedientes() {
     }
   };
 
-  // 🔹 Función para actualizar sugerencias basada en el último correlativo ingresado
-  const actualizarSugerenciasPorCorrelativo = (correlativoIngresado) => {
-    if (correlativoIngresado && correlativoIngresado.trim() !== '') {
-      const numeroIngresado = parseInt(correlativoIngresado.replace(/\D/g, ''));
-      if (!isNaN(numeroIngresado) && numeroIngresado > 0) {
-        const siguienteNumero = numeroIngresado + 1;
-        
-        // Mantener el formato original del correlativo ingresado
-        const siguienteFormateado = siguienteNumero.toString().padStart(correlativoIngresado.length, '0');
-        setSugerenciasCorrelativo([siguienteFormateado]);
-      }
-    }
-  };
 
   // 🔹 Cargar sugerencias al montar el componente
   useEffect(() => {
@@ -726,8 +718,7 @@ export default function Expedientes() {
       const soloNumeros = value.replace(/[^0-9]/g, '');
       setFormData({ ...formData, [name]: soloNumeros });
       
-      // Actualizar sugerencias basadas en lo que el usuario está escribiendo
-      actualizarSugerenciasPorCorrelativo(soloNumeros);
+      // NO actualizar sugerencias dinámicamente - mantener fijas basadas en el último registro de la BD
       return;
     }
      
