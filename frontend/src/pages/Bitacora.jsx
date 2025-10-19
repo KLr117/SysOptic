@@ -2,7 +2,35 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/bitacora.css';
 import Titulo from '../components/Titulo';
-import { apiClient } from "../services/api";
+import { apiClient } from '../services/api';
+
+// Función para formatear fecha y hora en zona horaria de Guatemala
+const formatearFechaHoraGuatemala = (fechaISO) => {
+  if (!fechaISO) return { fecha: '—', hora: '—' };
+
+  const fecha = new Date(fechaISO);
+
+  // Formatear fecha y hora en zona horaria de Guatemala (America/Guatemala)
+  const opcionesFecha = {
+    timeZone: 'America/Guatemala',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  };
+
+  const opcionesHora = {
+    timeZone: 'America/Guatemala',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false, // Formato 24 horas
+  };
+
+  const fechaFormateada = fecha.toLocaleDateString('es-GT', opcionesFecha);
+  const horaFormateada = fecha.toLocaleTimeString('es-GT', opcionesHora);
+
+  return { fecha: fechaFormateada, hora: horaFormateada };
+};
 
 export default function Bitacora() {
   const [bitacora, setBitacora] = useState([]);
@@ -11,22 +39,19 @@ export default function Bitacora() {
     fetchBitacora();
   }, []);
 
-
-
-const fetchBitacora = async () => {
-  try {
-    const { data } = await apiClient.get("/api/bitacora");
-    if (data.ok && Array.isArray(data.bitacora)) {
-      setBitacora(data.bitacora);
-    } else {
-      alert("Error al obtener la bitácora");
+  const fetchBitacora = async () => {
+    try {
+      const { data } = await apiClient.get('/api/bitacora');
+      if (data.ok && Array.isArray(data.bitacora)) {
+        setBitacora(data.bitacora);
+      } else {
+        alert('Error al obtener la bitácora');
+      }
+    } catch (error) {
+      console.error('Error al obtener bitácora:', error);
+      alert('Error de conexión o permisos insuficientes');
     }
-  } catch (error) {
-    console.error("Error al obtener bitácora:", error);
-    alert("Error de conexión o permisos insuficientes");
-  }
-};
-
+  };
 
   const closeBitacora = () => {
     window.history.back(); // vuelve a la página anterior (AdminPanel)
@@ -55,16 +80,19 @@ const fetchBitacora = async () => {
             </tr>
           </thead>
           <tbody>
-            {bitacora.map((b) => (
-              <tr key={b.pk_id_bitacora}>
-                <td>{b.pk_id_bitacora}</td>
-                <td>{b.usuario_accion || '—'}</td>
-                <td>{b.accion}</td>
-                <td>{b.usuario_objetivo || '—'}</td>
-                <td>{new Date(b.fecha_accion).toLocaleDateString()}</td>
-                <td>{new Date(b.fecha_accion).toLocaleTimeString()}</td>
-              </tr>
-            ))}
+            {bitacora.map((b) => {
+              const { fecha, hora } = formatearFechaHoraGuatemala(b.fecha_accion);
+              return (
+                <tr key={b.pk_id_bitacora}>
+                  <td>{b.pk_id_bitacora}</td>
+                  <td>{b.usuario_accion || '—'}</td>
+                  <td>{b.accion}</td>
+                  <td>{b.usuario_objetivo || '—'}</td>
+                  <td>{fecha}</td>
+                  <td>{hora}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
