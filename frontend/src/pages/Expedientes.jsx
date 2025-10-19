@@ -13,12 +13,12 @@ import {
   createExpediente,
   updateExpediente,
   deleteExpediente,
-  getLastCorrelativoExpediente
+  getLastCorrelativoExpediente,
 } from '../services/expedientesService';
-import { 
-  subirImagen, 
+import {
+  subirImagen,
   obtenerImagenesPorExpediente,
-  eliminarImagen
+  eliminarImagen,
 } from '../services/imagenesExpedientesService';
 import {
   getEstadoNotificacionExpediente,
@@ -53,7 +53,6 @@ const getImageUrl = (path) => {
   return finalUrl;
 };
 
-
 export default function Expedientes() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,7 +75,7 @@ export default function Expedientes() {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Estado para fila seleccionada
   const [filaSeleccionada, setFilaSeleccionada] = useState(null);
 
@@ -97,12 +96,12 @@ export default function Expedientes() {
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState('fecha_registro');
   const [sortDirection, setSortDirection] = useState('desc');
-  
+
   // Estados separados para ordenamiento por flechas
   const [arrowSortField, setArrowSortField] = useState(null);
   const [arrowSortDirection, setArrowSortDirection] = useState('asc');
   const [sortKey, setSortKey] = useState(0); // Clave para forzar re-renderizado
-  
+
   // Función para obtener el número de fila
   const getRowNumber = (index) => startIndex + index + 1;
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -132,7 +131,7 @@ export default function Expedientes() {
   const [showConfirmEliminarExpediente, setShowConfirmEliminarExpediente] = useState(false);
   const [expedienteToDelete, setExpedienteToDelete] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
-  
+
   // 🔹 Wrapper para setShowPopup con logging
   const setShowPopupWithLog = (value) => {
     console.log('🔍 setShowPopup llamado con:', value, 'desde:', new Error().stack.split('\n')[2]);
@@ -140,25 +139,25 @@ export default function Expedientes() {
   };
   const [popupMessage, setPopupMessage] = useState('');
   const [popupType, setPopupType] = useState('success'); // "success", "error", "warning", "info"
-  
-   // Estados para sugerencias de correlativo
+
+  // Estados para sugerencias de correlativo
   const [sugerenciasCorrelativo, setSugerenciasCorrelativo] = useState([]);
   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
-   
+
   // Estados para modal de zoom
-   const [showZoomModal, setShowZoomModal] = useState(false);
-   const [zoomImage, setZoomImage] = useState(null);
-   const [zoomLevel, setZoomLevel] = useState(1);
-   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+  const [showZoomModal, setShowZoomModal] = useState(false);
+  const [zoomImage, setZoomImage] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
 
   // Estados para modal de imágenes
-   const [isModalOpen, setIsModalOpen] = useState(false);
-   const [modalImage, setModalImage] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImage, setModalImage] = useState(null);
 
   // Estados para popup personalizado de eliminación de foto
   const [showConfirmEliminarFotoPopup, setShowConfirmEliminarFotoPopup] = useState(false);
   const [fotoToDeleteInfo, setFotoToDeleteInfo] = useState(null);
-  
+
   // Estado para forzar re-renderizado de imágenes
   const [imagenesUpdateKey, setImagenesUpdateKey] = useState(0);
 
@@ -171,19 +170,19 @@ export default function Expedientes() {
     title: '',
     message: '',
     onConfirm: null,
-    onCancel: null
+    onCancel: null,
   });
 
   // 🔹 Mostrar popup
   const mostrarPopup = (mensaje, tipo = 'success') => {
     console.log('🔔 Llamando mostrarPopup:', mensaje, 'tipo:', tipo);
-    
+
     // Si hay un popup de confirmación activo, no interferir
     if (showConfirmUpdate) {
       console.log('🔔 Popup de confirmación activo, ignorando mostrarPopup');
       return;
     }
-    
+
     setPopupMessage(mensaje);
     setPopupType(tipo);
     setShowPopupWithLog(true);
@@ -219,13 +218,18 @@ export default function Expedientes() {
   // 🔹 Confirmar actualización
   const confirmarActualizacion = async () => {
     console.log('✅ Usuario presionó ACEPTAR - Cerrando popup y volviendo a vista principal');
-    console.log('🔍 Estado ANTES de cerrar - showConfirmUpdate:', showConfirmUpdate, 'showPopup:', showPopup);
-    
+    console.log(
+      '🔍 Estado ANTES de cerrar - showConfirmUpdate:',
+      showConfirmUpdate,
+      'showPopup:',
+      showPopup
+    );
+
     // Cerrar popup
     setShowConfirmUpdate(false);
     setShowPopupWithLog(false);
     setPendingUpdate(null);
-    
+
     // Cerrar formulario de edición y volver a vista principal
     setEditando(false);
     setMostrarFormulario(false);
@@ -237,22 +241,27 @@ export default function Expedientes() {
       email: '',
       direccion: '',
       fecha: new Date().toISOString().split('T')[0],
-      foto: []
+      foto: [],
     });
-    
+
     console.log('✅ Popup cerrado y formulario reseteado - Volviendo a vista principal');
   };
 
   // 🔹 Cancelar actualización
   const cancelarActualizacion = () => {
     console.log('❌ Usuario presionó CANCELAR - Cerrando popup y volviendo a vista principal');
-    console.log('🔍 Estado ANTES de cerrar - showConfirmUpdate:', showConfirmUpdate, 'showPopup:', showPopup);
-    
+    console.log(
+      '🔍 Estado ANTES de cerrar - showConfirmUpdate:',
+      showConfirmUpdate,
+      'showPopup:',
+      showPopup
+    );
+
     // Cerrar popup
     setShowConfirmUpdate(false);
     setShowPopupWithLog(false);
     setPendingUpdate(null);
-    
+
     // Cerrar formulario de edición y volver a vista principal
     setEditando(false);
     setMostrarFormulario(false);
@@ -264,19 +273,19 @@ export default function Expedientes() {
       email: '',
       direccion: '',
       fecha: new Date().toISOString().split('T')[0],
-      foto: []
+      foto: [],
     });
-    
+
     console.log('❌ Popup cerrado y formulario reseteado - Volviendo a vista principal');
   };
 
-   // 🔹 Funciones para modal de imágenes
-   const openImageModal = (imagen, expedienteId) => {
-     setModalImage({
-       ...imagen,
+  // 🔹 Funciones para modal de imágenes
+  const openImageModal = (imagen, expedienteId) => {
+    setModalImage({
+      ...imagen,
       expedienteId: expedienteId,
-     });
-     setIsModalOpen(true);
+    });
+    setIsModalOpen(true);
   };
 
   const closeImageModal = () => {
@@ -290,10 +299,10 @@ export default function Expedientes() {
       const rect = e.currentTarget.getBoundingClientRect();
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
-      
+
       const deltaX = (e.clientX - rect.left - centerX) / centerX;
       const deltaY = (e.clientY - rect.top - centerY) / centerY;
-      
+
       setZoomPosition((prev) => ({
         x: Math.max(-50, Math.min(50, prev.x + deltaX * 10)),
         y: Math.max(-50, Math.min(50, prev.y + deltaY * 10)),
@@ -452,7 +461,8 @@ export default function Expedientes() {
       title: 'Confirmar eliminación',
       message: '¿Seguro que deseas eliminar esta notificación?',
       onConfirm: () => confirmDeleteNotificacion(idNotificacion, idExpediente),
-      onCancel: () => setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null })
+      onCancel: () =>
+        setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null }),
     });
   };
 
@@ -473,35 +483,41 @@ export default function Expedientes() {
     }
   };
 
-
   // 🔹 Función para cargar sugerencias de correlativo basado en el último registro ingresado
   const cargarSugerenciasCorrelativo = async () => {
     try {
       setLoadingSugerencias(true);
-      
+
       // Obtener expedientes de la BD para encontrar el último registro ingresado
       const data = await getExpedientes();
       console.log('🔍 Datos de expedientes recibidos:', data);
-      
+
       if (Array.isArray(data) && data.length > 0) {
         // Ordenar por ID descendente para obtener el último registro ingresado
         const expedientesOrdenados = data.sort((a, b) => b.pk_id_expediente - a.pk_id_expediente);
         const ultimoExpediente = expedientesOrdenados[0];
         console.log('🔍 Último expediente ingresado (por ID):', ultimoExpediente);
-        
+
         if (ultimoExpediente && ultimoExpediente.correlativo) {
           // Extraer solo números del correlativo del último expediente
           const numeros = ultimoExpediente.correlativo.replace(/\D/g, '');
           const numeroCorrelativo = numeros ? parseInt(numeros) : 0;
-          
+
           if (numeroCorrelativo > 0) {
             // El siguiente número será el correlativo del último + 1
             const siguienteNumero = numeroCorrelativo + 1;
-            
+
             // Mantener el formato original del correlativo (con los mismos ceros)
             const correlativoOriginal = ultimoExpediente.correlativo;
-            const siguienteFormateado = siguienteNumero.toString().padStart(correlativoOriginal.length, '0');
-            console.log('🔍 Sugerencia generada:', siguienteFormateado, 'basada en correlativo:', numeroCorrelativo);
+            const siguienteFormateado = siguienteNumero
+              .toString()
+              .padStart(correlativoOriginal.length, '0');
+            console.log(
+              '🔍 Sugerencia generada:',
+              siguienteFormateado,
+              'basada en correlativo:',
+              numeroCorrelativo
+            );
             setSugerenciasCorrelativo([siguienteFormateado]);
           } else {
             // Si no hay correlativo válido, empezar con 1
@@ -516,90 +532,88 @@ export default function Expedientes() {
         // Si no hay expedientes en la BD, empezar con 1
         setSugerenciasCorrelativo(['1']);
       }
-     } catch (error) {
-       console.error('Error cargando sugerencias de correlativo:', error);
-       // En caso de error, sugerir 1
-       setSugerenciasCorrelativo(['1']);
-     } finally {
+    } catch (error) {
+      console.error('Error cargando sugerencias de correlativo:', error);
+      // En caso de error, sugerir 1
+      setSugerenciasCorrelativo(['1']);
+    } finally {
       setLoadingSugerencias(false);
     }
   };
-
 
   // 🔹 Cargar sugerencias al montar el componente
   useEffect(() => {
     cargarSugerenciasCorrelativo();
   }, []); // Solo se ejecuta una vez al cargar el componente
 
-   // 🔹 Función para formatear fecha para input type="date" (YYYY-MM-DD)
-   const formatearFechaParaInput = (fecha) => {
-     if (!fecha) return '';
-     
-     try {
-       // Si viene en formato ISO completo
-       if (fecha.includes('T')) {
-         const fechaObj = new Date(fecha);
-         const año = fechaObj.getFullYear();
-         const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
-         const dia = fechaObj.getDate().toString().padStart(2, '0');
-         return `${año}-${mes}-${dia}`;
-       }
-       
-       // Si viene en formato DD/MM/YYYY
-       if (fecha.includes('/')) {
-         const [dia, mes, año] = fecha.split('/');
-         return `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
-       }
-       
-       // Si viene en formato YYYY-MM-DD, devolverlo tal como está
-       if (fecha.includes('-')) {
-         return fecha;
-       }
-       
-       // Si es una fecha válida, convertirla
-       const fechaObj = new Date(fecha);
-       if (!isNaN(fechaObj.getTime())) {
-         const año = fechaObj.getFullYear();
-         const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
-         const dia = fechaObj.getDate().toString().padStart(2, '0');
-         return `${año}-${mes}-${dia}`;
-       }
-       
-       return fecha; // Devolver fecha original si no se puede convertir
-     } catch (error) {
-       console.error('Error al formatear fecha para input:', error);
-       return fecha; // Devolver fecha original si hay error
-     }
-   };
-  
+  // 🔹 Función para formatear fecha para input type="date" (YYYY-MM-DD)
+  const formatearFechaParaInput = (fecha) => {
+    if (!fecha) return '';
 
-   // 🔹 Función para formatear fecha
-   const formatearFecha = (fecha) => {
-     if (!fecha) return '';
-     
-     try {
+    try {
       // Si viene en formato ISO completo
-       if (fecha.includes('T')) {
-         const fechaObj = new Date(fecha);
-         const dia = fechaObj.getDate().toString().padStart(2, '0');
-         const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
-         const año = fechaObj.getFullYear();
-         return `${dia}/${mes}/${año}`;
-       }
-       
-       // Si viene en formato YYYY-MM-DD
-       if (fecha.includes('-')) {
-         const [año, mes, dia] = fecha.split('-');
-         return `${dia}/${mes}/${año}`;
-       }
-       
-       // Si ya está en formato DD/MM/YYYY, devolverlo tal como está
-       return fecha;
-     } catch (error) {
-       console.error('Error al formatear fecha:', error);
-       return fecha; // Devolver fecha original si hay error
-     }
-   };
+      if (fecha.includes('T')) {
+        const fechaObj = new Date(fecha);
+        const año = fechaObj.getFullYear();
+        const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
+        const dia = fechaObj.getDate().toString().padStart(2, '0');
+        return `${año}-${mes}-${dia}`;
+      }
+
+      // Si viene en formato DD/MM/YYYY
+      if (fecha.includes('/')) {
+        const [dia, mes, año] = fecha.split('/');
+        return `${año}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+      }
+
+      // Si viene en formato YYYY-MM-DD, devolverlo tal como está
+      if (fecha.includes('-')) {
+        return fecha;
+      }
+
+      // Si es una fecha válida, convertirla
+      const fechaObj = new Date(fecha);
+      if (!isNaN(fechaObj.getTime())) {
+        const año = fechaObj.getFullYear();
+        const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
+        const dia = fechaObj.getDate().toString().padStart(2, '0');
+        return `${año}-${mes}-${dia}`;
+      }
+
+      return fecha; // Devolver fecha original si no se puede convertir
+    } catch (error) {
+      console.error('Error al formatear fecha para input:', error);
+      return fecha; // Devolver fecha original si hay error
+    }
+  };
+
+  // 🔹 Función para formatear fecha
+  const formatearFecha = (fecha) => {
+    if (!fecha) return '';
+
+    try {
+      // Si viene en formato ISO completo
+      if (fecha.includes('T')) {
+        const fechaObj = new Date(fecha);
+        const dia = fechaObj.getDate().toString().padStart(2, '0');
+        const mes = (fechaObj.getMonth() + 1).toString().padStart(2, '0');
+        const año = fechaObj.getFullYear();
+        return `${dia}/${mes}/${año}`;
+      }
+
+      // Si viene en formato YYYY-MM-DD
+      if (fecha.includes('-')) {
+        const [año, mes, dia] = fecha.split('-');
+        return `${dia}/${mes}/${año}`;
+      }
+
+      // Si ya está en formato DD/MM/YYYY, devolverlo tal como está
+      return fecha;
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      return fecha; // Devolver fecha original si hay error
+    }
+  };
   // 🔹 Manejo de formulario - Función para eliminar una foto específica
   const eliminarFoto = (index) => {
     // Guardar el índice de la foto a eliminar
@@ -612,7 +626,7 @@ export default function Expedientes() {
   const confirmarEliminarFoto = async () => {
     if (fotoIndexToDelete !== null) {
       const imagenAEliminar = formData.foto[fotoIndexToDelete];
-      
+
       // Si es una imagen existente (tiene ID de la base de datos), eliminarla de la BD
       if (imagenAEliminar && imagenAEliminar.id && imagenAEliminar.esExistente) {
         try {
@@ -625,13 +639,13 @@ export default function Expedientes() {
           return;
         }
       }
-      
+
       // Eliminar la imagen del formulario local
       setFormData((prev) => ({
         ...prev,
         foto: prev.foto.filter((_, i) => i !== fotoIndexToDelete),
       }));
-      
+
       mostrarPopup('Foto eliminada correctamente', 'success');
       // Desactivar el mensaje de subir otra foto
       setFotoMensaje(false);
@@ -645,9 +659,9 @@ export default function Expedientes() {
     // Obtener información del expediente y la foto
     const expediente = expedientes.find((exp) => exp.pk_id_expediente === expedienteId);
     if (expediente && expediente.foto && expediente.foto.length > fotoIndex) {
-      setFotoToDeleteInfo({ 
-        expedienteId, 
-        fotoIndex, 
+      setFotoToDeleteInfo({
+        expedienteId,
+        fotoIndex,
         expedienteNombre: expediente.nombre,
         fotoNumero: fotoIndex + 1,
       });
@@ -659,30 +673,34 @@ export default function Expedientes() {
   const confirmarEliminarFotoTabla = async () => {
     if (fotoToDeleteInfo) {
       const { expedienteId, fotoIndex } = fotoToDeleteInfo;
-      
+
       try {
         // Obtener el expediente actual
         const expediente = expedientes.find((exp) => exp.pk_id_expediente === expedienteId);
         if (expediente && expediente.foto && expediente.foto[fotoIndex]) {
           // Obtener las imágenes del expediente desde la base de datos
           const imagenesResponse = await obtenerImagenesPorExpediente(expedienteId);
-          if (imagenesResponse.success && imagenesResponse.imagenes && imagenesResponse.imagenes[fotoIndex]) {
+          if (
+            imagenesResponse.success &&
+            imagenesResponse.imagenes &&
+            imagenesResponse.imagenes[fotoIndex]
+          ) {
             const imagenId = imagenesResponse.imagenes[fotoIndex].id;
-            
+
             // Eliminar la imagen usando el servicio específico
             await eliminarImagen(imagenId);
-            
+
             // Actualizar el estado local
             const nuevasFotos = expediente.foto.filter((_, i) => i !== fotoIndex);
             setExpedientes((prev) =>
               prev.map((exp) =>
-              exp.pk_id_expediente === expedienteId 
-                ? { ...exp, foto: nuevasFotos, imagenes: nuevasFotos.length > 0 }
-                : exp
+                exp.pk_id_expediente === expedienteId
+                  ? { ...exp, foto: nuevasFotos, imagenes: nuevasFotos.length > 0 }
+                  : exp
               )
             );
           }
-          
+
           mostrarPopup('Foto eliminada correctamente', 'success');
         }
       } catch (error) {
@@ -690,7 +708,7 @@ export default function Expedientes() {
         mostrarPopup('Error al eliminar la foto', 'error');
       }
     }
-    
+
     setShowConfirmEliminarFotoPopup(false);
     setFotoToDeleteInfo(null);
   };
@@ -700,37 +718,36 @@ export default function Expedientes() {
     const files = e.target.files;
     if (!files || !files[0]) return;
 
-    
     const file = files[0];
-    
+
     // Verificar tipo de archivo
     if (!file.type.startsWith('image/')) {
       mostrarPopup('Solo se permiten archivos de imagen', 'error');
       return;
     }
-    
+
     // Verificar tamaño original
     if (file.size > 5 * 1024 * 1024) {
       // 5MB
       mostrarPopup('El archivo es demasiado grande. Máximo 5MB', 'error');
       return;
     }
-    
+
     try {
       // Usar el archivo original sin comprimir (el servidor ya optimiza)
       const compressedFile = file;
-      
+
       // Crear objeto con archivo y preview para vista previa
       const imagenData = {
         id: Date.now() + Math.random(),
         file: compressedFile,
-        preview: URL.createObjectURL(compressedFile) // URL para vista previa local
+        preview: URL.createObjectURL(compressedFile), // URL para vista previa local
       };
 
       // Agregar a la lista de fotos
       setFormData((prev) => ({
         ...prev,
-        foto: [...prev.foto, imagenData]
+        foto: [...prev.foto, imagenData],
       }));
 
       mostrarPopup('Imagen agregada correctamente', 'success');
@@ -745,34 +762,34 @@ export default function Expedientes() {
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-    
+
     // Validación especial para el campo correlativo - solo números
     if (name === 'correlativo') {
       // Permitir solo números
       const soloNumeros = value.replace(/[^0-9]/g, '');
       setFormData({ ...formData, [name]: soloNumeros });
-      
+
       // NO actualizar sugerencias dinámicamente - mantener fijas basadas en el último registro de la BD
       return;
     }
-     
-     // Validación especial para el campo nombre - solo letras y espacios
+
+    // Validación especial para el campo nombre - solo letras y espacios
     if (name === 'nombre') {
-       // Permitir solo letras, espacios y acentos
-       const soloLetras = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
-       setFormData({ ...formData, [name]: soloLetras });
-       return;
-     }
-     
-     // Validación especial para el campo teléfono - formato internacional
+      // Permitir solo letras, espacios y acentos
+      const soloLetras = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+      setFormData({ ...formData, [name]: soloLetras });
+      return;
+    }
+
+    // Validación especial para el campo teléfono - formato internacional
     if (name === 'telefono') {
-       // Permitir números, +, (), espacios y guiones
-       const telefonoFiltrado = value.replace(/[^0-9+\-() ]/g, '');
-       setFormData({ ...formData, [name]: telefonoFiltrado });
-       return;
-     }
-    
-     setFormData({ ...formData, [name]: value });
+      // Permitir números, +, (), espacios y guiones
+      const telefonoFiltrado = value.replace(/[^0-9+\-() ]/g, '');
+      setFormData({ ...formData, [name]: telefonoFiltrado });
+      return;
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   useEffect(() => {
@@ -783,21 +800,21 @@ export default function Expedientes() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       if (editando) {
         // Actualizar expediente directamente sin popup de confirmación
         console.log('🔄 Actualizando expediente directamente...');
-        
+
         // Preparar datos para actualización (sin fotos en el payload)
         const expedienteData = { ...formData };
         delete expedienteData.foto;
-        
+
         // Actualizar expediente
         await updateExpediente(expedienteId, expedienteData);
-        
+
         // Subir nuevas imágenes si las hay
-        const nuevasImagenes = formData.foto.filter(imagen => imagen.file && !imagen.esExistente);
+        const nuevasImagenes = formData.foto.filter((imagen) => imagen.file && !imagen.esExistente);
         if (nuevasImagenes.length > 0) {
           console.log('📸 Subiendo', nuevasImagenes.length, 'nuevas imágenes...');
           for (const imagen of nuevasImagenes) {
@@ -805,7 +822,7 @@ export default function Expedientes() {
           }
           console.log('📸 Imágenes subidas correctamente');
         }
-        
+
         // Cerrar formulario y volver a vista principal
         setEditando(false);
         setMostrarFormulario(false);
@@ -817,25 +834,24 @@ export default function Expedientes() {
           email: '',
           direccion: '',
           fecha: new Date().toISOString().split('T')[0],
-          foto: []
+          foto: [],
         });
-        
+
         // Recargar lista de expedientes
         const expedientesActualizados = await getExpedientes();
         setExpedientes(expedientesActualizados);
-        
+
         console.log('✅ Expediente actualizado correctamente');
         return;
-    } else {
+      } else {
         // Crear nuevo expediente (sin fotos en el payload)
         const expedienteData = { ...formData };
-        
+
         // Remover el campo foto del objeto principal (no se envía en el payload)
         delete expedienteData.foto;
-        
-        
+
         const newExp = await createExpediente(expedienteData);
-        
+
         // Subir imágenes por separado si existen
         let imagenesUrls = [];
         if (formData.foto && formData.foto.length > 0) {
@@ -849,14 +865,14 @@ export default function Expedientes() {
             // Continuar aunque falle la subida de imágenes
           }
         }
-        
+
         // Recargar expedientes para obtener las imágenes actualizadas
         const expedientesActualizados = await getExpedientes();
         setExpedientes(expedientesActualizados);
-        
+
         // Actualizar sugerencias de correlativo después de crear expediente
         await cargarSugerenciasCorrelativo();
-        
+
         mostrarPopup('Expediente guardado correctamente', 'success');
       }
       setFormData({
@@ -873,32 +889,33 @@ export default function Expedientes() {
       console.error('Error completo:', err);
       console.error('Error response:', err.response);
       console.error('Error response data:', err.response?.data);
-      
+
       // Mostrar mensaje de error específico del backend
-      const errorMessage = err.response?.data?.message || 
-                          err.response?.data?.error || 
-                          'Error al guardar expediente';
-      
+      const errorMessage =
+        err.response?.data?.message || err.response?.data?.error || 'Error al guardar expediente';
+
       mostrarPopup(errorMessage, 'error');
     }
   };
 
   const handleEditar = async (exp) => {
     const fechaFormateada = formatearFechaParaInput(exp.fecha_registro);
-    
+
     // Almacenar el ID del expediente que se está editando
     setExpedienteId(exp.pk_id_expediente);
-    
+
     try {
       // Cargar imágenes existentes desde la base de datos
       const imagenesResponse = await obtenerImagenesPorExpediente(exp.pk_id_expediente);
       let imagenesExistentes = [];
-      
+
       if (imagenesResponse.success && imagenesResponse.imagenes) {
         // Convertir las imágenes de la BD al formato esperado por el formulario
         imagenesExistentes = imagenesResponse.imagenes.map((imagen) => {
           // 🧩 Limpiar posibles prefijos locales mal formados
-          const rutaLimpia = imagen.ruta_archivo?.replace(/https?:\/\/localhost:\d+/i, '').replace(/^\/+/, '');
+          const rutaLimpia = imagen.ruta_archivo
+            ?.replace(/https?:\/\/localhost:\d+/i, '')
+            .replace(/^\/+/, '');
           const rutaDirecta = getImageUrl(rutaLimpia);
 
           return {
@@ -911,7 +928,7 @@ export default function Expedientes() {
         });
         console.log('🖼️ Imágenes cargadas para edición:', imagenesExistentes);
       }
-      
+
       setFormData({
         correlativo: exp.correlativo,
         nombre: exp.nombre,
@@ -950,17 +967,15 @@ export default function Expedientes() {
   const limpiarFotosDelCache = (expedienteId) => {
     try {
       // Limpiar cualquier referencia a fotos en el estado local
-      setExpedientes(prev => 
-        prev.map(exp => 
-          exp.pk_id_expediente === expedienteId 
-            ? { ...exp, foto: [], imagenes: false }
-            : exp
+      setExpedientes((prev) =>
+        prev.map((exp) =>
+          exp.pk_id_expediente === expedienteId ? { ...exp, foto: [], imagenes: false } : exp
         )
       );
-      
+
       // Limpiar el key de actualización de imágenes para forzar re-render
-      setImagenesUpdateKey(prev => prev + 1);
-      
+      setImagenesUpdateKey((prev) => prev + 1);
+
       console.log('🧹 Fotos del cache limpiadas para expediente:', expedienteId);
     } catch (error) {
       console.error('Error limpiando fotos del cache:', error);
@@ -971,10 +986,10 @@ export default function Expedientes() {
     if (expedienteToDelete) {
       try {
         await deleteExpediente(expedienteToDelete);
-        
+
         // Limpiar fotos del cache local
         limpiarFotosDelCache(expedienteToDelete);
-        
+
         setExpedientes(expedientes.filter((exp) => exp.pk_id_expediente !== expedienteToDelete));
         mostrarPopup('Expediente eliminado correctamente', 'success');
       } catch (err) {
@@ -1000,21 +1015,21 @@ export default function Expedientes() {
     setMostrarFormulario(false);
   };
 
-    // Estados para PopUp
-    const [popup, setPopup] = useState({
-      isOpen: false,
-      title: '',
-      message: '',
+  // Estados para PopUp
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
     type: 'success',
-    });
+  });
 
   // 🔹 Filtrado y ordenamiento con useMemo
   const filtro = search.trim().toLowerCase();
-  
+
   const expedientesFiltrados = useMemo(() => {
     // Validar que expedientes sea un array antes de usar spread operator
     const expedientesArray = Array.isArray(expedientes) ? [...expedientes] : [];
-    
+
     const filtrados = expedientesArray.filter((exp) => {
       const match =
         !filtro ||
@@ -1029,18 +1044,20 @@ export default function Expedientes() {
         // Búsqueda por Email
         (exp.email || '').toLowerCase().includes(filtro) ||
         // Búsqueda por Fecha de Registro (formato DD/MM/YYYY)
-        (exp.fecha_registro ? formatearFecha(exp.fecha_registro).toLowerCase() : '').includes(filtro) ||
+        (exp.fecha_registro ? formatearFecha(exp.fecha_registro).toLowerCase() : '').includes(
+          filtro
+        ) ||
         // Búsqueda por ID
         (exp.pk_id_expediente || '').toString().toLowerCase().includes(filtro);
-      
+
       return match;
     });
-    
+
     return filtrados.sort((a, b) => {
       // Determinar qué ordenamiento usar (flechas tienen prioridad)
       const currentSortField = arrowSortField !== null ? arrowSortField : sortField;
       const currentSortDirection = arrowSortField !== null ? arrowSortDirection : sortDirection;
-      
+
       // Ordenamiento por ID (columna #)
       if (currentSortField === 'row_number') {
         // Para la columna #, ordenamos por ID de la base de datos
@@ -1048,51 +1065,53 @@ export default function Expedientes() {
         const idB = parseInt(b.pk_id_expediente) || 0;
         return currentSortDirection === 'asc' ? idA - idB : idB - idA;
       }
-      
+
       // Ordenamiento por Correlativo
-          if (currentSortField === 'correlativo') {
+      if (currentSortField === 'correlativo') {
         // Convertir a número, manejar casos donde correlativo puede ser string o número
         const correlativoA = Number(a.correlativo) || 0;
         const correlativoB = Number(b.correlativo) || 0;
-        
+
         // Si ambos son números válidos, ordenar numéricamente
         if (!isNaN(correlativoA) && !isNaN(correlativoB)) {
-          return currentSortDirection === 'asc' ? correlativoA - correlativoB : correlativoB - correlativoA;
+          return currentSortDirection === 'asc'
+            ? correlativoA - correlativoB
+            : correlativoB - correlativoA;
         }
-        
+
         // Si no son números válidos, ordenar alfabéticamente
         const strA = String(a.correlativo || '');
         const strB = String(b.correlativo || '');
         return currentSortDirection === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA);
       }
-      
+
       // Ordenamiento por Nombre
-          if (currentSortField === 'nombre') {
-            const nombreA = (a.nombre || '').toLowerCase().trim();
-            const nombreB = (b.nombre || '').toLowerCase().trim();
-            if (currentSortDirection === 'asc') {
-              return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' });
-            } else {
-              return nombreB.localeCompare(nombreA, 'es', { sensitivity: 'base' });
-            }
+      if (currentSortField === 'nombre') {
+        const nombreA = (a.nombre || '').toLowerCase().trim();
+        const nombreB = (b.nombre || '').toLowerCase().trim();
+        if (currentSortDirection === 'asc') {
+          return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' });
+        } else {
+          return nombreB.localeCompare(nombreA, 'es', { sensitivity: 'base' });
+        }
       }
-      
+
       // Ordenamiento por Fecha
-          if (currentSortField === 'fecha_registro') {
+      if (currentSortField === 'fecha_registro') {
         // Manejar fechas vacías o inválidas
         const fechaA = a.fecha_registro ? new Date(a.fecha_registro) : new Date('1900-01-01');
         const fechaB = b.fecha_registro ? new Date(b.fecha_registro) : new Date('1900-01-01');
-        
+
         // Verificar que las fechas sean válidas
         const fechaAValida = !isNaN(fechaA.getTime());
         const fechaBValida = !isNaN(fechaB.getTime());
-        
-            if (!fechaAValida && !fechaBValida) return 0;
-            if (!fechaAValida) return currentSortDirection === 'asc' ? 1 : -1;
-            if (!fechaBValida) return currentSortDirection === 'asc' ? -1 : 1;
 
-            return currentSortDirection === 'asc' ? fechaA - fechaB : fechaB - fechaA;
-          }
+        if (!fechaAValida && !fechaBValida) return 0;
+        if (!fechaAValida) return currentSortDirection === 'asc' ? 1 : -1;
+        if (!fechaBValida) return currentSortDirection === 'asc' ? -1 : 1;
+
+        return currentSortDirection === 'asc' ? fechaA - fechaB : fechaB - fechaA;
+      }
 
       return 0;
     });
@@ -1126,9 +1145,8 @@ export default function Expedientes() {
     }
     // Forzar re-renderizado
     setCurrentPage(1);
-    setSortKey(prev => prev + 1);
+    setSortKey((prev) => prev + 1);
   };
-
 
   const handlePageInput = (e) => {
     const val = parseInt(e.currentTarget.value, 10);
@@ -1160,65 +1178,63 @@ export default function Expedientes() {
       <h2>Gestión de Expedientes</h2>
 
       {/* 🔹 POPUP DE NOTIFICACIONES - VERSIÓN MEJORADA */}
-      {console.log('🔍 Renderizando popup - showPopup:', showPopup, 'showConfirmUpdate:', showConfirmUpdate)}
+      {console.log(
+        '🔍 Renderizando popup - showPopup:',
+        showPopup,
+        'showConfirmUpdate:',
+        showConfirmUpdate
+      )}
       {showPopup && (
-  <div className="popup-overlay">
-    <div className="popup-container">
-      <div className={`popup-header popup-${popupType}`}>
-        <div className="popup-icon">
+        <div className="popup-overlay">
+          <div className="popup-container">
+            <div className={`popup-header popup-${popupType}`}>
+              <div className="popup-icon">
                 {popupType === 'success' && '✓'}
                 {popupType === 'error' && '✕'}
                 {popupType === 'warning' && '!'}
                 {popupType === 'info' && 'i'}
-        </div>
-        <h3 className="popup-title">
+              </div>
+              <h3 className="popup-title">
                 {popupType === 'success' && 'Éxito'}
                 {popupType === 'error' && 'Error'}
                 {popupType === 'warning' && 'Advertencia'}
                 {popupType === 'info' && 'Información'}
-        </h3>
+              </h3>
               <button className="popup-close" onClick={() => setShowPopupWithLog(false)}>
-          ×
-        </button>
-      </div>
-      <div className="popup-body">
-        <p className="popup-message">{popupMessage}</p>
-      </div>
-      <div className="popup-footer">
-        {console.log('🔍 Evaluando showConfirmUpdate:', showConfirmUpdate)}
-        {showConfirmUpdate ? (
-          <>
-            {console.log('🔍 Renderizando botones de confirmación')}
-            <button 
-              className="popup-btn popup-btn-cancel"
-              onClick={cancelarActualizacion}
-            >
-              Cancelar
-            </button>
-            <button 
-              className="popup-btn popup-btn-success"
-              onClick={confirmarActualizacion}
-            >
-              Aceptar
-            </button>
-          </>
-        ) : (
-          <button 
-            className={`popup-btn popup-btn-${popupType}`}
-            onClick={() => setShowPopupWithLog(false)}
-          >
-            Aceptar
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-)}
+                ×
+              </button>
+            </div>
+            <div className="popup-body">
+              <p className="popup-message">{popupMessage}</p>
+            </div>
+            <div className="popup-footer">
+              {console.log('🔍 Evaluando showConfirmUpdate:', showConfirmUpdate)}
+              {showConfirmUpdate ? (
+                <>
+                  {console.log('🔍 Renderizando botones de confirmación')}
+                  <button className="popup-btn popup-btn-cancel" onClick={cancelarActualizacion}>
+                    Cancelar
+                  </button>
+                  <button className="popup-btn popup-btn-success" onClick={confirmarActualizacion}>
+                    Aceptar
+                  </button>
+                </>
+              ) : (
+                <button
+                  className={`popup-btn popup-btn-${popupType}`}
+                  onClick={() => setShowPopupWithLog(false)}
+                >
+                  Aceptar
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 🔹 MOSTRAR CONTROLES SOLO CUANDO NO ESTÉ EN MODO FORMULARIO */}
       {!mostrarFormulario && (
         <>
-
           {/* Barra de acciones - igual que notificaciones */}
           <div className="table-actions">
             <button className="btn-agregar" onClick={() => setMostrarFormulario(true)}>
@@ -1273,49 +1289,83 @@ export default function Expedientes() {
                       {i === 0 ? (
                         <div className="header-numero">
                           <span className="simbolo-numero">#</span>
-                          <span 
+                          <span
                             className="sort-arrow"
                             onClick={() => handleSortClick('row_number')}
                             style={{ cursor: 'pointer', userSelect: 'none', marginLeft: '5px' }}
                             title="Click para ordenar por número de fila"
                           >
-                            {arrowSortField === 'row_number' ? (arrowSortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                            {arrowSortField === 'row_number'
+                              ? arrowSortDirection === 'asc'
+                                ? '↑'
+                                : '↓'
+                              : '↕'}
                           </span>
                         </div>
                       ) : i === 1 ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
                           <span>{col}</span>
-                          <span 
+                          <span
                             className="sort-arrow"
                             onClick={() => handleSortClick('correlativo')}
                             style={{ cursor: 'pointer', userSelect: 'none', marginLeft: '5px' }}
                             title="Click para ordenar por correlativo"
                           >
-                            {arrowSortField === 'correlativo' ? (arrowSortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                            {arrowSortField === 'correlativo'
+                              ? arrowSortDirection === 'asc'
+                                ? '↑'
+                                : '↓'
+                              : '↕'}
                           </span>
                         </div>
                       ) : i === 2 ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
                           <span>{col}</span>
-                          <span 
+                          <span
                             className="sort-arrow"
                             onClick={() => handleSortClick('nombre')}
                             style={{ cursor: 'pointer', userSelect: 'none', marginLeft: '5px' }}
                             title="Click para ordenar por nombre"
                           >
-                            {arrowSortField === 'nombre' ? (arrowSortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                            {arrowSortField === 'nombre'
+                              ? arrowSortDirection === 'asc'
+                                ? '↑'
+                                : '↓'
+                              : '↕'}
                           </span>
                         </div>
                       ) : i === 6 ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
                           <span>{col}</span>
-                          <span 
+                          <span
                             className="sort-arrow"
                             onClick={() => handleSortClick('fecha_registro')}
                             style={{ cursor: 'pointer', userSelect: 'none', marginLeft: '5px' }}
                             title="Click para ordenar por fecha"
                           >
-                            {arrowSortField === 'fecha_registro' ? (arrowSortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                            {arrowSortField === 'fecha_registro'
+                              ? arrowSortDirection === 'asc'
+                                ? '↑'
+                                : '↓'
+                              : '↕'}
                           </span>
                         </div>
                       ) : (
@@ -1328,12 +1378,14 @@ export default function Expedientes() {
               <tbody>
                 {expedientesPaginados.length > 0 ? (
                   expedientesPaginados.map((exp, index) => (
-                    <tr 
+                    <tr
                       key={exp.pk_id_expediente}
-                      className={filaSeleccionada === exp.pk_id_expediente ? 'fila-seleccionada' : ''}
+                      className={
+                        filaSeleccionada === exp.pk_id_expediente ? 'fila-seleccionada' : ''
+                      }
                       onClick={() => handleSeleccionarFila(exp)}
-                      style={{ 
-                        cursor: 'pointer'
+                      style={{
+                        cursor: 'pointer',
                       }}
                     >
                       <td className="celda-numero">{exp.pk_id_expediente}</td>
@@ -1352,7 +1404,7 @@ export default function Expedientes() {
                               fotosExpediente.map((foto, index) => (
                                 <div key={index} className="foto-tabla-container">
                                   {console.log('🖼️ Renderizando imagen de expediente:', foto)}
-                                    <img
+                                  <img
                                     src={getImageUrl(
                                       typeof foto === 'string'
                                         ? foto
@@ -1373,7 +1425,10 @@ export default function Expedientes() {
                                           ...foto,
                                           url: ruta,
                                           preview: ruta,
-                                          nombre: foto.nombre_archivo || foto.nombre || `Foto ${index + 1}`,
+                                          nombre:
+                                            foto.nombre_archivo ||
+                                            foto.nombre ||
+                                            `Foto ${index + 1}`,
                                         },
                                         exp.pk_id_expediente
                                       );
@@ -1381,7 +1436,9 @@ export default function Expedientes() {
                                     style={{ cursor: 'pointer' }}
                                     onError={(e) => {
                                       e.target.style.display = 'none';
-                                      if (!e.target.parentNode.querySelector('.error-placeholder')) {
+                                      if (
+                                        !e.target.parentNode.querySelector('.error-placeholder')
+                                      ) {
                                         const errorSpan = document.createElement('span');
                                         errorSpan.className = 'error-placeholder';
                                         errorSpan.textContent = '❌';
@@ -1392,7 +1449,7 @@ export default function Expedientes() {
                                       }
                                     }}
                                   />
-                                  
+
                                   <button
                                     type="button"
                                     className="btn-eliminar-foto-tabla"
@@ -1436,14 +1493,17 @@ export default function Expedientes() {
                             const estado = notificacionesEstado[exp.pk_id_expediente];
 
                             if (valor === 'Crear' && !estado?.tieneNotificacion) {
-                              navigate(`/notificaciones-especificas/expediente/${exp.pk_id_expediente}`, {
-                                state: {
-                                  registro: {
-                                    correlativo: exp.correlativo,
-                                    nombre: exp.nombre, // este nombre debe coincidir con el que usas en tu backend y en el form
+                              navigate(
+                                `/notificaciones-especificas/expediente/${exp.pk_id_expediente}`,
+                                {
+                                  state: {
+                                    registro: {
+                                      correlativo: exp.correlativo,
+                                      nombre: exp.nombre, // este nombre debe coincidir con el que usas en tu backend y en el form
+                                    },
                                   },
-                                },
-                              });
+                                }
+                              );
                             } else if (valor === 'Mostrar' && estado?.tieneNotificacion) {
                               handleViewNotificacion(exp);
                             } else if (valor === 'Editar' && estado?.tieneNotificacion) {
@@ -1477,7 +1537,7 @@ export default function Expedientes() {
                             return '—';
                           }
                           return (
-                            <span 
+                            <span
                               className={`estado-notificacion ${
                                 estado.estado === 'activa' ? 'estado-activa' : 'estado-inactiva'
                               }`}
@@ -1507,8 +1567,8 @@ export default function Expedientes() {
               {/* Selector de items por página */}
               <div className="page-size-selector">
                 <span>Mostrar</span>
-                <select 
-                  value={pageSize} 
+                <select
+                  value={pageSize}
                   onChange={(e) => setPageSize(Number(e.target.value))}
                   className="page-size-select"
                 >
@@ -1530,8 +1590,8 @@ export default function Expedientes() {
 
               {/* Controles de paginación */}
               <div className="pagination-controls">
-                <button 
-                  onClick={() => setCurrentPage(1)} 
+                <button
+                  onClick={() => setCurrentPage(1)}
                   disabled={currentPageClamped === 1}
                   className="pagination-btn"
                 >
@@ -1586,8 +1646,11 @@ export default function Expedientes() {
 
           {/* Sugerencias de correlativo - arriba del campo No. Correlativo */}
           {!editando && sugerenciasCorrelativo.length > 0 && (
-            <div className="sugerencias-correlativo" style={{textAlign: 'right', marginBottom: '10px', marginRight: '150px'}}>
-              <div className="sugerencias-header" style={{marginBottom: '8px'}}>
+            <div
+              className="sugerencias-correlativo"
+              style={{ textAlign: 'right', marginBottom: '10px', marginRight: '150px' }}
+            >
+              <div className="sugerencias-header" style={{ marginBottom: '8px' }}>
                 <span className="sugerencias-icon">💡</span>
                 <span className="sugerencias-title">Sugerencia correlativo</span>
               </div>
@@ -1600,12 +1663,10 @@ export default function Expedientes() {
                     onClick={() => {
                       setFormData((prev) => ({
                         ...prev,
-                        correlativo: correlativo
+                        correlativo: correlativo,
                       }));
                       // Scroll al campo No. Correlativo
-                      const correlativoInput = document.querySelector(
-                        'input[name="correlativo"]'
-                      );
+                      const correlativoInput = document.querySelector('input[name="correlativo"]');
                       if (correlativoInput) {
                         correlativoInput.scrollIntoView({
                           behavior: 'smooth',
@@ -1624,7 +1685,10 @@ export default function Expedientes() {
           )}
 
           {!editando && loadingSugerencias && (
-            <div className="sugerencias-loading" style={{textAlign: 'right', marginBottom: '10px', marginRight: '150px'}}>
+            <div
+              className="sugerencias-loading"
+              style={{ textAlign: 'right', marginBottom: '10px', marginRight: '150px' }}
+            >
               <span className="loading-spinner"></span>
               <span>Cargando...</span>
             </div>
@@ -1686,17 +1750,12 @@ export default function Expedientes() {
           </div>
 
           <div className="campo-formulario">
-             <label>Correo</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-            />
+            <label>Correo</label>
+            <input type="email" name="email" value={formData.email} onChange={handleInputChange} />
           </div>
 
           <div className="campo-formulario">
-             <label>Dirección</label>
+            <label>Dirección</label>
             <input
               type="text"
               name="direccion"
@@ -1707,17 +1766,17 @@ export default function Expedientes() {
 
           <div className="campo-formulario">
             <label>Fotos</label>
-            
+
             {/* Botón para subir fotos */}
             <div className="upload-photos-container">
-              <input 
-                type="file" 
-                id="photo-upload" 
-                accept="image/*" 
+              <input
+                type="file"
+                id="photo-upload"
+                accept="image/*"
                 onChange={handleFileUpload}
                 style={{ display: 'none' }}
               />
-              <button 
+              <button
                 type="button"
                 className="btn-subir-foto"
                 onClick={() => document.getElementById('photo-upload').click()}
@@ -1738,22 +1797,26 @@ export default function Expedientes() {
             {/* Vista previa de fotos en horizontal */}
             {formData.foto.length > 0 && (
               <div className="vista-previa-fotos-horizontal" key={`fotos-${imagenesUpdateKey}`}>
-              {formData.foto.map((imagen, i) => (
-                  <div key={`${imagen.id || i}-${imagenesUpdateKey}`} className="foto-miniatura-container">
-                <img
-                  src={imagen.preview || imagen.url} // Usar preview o url para mostrar la imagen
-                  alt={`Foto ${i + 1}`}
+                {formData.foto.map((imagen, i) => (
+                  <div
+                    key={`${imagen.id || i}-${imagenesUpdateKey}`}
+                    className="foto-miniatura-container"
+                  >
+                    <img
+                      src={imagen.preview || imagen.url} // Usar preview o url para mostrar la imagen
+                      alt={`Foto ${i + 1}`}
                       className="foto-miniatura"
-                  onClick={() => setFotoAmpliada(imagen.preview || imagen.url)}
-                  onError={(e) => {
-                    console.error('Error cargando imagen:', imagen);
-                    e.target.style.display = 'none';
-                    const errorSpan = document.createElement('span');
-                    errorSpan.textContent = '❌ Error cargando imagen';
-                    errorSpan.style.cssText = 'color: #999; font-size: 12px; display: block; text-align: center;';
-                    e.target.parentNode.appendChild(errorSpan);
-                  }}
-                />
+                      onClick={() => setFotoAmpliada(imagen.preview || imagen.url)}
+                      onError={(e) => {
+                        console.error('Error cargando imagen:', imagen);
+                        e.target.style.display = 'none';
+                        const errorSpan = document.createElement('span');
+                        errorSpan.textContent = '❌ Error cargando imagen';
+                        errorSpan.style.cssText =
+                          'color: #999; font-size: 12px; display: block; text-align: center;';
+                        e.target.parentNode.appendChild(errorSpan);
+                      }}
+                    />
                     <button
                       type="button"
                       className="btn-eliminar-foto"
@@ -1763,7 +1826,7 @@ export default function Expedientes() {
                       ✕
                     </button>
                   </div>
-              ))}
+                ))}
               </div>
             )}
           </div>
@@ -1814,7 +1877,7 @@ export default function Expedientes() {
             <div className="popup-header popup-warning">
               <div className="popup-icon">⚠️</div>
               <h3 className="popup-title">Confirmar Eliminación</h3>
-              <button 
+              <button
                 className="popup-close"
                 onClick={() => {
                   setShowConfirmEliminarFotoPopup(false);
@@ -1826,9 +1889,7 @@ export default function Expedientes() {
             </div>
             <div className="popup-body">
               <div className="popup-message-container">
-                <p className="popup-message">
-                  ¿Desea eliminar esta fotografía?
-                </p>
+                <p className="popup-message">¿Desea eliminar esta fotografía?</p>
                 <div className="popup-warning-text">
                   <span className="warning-icon">⚠️</span>
                   <span>Esta acción no se puede deshacer</span>
@@ -1836,7 +1897,7 @@ export default function Expedientes() {
               </div>
             </div>
             <div className="popup-footer">
-              <button 
+              <button
                 className="popup-btn popup-btn-cancel"
                 onClick={() => {
                   setShowConfirmEliminarFotoPopup(false);
@@ -1880,15 +1941,15 @@ export default function Expedientes() {
                   <p>Información detallada del paciente</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setExpedienteVisualizar(null)} 
+              <button
+                onClick={() => setExpedienteVisualizar(null)}
                 className="btn-close-profesional"
                 title="Cerrar"
               >
                 ✕
               </button>
             </div>
-            
+
             {/* Body con diseño mejorado - Orden igual al formulario */}
             <div className="modal-body-profesional">
               {/* Primera fila: Fecha y Correlativo */}
@@ -1904,9 +1965,9 @@ export default function Expedientes() {
                       <span className="info-value fecha">
                         {formatearFecha(expedienteVisualizar.fecha_registro)}
                       </span>
-                </div>
-                </div>
-                  
+                    </div>
+                  </div>
+
                   <div className="info-card">
                     <div className="info-icon">🔢</div>
                     <div className="info-content">
@@ -1914,8 +1975,8 @@ export default function Expedientes() {
                       <span className="info-value correlativo">
                         {expedienteVisualizar.correlativo}
                       </span>
-                </div>
-                </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1930,18 +1991,18 @@ export default function Expedientes() {
                     <div className="info-content">
                       <label>Nombre del Paciente</label>
                       <span className="info-value nombre">{expedienteVisualizar.nombre}</span>
-                </div>
-              </div>
+                    </div>
+                  </div>
 
                   <div className="info-card">
                     <div className="info-icon">📞</div>
                     <div className="info-content">
                       <label>Teléfono</label>
                       <span className="info-value telefono">{expedienteVisualizar.telefono}</span>
+                    </div>
                   </div>
                 </div>
-                </div>
-            </div>
+              </div>
 
               {/* Tercera fila: Correo (ancho completo) */}
               <div className="info-section terciaria">
@@ -1994,7 +2055,7 @@ export default function Expedientes() {
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="info-card">
                     <div className="info-icon">✅</div>
                     <div className="info-content">
@@ -2012,13 +2073,13 @@ export default function Expedientes() {
                 <span className="footer-text"> Sistema de Expedientes </span>
               </div>
               <div className="footer-actions">
-              <button 
-                onClick={() => setExpedienteVisualizar(null)} 
+                <button
+                  onClick={() => setExpedienteVisualizar(null)}
                   className="btn-cerrar-profesional"
-              >
+                >
                   <span className="btn-icon">✓</span>
-                Cerrar
-              </button>
+                  Cerrar
+                </button>
               </div>
             </div>
           </div>
@@ -2187,7 +2248,9 @@ export default function Expedientes() {
                         <span className="info-label">Fecha Fin:</span>
                         <span className="info-value">
                           {notificacionSeleccionada.fecha_fin
-                            ? new Date(notificacionSeleccionada.fecha_fin).toLocaleDateString('es-ES')
+                            ? new Date(notificacionSeleccionada.fecha_fin).toLocaleDateString(
+                                'es-ES'
+                              )
                             : '—'}
                         </span>
                       </div>
@@ -2258,7 +2321,6 @@ export default function Expedientes() {
         </div>
       )}
 
-
       {/* 🔹 Modal de Zoom para Imágenes */}
       {showZoomModal && zoomImage && (
         <div className="modal-overlay zoom-modal-overlay">
@@ -2276,14 +2338,16 @@ export default function Expedientes() {
 
             {/* Contenido del modal de zoom */}
             <div className="zoom-modal-content">
-              <div 
+              <div
                 className="zoom-image-container"
                 onMouseMove={handleImageDrag}
                 onMouseDown={handleImageDrag}
                 onWheel={handleWheelZoom}
               >
                 <img
-                  src={getImageUrl(zoomImage.url || zoomImage.preview || zoomImage.ruta_archivo || '')}
+                  src={getImageUrl(
+                    zoomImage.url || zoomImage.preview || zoomImage.ruta_archivo || ''
+                  )}
                   alt={zoomImage.nombre || 'Imagen'}
                   className="zoom-image"
                   style={{

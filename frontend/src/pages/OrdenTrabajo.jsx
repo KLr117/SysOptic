@@ -47,7 +47,7 @@ const OrdenTrabajo = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notificacionesEstado, setNotificacionesEstado] = useState({});
-  
+
   // Estado para fila seleccionada
   const [filaSeleccionada, setFilaSeleccionada] = useState(null);
 
@@ -149,7 +149,7 @@ const OrdenTrabajo = () => {
     title: '',
     message: '',
     onConfirm: null,
-    onCancel: null
+    onCancel: null,
   });
 
   // Estado para imágenes de órdenes desde la base de datos
@@ -279,7 +279,7 @@ const OrdenTrabajo = () => {
     setModalObservaciones({
       texto: observaciones,
       ordenId: orden.pk_id_orden,
-      correlativo: orden.correlativo
+      correlativo: orden.correlativo,
     });
     setIsModalObservacionesOpen(true);
   };
@@ -411,7 +411,8 @@ const OrdenTrabajo = () => {
       title: 'Confirmar eliminación',
       message: '¿Seguro que deseas eliminar esta notificación?',
       onConfirm: () => confirmDeleteNotificacion(idNotificacion, idOrden),
-      onCancel: () => setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null })
+      onCancel: () =>
+        setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null }),
     });
   };
 
@@ -505,7 +506,7 @@ const OrdenTrabajo = () => {
         const busquedaTotal = (orden.total || '').toString().includes(filtro);
         const busquedaAdelanto = (orden.adelanto || '').toString().includes(filtro);
         const busquedaSaldo = (orden.saldo || '').toString().includes(filtro);
-        
+
         // Búsqueda en observaciones
         const busquedaObservaciones = normalizarTexto(orden.observaciones || '').includes(
           normalizarTexto(filtro)
@@ -657,7 +658,10 @@ const OrdenTrabajo = () => {
       </div>
 
       {/* TABLA CON SCROLL HORIZONTAL */}
-      <div className="overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-500" id="table-container">
+      <div
+        className="overflow-x-auto overflow-y-hidden scrollbar scrollbar-thumb-gray-500 scrollbar-track-gray-200 hover:scrollbar-thumb-gray-600"
+        id="table-container"
+      >
         <table className="table orden-table">
           <thead>
             <tr>
@@ -707,13 +711,15 @@ const OrdenTrabajo = () => {
               <th>Acciones</th>
               <th>Notificación</th>
               <th>
-                <div style={{ 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  alignItems: 'center', 
-                  gap: '2px',
-                  lineHeight: '1.2'
-                }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '2px',
+                    lineHeight: '1.2',
+                  }}
+                >
                   <div>Estado</div>
                   <div>de</div>
                   <div>Notificación</div>
@@ -724,12 +730,12 @@ const OrdenTrabajo = () => {
           <tbody>
             {ordenesPaginadas.length > 0 ? (
               ordenesPaginadas.map((orden) => (
-                <tr 
+                <tr
                   key={orden.pk_id_orden}
                   className={filaSeleccionada === orden.pk_id_orden ? 'fila-seleccionada' : ''}
                   onClick={() => handleSeleccionarFila(orden)}
-                  style={{ 
-                    cursor: 'pointer'
+                  style={{
+                    cursor: 'pointer',
                   }}
                 >
                   <td>{orden.pk_id_orden}</td>
@@ -753,15 +759,18 @@ const OrdenTrabajo = () => {
                   <td className="text-right font-semibold saldo-cell">
                     Q{parseFloat(orden.saldo || 0).toFixed(2)}
                   </td>
-                  <td className="observaciones-cell" style={{
-                    maxWidth: '200px',
-                    wordWrap: 'break-word',
-                    whiteSpace: 'pre-wrap',
-                    fontSize: '12px',
-                    lineHeight: '1.3'
-                  }}>
+                  <td
+                    className="observaciones-cell"
+                    style={{
+                      maxWidth: '200px',
+                      wordWrap: 'break-word',
+                      whiteSpace: 'pre-wrap',
+                      fontSize: '12px',
+                      lineHeight: '1.3',
+                    }}
+                  >
                     {orden.observaciones ? (
-                      <div 
+                      <div
                         style={{
                           backgroundColor: 'var(--color-bg-secondary)',
                           color: 'var(--color-text)',
@@ -773,7 +782,7 @@ const OrdenTrabajo = () => {
                           textOverflow: 'ellipsis',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
-                          position: 'relative'
+                          position: 'relative',
                         }}
                         onClick={() => openObservacionesModal(orden.observaciones, orden)}
                         onMouseEnter={(e) => {
@@ -788,18 +797,19 @@ const OrdenTrabajo = () => {
                         }}
                         title="Hacer clic para ver observaciones completas"
                       >
-                        {orden.observaciones.length > 100 
-                          ? `${orden.observaciones.substring(0, 100)}...` 
-                          : orden.observaciones
-                        }
-                        <span style={{
-                          position: 'absolute',
-                          top: '2px',
-                          right: '4px',
-                          fontSize: '10px',
-                          color: '#007bff',
-                          fontWeight: 'bold'
-                        }}>
+                        {orden.observaciones.length > 100
+                          ? `${orden.observaciones.substring(0, 100)}...`
+                          : orden.observaciones}
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: '2px',
+                            right: '4px',
+                            fontSize: '10px',
+                            color: '#007bff',
+                            fontWeight: 'bold',
+                          }}
+                        >
                           👁️
                         </span>
                       </div>
@@ -888,32 +898,38 @@ const OrdenTrabajo = () => {
                   </td>
 
                   <td className="text-center">
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <div
+                      style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                    >
                       {(() => {
                         const estado = notificacionesEstado[orden.pk_id_orden];
                         if (!estado || !estado.tieneNotificacion) {
                           return <span style={{ color: '#666', fontStyle: 'italic' }}>—</span>;
                         }
                         return estado.estado === 'activa' ? (
-                          <span style={{ 
-                            color: '#22c55e', 
-                            fontWeight: 'bold',
-                            backgroundColor: '#dcfce7',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            display: 'inline-block'
-                          }}>
+                          <span
+                            style={{
+                              color: '#22c55e',
+                              fontWeight: 'bold',
+                              backgroundColor: '#dcfce7',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              display: 'inline-block',
+                            }}
+                          >
                             Activa
                           </span>
                         ) : (
-                          <span style={{ 
-                            color: '#ef4444', 
-                            fontWeight: 'bold',
-                            backgroundColor: '#fef2f2',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            display: 'inline-block'
-                          }}>
+                          <span
+                            style={{
+                              color: '#ef4444',
+                              fontWeight: 'bold',
+                              backgroundColor: '#fef2f2',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              display: 'inline-block',
+                            }}
+                          >
                             Inactiva
                           </span>
                         );
@@ -935,7 +951,6 @@ const OrdenTrabajo = () => {
           </tbody>
         </table>
       </div>
-
 
       {/* 📑 Paginación (copiado de notificaciones) */}
       <div className="pagination-container">
@@ -1059,33 +1074,35 @@ const OrdenTrabajo = () => {
                 <span className="modal-icon">📝</span>
                 Observaciones - Orden #{modalObservaciones.correlativo}
               </h3>
-              <button 
+              <button
                 onClick={closeObservacionesModal}
                 style={{
                   background: 'none',
                   border: 'none',
                   fontSize: '20px',
                   cursor: 'pointer',
-                  color: '#666'
+                  color: '#666',
                 }}
               >
                 ✕
               </button>
             </div>
             <div className="modal-body">
-              <div style={{
-                padding: '16px',
-                backgroundColor: 'var(--color-bg-secondary)',
-                color: 'var(--color-text)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '6px',
-                whiteSpace: 'pre-wrap',
-                wordWrap: 'break-word',
-                fontSize: '14px',
-                lineHeight: '1.6',
-                maxHeight: '400px',
-                overflowY: 'auto'
-              }}>
+              <div
+                style={{
+                  padding: '16px',
+                  backgroundColor: 'var(--color-bg-secondary)',
+                  color: 'var(--color-text)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '6px',
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                }}
+              >
                 {modalObservaciones.texto}
               </div>
             </div>
@@ -1122,9 +1139,9 @@ const OrdenTrabajo = () => {
             </div>
 
             <div className="modal-body">
-
               {/* Información de la Orden Asociada */}
-              {(notificacionSeleccionada.correlativo_orden || notificacionSeleccionada.nombre_orden) && (
+              {(notificacionSeleccionada.correlativo_orden ||
+                notificacionSeleccionada.nombre_orden) && (
                 <div className="modal-section">
                   <h4 className="section-title">
                     <span className="section-icon">📋</span>
@@ -1134,7 +1151,9 @@ const OrdenTrabajo = () => {
                     {notificacionSeleccionada.correlativo_orden && (
                       <div className="info-item">
                         <span className="info-label">No. Orden:</span>
-                        <span className="info-value">{notificacionSeleccionada.correlativo_orden}</span>
+                        <span className="info-value">
+                          {notificacionSeleccionada.correlativo_orden}
+                        </span>
                       </div>
                     )}
                     {notificacionSeleccionada.nombre_orden && (
@@ -1145,7 +1164,7 @@ const OrdenTrabajo = () => {
                     )}
                   </div>
                 </div>
-              )}    
+              )}
 
               {/* Información Básica */}
               <div className="modal-section">

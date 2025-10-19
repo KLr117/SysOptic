@@ -59,11 +59,12 @@ const NotificacionForm = ({ mode = 'create' }) => {
   const [moduloOriginal, setModuloOriginal] = useState('');
   const [showCambiarConfigModal, setShowCambiarConfigModal] = useState(false);
   const [pendingConfigChange, setPendingConfigChange] = useState(null);
+  const [showCategoriaBlockedPopup, setShowCategoriaBlockedPopup] = useState(false);
 
   const [registroAsociado, setRegistroAsociado] = useState({
-  correlativo: '',
-  nombre: '',
-});
+    correlativo: '',
+    nombre: '',
+  });
 
   // ✅ Cargar datos según modo
   useEffect(() => {
@@ -89,7 +90,7 @@ const NotificacionForm = ({ mode = 'create' }) => {
               tipo: 'Recordatorio',
             });
 
-            // 🟢 NUEVO: asignar registro asociado
+            // 🟢 Asignar registro asociado
             if (res.fk_id_modulo_notificacion === 1) {
               setRegistroAsociado({
                 correlativo: res.correlativo_expediente || '—',
@@ -186,49 +187,56 @@ const NotificacionForm = ({ mode = 'create' }) => {
     if (mode === 'edit' || mode === 'editEspecifica') {
       fetchData();
     } else if (mode === 'createExpediente' || mode === 'createOrden') {
-        const storedData = location.state?.registro || {}; // puedes enviarlo al navegar
-        if (mode === 'createExpediente') {
-          setFormData((prev) => ({
-            ...prev,
-            modulo: '1',
-            categoria: '1',
-            tipo: 'Recordatorio',
-            tipoIntervalo: 'despues_registro',
-          }));
-          setRegistroAsociado({
-            correlativo: storedData.correlativo || '—',
-            nombre: storedData.nombre || '—',
-          });
-        } else {
-          setFormData((prev) => ({
-            ...prev,
-            modulo: '2',
-            categoria: '1',
-            tipo: 'Recordatorio',
-          }));
-          setRegistroAsociado({
-            correlativo: storedData.correlativo || '—',
-            nombre: storedData.paciente || '—',
-          });
-        }
+      const storedData = location.state?.registro || {}; // puedes enviarlo al navegar
+      if (mode === 'createExpediente') {
+        setFormData((prev) => ({
+          ...prev,
+          modulo: '1',
+          categoria: '1',
+          tipo: 'Recordatorio',
+          tipoIntervalo: 'despues_registro',
+        }));
+        setRegistroAsociado({
+          correlativo: storedData.correlativo || '—',
+          nombre: storedData.nombre || '—',
+        });
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          modulo: '2',
+          categoria: '1',
+          tipo: 'Recordatorio',
+        }));
+        setRegistroAsociado({
+          correlativo: storedData.correlativo || '—',
+          nombre: storedData.paciente || '—',
+        });
+      }
     }
   }, [mode, id]);
 
   const handleChange = (e) => {
-  const { name, value, type, checked } = e.target;
+    const { name, value, type, checked } = e.target;
 
-  // solo activar validación si estamos editando una notificación existente (con id)
-  const isEditing = (mode === 'edit' || mode === 'editEspecifica') && !!id;
+    // solo activar validación si estamos editando una notificación existente (con id)
+    const isEditing = (mode === 'edit' || mode === 'editEspecifica') && !!id;
 
-    // 🟡 Validación especial para cambio de categoría si hay correos enviados
-    if ((name === 'categoria' || name === 'modulo') && isEditing && correosEnviados) {
+    // 🟡 Validación especial para cambio de categoría/módulo si hay correos enviados
+    // Para notificaciones ESPECÍFICAS: permitir cambio pero mostrar confirmación
+    // Para notificaciones GENERALES: el campo ya está bloqueado en el JSX
+    if (
+      (name === 'categoria' || name === 'modulo') &&
+      mode === 'editEspecifica' &&
+      isEditing &&
+      correosEnviados
+    ) {
       const isModuleChange = name === 'modulo' && value !== moduloOriginal;
       const isCategoryChange = name === 'categoria' && value !== categoriaOriginal;
 
       if (isModuleChange || isCategoryChange) {
         setPendingConfigChange({
           field: name,
-          value: value
+          value: value,
         });
         setShowCambiarConfigModal(true);
         return;
@@ -236,11 +244,7 @@ const NotificacionForm = ({ mode = 'create' }) => {
     }
 
     // 🟡 Validación especial para cambio de fecha de inicio si hay correos enviados
-    if (
-      name === 'fechaInicioProm' &&
-      isEditing &&
-      correosEnviados
-    ) {
+    if (name === 'fechaInicioProm' && isEditing && correosEnviados) {
       if (value !== fechaInicioOriginal) {
         setPendingFechaInicioChange(value);
         setShowCambiarFechaModal(true);
@@ -271,11 +275,11 @@ const NotificacionForm = ({ mode = 'create' }) => {
   };
 
   const confirmarCambiarConfig = () => {
-  setFormData(prev => ({
-    ...prev,
-    [pendingConfigChange.field]: pendingConfigChange.value,
-    // Si cambia el módulo, resetear tipoIntervalo
-    ...(pendingConfigChange.field === 'modulo' ? { tipoIntervalo: '' } : {})
+    setFormData((prev) => ({
+      ...prev,
+      [pendingConfigChange.field]: pendingConfigChange.value,
+      // Si cambia el módulo, resetear tipoIntervalo
+      ...(pendingConfigChange.field === 'modulo' ? { tipoIntervalo: '' } : {}),
     }));
     setShowCambiarConfigModal(false);
     setPendingConfigChange(null);
@@ -544,43 +548,42 @@ const NotificacionForm = ({ mode = 'create' }) => {
       ) : (
         <>
           <form className="notificaciones-form" onSubmit={handleSubmit}>
-
             {/* 🔹 Información del Registro Asociado */}
             {isSpecific && (
-                <div className="form-section">
-                  <div className="section-header">
-                    <h3>📁 Registro Asociado</h3>
-                    <p>Información del registro vinculado a esta notificación</p>
+              <div className="form-section">
+                <div className="section-header">
+                  <h3>📁 Registro Asociado</h3>
+                  <p>Información del registro vinculado a esta notificación</p>
+                </div>
+
+                <div className="form-grid">
+                  <div className="form-field">
+                    <label className="field-label">
+                      <span className="label-icon">#️⃣</span>
+                      {formData.modulo === '1' ? 'No. Correlativo (Expediente)' : 'No. Orden'}
+                    </label>
+                    <input
+                      type="text"
+                      value={registroAsociado.correlativo}
+                      disabled
+                      className="field-input disabled"
+                    />
                   </div>
 
-                  <div className="form-grid">
-                    <div className="form-field">
-                      <label className="field-label">
-                        <span className="label-icon">#️⃣</span>
-                        {formData.modulo === '1' ? 'No. Correlativo (Expediente)' : 'No. Orden'}
-                      </label>
-                      <input
-                        type="text"
-                        value={registroAsociado.correlativo}
-                        disabled
-                        className="field-input disabled"
-                      />
-                    </div>
-
-                    <div className="form-field">
-                      <label className="field-label">
-                        <span className="label-icon">👤</span>
-                        {formData.modulo === '1' ? 'Nombre del Paciente' : 'Nombre del Cliente'}
-                      </label>
-                      <input
-                        type="text"
-                        value={registroAsociado.nombre}
-                        disabled
-                        className="field-input disabled"
-                      />
-                    </div>
+                  <div className="form-field">
+                    <label className="field-label">
+                      <span className="label-icon">👤</span>
+                      {formData.modulo === '1' ? 'Nombre del Paciente' : 'Nombre del Cliente'}
+                    </label>
+                    <input
+                      type="text"
+                      value={registroAsociado.nombre}
+                      disabled
+                      className="field-input disabled"
+                    />
                   </div>
                 </div>
+              </div>
             )}
 
             {/* Sección: Información Básica */}
@@ -659,13 +662,54 @@ const NotificacionForm = ({ mode = 'create' }) => {
                       name="categoria"
                       value={formData.categoria}
                       onChange={handleChange}
+                      onMouseDown={(e) => {
+                        // Si estamos editando (mode=edit) y hay correos enviados, bloquear
+                        if (mode === 'edit' && id && correosEnviados) {
+                          e.preventDefault();
+                          setShowCategoriaBlockedPopup(true);
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        // Bloquear también con teclado
+                        if (
+                          mode === 'edit' &&
+                          id &&
+                          correosEnviados &&
+                          (e.key === 'ArrowDown' ||
+                            e.key === 'ArrowUp' ||
+                            e.key === 'Enter' ||
+                            e.key === ' ')
+                        ) {
+                          e.preventDefault();
+                          setShowCategoriaBlockedPopup(true);
+                        }
+                      }}
+                      disabled={mode === 'edit' && id && correosEnviados}
                       className="field-select"
+                      style={
+                        mode === 'edit' && id && correosEnviados
+                          ? { cursor: 'not-allowed', opacity: 0.6 }
+                          : {}
+                      }
                     >
                       <option value="">Seleccione categoría...</option>
                       <option value="1">📅 Recordatorio</option>
                       <option value="2">🎯 Promoción</option>
                     </select>
                     {errors.categoria && <span className="error-message">{errors.categoria}</span>}
+                    {mode === 'edit' && id && correosEnviados && (
+                      <span
+                        className="info-message"
+                        style={{
+                          fontSize: '12px',
+                          color: '#666',
+                          marginTop: '4px',
+                          display: 'block',
+                        }}
+                      >
+                        ℹ️ Campo bloqueado: ya se registraron envíos de correo
+                      </span>
+                    )}
                   </div>
 
                   {/* Módulo */}
@@ -685,7 +729,7 @@ const NotificacionForm = ({ mode = 'create' }) => {
                         if (isEditing && correosEnviados && value !== moduloOriginal) {
                           setPendingConfigChange({
                             field: 'modulo',
-                            value: value
+                            value: value,
                           });
                           setShowCambiarConfigModal(true);
                           return;
@@ -772,8 +816,20 @@ const NotificacionForm = ({ mode = 'create' }) => {
                       name="fechaInicioProm"
                       value={formData.fechaInicioProm || ''}
                       onChange={handleChange}
-                      onClick={(e) => e.target.showPicker && e.target.showPicker()}  // ✅ abre calendario al hacer clic
-                      onFocus={(e) => e.target.showPicker && e.target.showPicker()}  // ✅ abre también al enfocar con tab
+                      onClick={(e) => {
+                        try {
+                          e.target.showPicker?.();
+                        } catch (err) {
+                          // Silenciar error si showPicker no está disponible o falla
+                        }
+                      }}
+                      onFocus={(e) => {
+                        try {
+                          e.target.showPicker?.();
+                        } catch (err) {
+                          // Silenciar error si showPicker no está disponible o falla
+                        }
+                      }}
                       className="field-input"
                     />
                     {errors.fechaInicioProm && (
@@ -793,8 +849,20 @@ const NotificacionForm = ({ mode = 'create' }) => {
                         value={formData.fechaFin || ''}
                         onChange={handleChange}
                         min={formData.fechaInicioProm}
-                        onClick={(e) => e.target.showPicker && e.target.showPicker()}  // ✅ abre calendario al hacer clic
-                        onFocus={(e) => e.target.showPicker && e.target.showPicker()}  // ✅ abre también al enfocar con tab
+                        onClick={(e) => {
+                          try {
+                            e.target.showPicker?.();
+                          } catch (err) {
+                            // Silenciar error si showPicker no está disponible o falla
+                          }
+                        }}
+                        onFocus={(e) => {
+                          try {
+                            e.target.showPicker?.();
+                          } catch (err) {
+                            // Silenciar error si showPicker no está disponible o falla
+                          }
+                        }}
                         className="field-input"
                       />
                       {errors.fechaFin && <span className="error-message">{errors.fechaFin}</span>}
@@ -989,7 +1057,8 @@ const NotificacionForm = ({ mode = 'create' }) => {
                 <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#666' }}>
                   Si la cambia, no se enviará un nuevo correo a quienes ya lo recibieron.
                   <br />
-                  Si desea reenviar una notificación, elimínela y cree una nueva con la configuracion deseada.
+                  Si desea reenviar una notificación, elimínela y cree una nueva con la
+                  configuracion deseada.
                 </p>
               </>
             }
@@ -1008,11 +1077,14 @@ const NotificacionForm = ({ mode = 'create' }) => {
                   Ya fue enviado un correo basado en esta configuración de fecha de inicio.
                   <br />
                   <br />
-                  <strong>¿Está seguro que desea cambiar la fecha de inicio de esta notificación?</strong>
+                  <strong>
+                    ¿Está seguro que desea cambiar la fecha de inicio de esta notificación?
+                  </strong>
                 </p>
                 <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#666' }}>
-                  Si la cambia, no se reenviará un nuevo correo automáticamente a los registros que ya recibieron uno bajo esta configuración.
-                  <br />   
+                  Si la cambia, no se reenviará un nuevo correo automáticamente a los registros que
+                  ya recibieron uno bajo esta configuración.
+                  <br />
                   Si necesita enviar un nuevo correo, elimine esta notificación y cree una nueva.
                 </p>
               </>
@@ -1032,15 +1104,17 @@ const NotificacionForm = ({ mode = 'create' }) => {
                   Ya fue enviado al menos un correo con esta configuración.
                   <br />
                   <strong>
-                    ¿Está seguro que desea cambiar {
-                      pendingConfigChange?.field === 'modulo' ? 'módulo' : 'categoría'
-                    } de esta notificación?
+                    ¿Está seguro que desea cambiar{' '}
+                    {pendingConfigChange?.field === 'modulo' ? 'módulo' : 'categoría'} de esta
+                    notificación?
                   </strong>
                 </p>
                 <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#666' }}>
-                  Si realiza el cambio, no se enviará un nuevo correo a los registros que ya recibieron uno bajo la configuración anterior.
+                  Si realiza el cambio, no se enviará un nuevo correo a los registros que ya
+                  recibieron uno bajo la configuración anterior.
                   <br />
-                  Si necesita reenviar notificaciones, le sugerimos crear una nueva notificación con la configuración deseada.
+                  Si necesita reenviar notificaciones, le sugerimos crear una nueva notificación con
+                  la configuración deseada.
                 </p>
               </>
             }
@@ -1048,6 +1122,31 @@ const NotificacionForm = ({ mode = 'create' }) => {
             onCancel={cancelarCambiarConfig}
           />
           {/* Fin Modal de advertencia de cambio de configuración */}
+
+          {/* Modal informativo de categoría bloqueada (solo notificaciones generales) */}
+          <ConfirmModal
+            isOpen={showCategoriaBlockedPopup}
+            title="⚠️ Categoría Bloqueada"
+            message={
+              <>
+                <p>
+                  Se recomienda crear una nueva notificación si desea cambiar la categoría.
+                  <br />
+                  <br />
+                  <strong>Ya se registraron envíos de correo bajo esta configuración.</strong>
+                </p>
+                <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#666' }}>
+                  Si necesita cambiar la categoría, elimine esta notificación y cree una nueva con
+                  la configuración deseada.
+                </p>
+              </>
+            }
+            onConfirm={() => setShowCategoriaBlockedPopup(false)}
+            onCancel={() => setShowCategoriaBlockedPopup(false)}
+            confirmText="Entendido"
+            showCancel={false}
+          />
+          {/* Fin Modal informativo de categoría bloqueada */}
         </>
       )}
     </div>
