@@ -76,6 +76,15 @@ export const createExpedienteController = async (req, res) => {
     });
   } catch (error) {
     console.error("Error al crear expediente:", error);
+    
+    // Manejar específicamente el error de correlativo duplicado
+    if (error.code === 'ER_DUP_ENTRY' && error.sqlMessage && error.sqlMessage.includes('correlativo')) {
+      return res.status(400).json({ 
+        ok: false, 
+        message: "Este correlativo ya está ingresado. Por favor, use un número diferente."
+      });
+    }
+    
     res.status(500).json({ 
       ok: false, 
       error: error.message
@@ -116,6 +125,15 @@ export const updateExpedienteController = async (req, res) => {
     }
   } catch (error) {
     console.error("Error al actualizar expediente:", error);
+    
+    // Manejar específicamente el error de correlativo duplicado
+    if (error.code === 'ER_DUP_ENTRY' && error.sqlMessage && error.sqlMessage.includes('correlativo')) {
+      return res.status(400).json({ 
+        ok: false, 
+        message: "Este correlativo ya está ingresado. Por favor, use un número diferente."
+      });
+    }
+    
     res.status(500).json({ ok: false, error: error.message });
   }
 };
