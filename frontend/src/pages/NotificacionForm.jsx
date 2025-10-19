@@ -9,20 +9,13 @@ import {
   updateNotificacionEspecifica,
   getNotificacionEspecificaById,
 } from '../services/notificacionesService';
+import { toInputDate, toGuatemalaDateTime } from '../utils/dateUtils';
 import '../styles/vista-notificaciones.css';
 import '../styles/form-errors.css';
 import ConfirmModal from '../components/ConfirmModal';
 
 // ID real de la categoría Promoción en tu catálogo (tu select ya usa "2")
 const PROMO_CATEGORY_ID = '2';
-
-// Normaliza string/Date a "YYYY-MM-DD" para <input type="date">
-const toInputDate = (d) => {
-  if (!d) return '';
-  const dt = new Date(d);
-  if (Number.isNaN(dt.getTime())) return '';
-  return dt.toISOString().slice(0, 10);
-};
 
 const NotificacionForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -404,15 +397,19 @@ const NotificacionForm = ({ mode = 'create' }) => {
         cuerpo_email: formData.cuerpoEmail,
         fk_id_categoria_notificacion: Number(formData.categoria || 1),
         fecha_objetivo:
-          formData.categoria === PROMO_CATEGORY_ID ? formData.fechaInicioProm || null : null,
-        fecha_fin: formData.categoria === PROMO_CATEGORY_ID ? formData.fechaFin || null : null,
+          formData.categoria === PROMO_CATEGORY_ID
+            ? toGuatemalaDateTime(formData.fechaInicioProm)
+            : null,
+        fecha_fin:
+          formData.categoria === PROMO_CATEGORY_ID ? toGuatemalaDateTime(formData.fechaFin) : null,
       };
     } else {
       // Payload para notificaciones generales
       payload = {
         titulo: formData.titulo,
         descripcion: formData.descripcion,
-        fechaFin: formData.categoria === PROMO_CATEGORY_ID ? formData.fechaFin || null : null,
+        fechaFin:
+          formData.categoria === PROMO_CATEGORY_ID ? toGuatemalaDateTime(formData.fechaFin) : null,
         intervaloDias: formData.categoria === PROMO_CATEGORY_ID ? null : dias,
         tipo_intervalo: tipoIntervalo,
         fk_id_categoria_notificacion: Number(formData.categoria || 0),
@@ -425,7 +422,9 @@ const NotificacionForm = ({ mode = 'create' }) => {
         fk_id_expediente: null,
         fk_id_orden: null,
         fecha_objetivo:
-          formData.categoria === PROMO_CATEGORY_ID ? formData.fechaInicioProm || null : null,
+          formData.categoria === PROMO_CATEGORY_ID
+            ? toGuatemalaDateTime(formData.fechaInicioProm)
+            : null,
       };
     }
 

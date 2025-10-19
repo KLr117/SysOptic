@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import "../styles/vista-orden-trabajo.css";
-import "../styles/orden-trabajo.css";
-import "../styles/popup.css";
-import logo from "../assets/logo.jpg";
-import Titulo from "../components/Titulo";
-import PopUp from "../components/PopUp";
-import { getOrdenById, updateOrden } from "../services/ordenTrabajoService";
-import { obtenerImagenesPorOrden, eliminarImagen, subirImagen } from "../services/imagenesOrdenesService";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import '../styles/vista-orden-trabajo.css';
+import '../styles/orden-trabajo.css';
+import '../styles/popup.css';
+import logo from '../assets/logo.jpg';
+import Titulo from '../components/Titulo';
+import PopUp from '../components/PopUp';
+import { getOrdenById, updateOrden } from '../services/ordenTrabajoService';
+import {
+  obtenerImagenesPorOrden,
+  eliminarImagen,
+  subirImagen,
+} from '../services/imagenesOrdenesService';
+import { toGuatemalaDateTime } from '../utils/dateUtils';
 
 const EditarOrdenTrabajo = () => {
   const { id } = useParams(); // Capturar el ID de la orden
@@ -25,26 +30,24 @@ const EditarOrdenTrabajo = () => {
     total: '',
     adelanto: '',
     saldo: '',
-    observaciones: ''
+    observaciones: '',
   });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
-  
+
   // Estados para imágenes
   const [imagenesOrden, setImagenesOrden] = useState([]); // Imágenes existentes
   const [nuevasImagenes, setNuevasImagenes] = useState([]); // Nuevas imágenes a subir
   const [isDragOver, setIsDragOver] = useState(false);
-  
-  
 
   // Estados para PopUp
   const [popup, setPopup] = useState({
     isOpen: false,
     title: '',
     message: '',
-    type: 'success'
+    type: 'success',
   });
 
   // Cargar datos de la orden desde el backend
@@ -54,17 +57,17 @@ const EditarOrdenTrabajo = () => {
         setLoading(true);
         setError(null);
         const response = await getOrdenById(id);
-        
+
         if (response.ok) {
           const orden = response.order;
-          
+
           // Formatear fechas para inputs de tipo date (YYYY-MM-DD)
           const formatDateForInput = (dateString) => {
             if (!dateString) return '';
             const date = new Date(dateString);
             return date.toISOString().split('T')[0];
           };
-          
+
           setFormData({
             correlativo: orden.correlativo || '',
             paciente: orden.paciente || '',
@@ -76,17 +79,17 @@ const EditarOrdenTrabajo = () => {
             total: orden.total || '',
             adelanto: orden.adelanto || '',
             saldo: orden.saldo || '',
-            observaciones: orden.observaciones || ''
+            observaciones: orden.observaciones || '',
           });
 
           // Cargar imágenes existentes
           await cargarImagenesExistentes();
         } else {
-          setError("Error al cargar la orden");
+          setError('Error al cargar la orden');
         }
       } catch (err) {
-        console.error("Error cargando orden:", err);
-        setError("Error al cargar la orden");
+        console.error('Error cargando orden:', err);
+        setError('Error al cargar la orden');
       } finally {
         setLoading(false);
       }
@@ -96,12 +99,12 @@ const EditarOrdenTrabajo = () => {
       try {
         const response = await obtenerImagenesPorOrden(id);
         if (response.success && response.imagenes) {
-          const imagenesConPreview = response.imagenes.map(imagen => ({
+          const imagenesConPreview = response.imagenes.map((imagen) => ({
             id: imagen.id,
             nombre: imagen.nombre_archivo,
             preview: imagen.url,
             url: imagen.url,
-            esExistente: true
+            esExistente: true,
           }));
           setImagenesOrden(imagenesConPreview);
           console.log('Imágenes existentes cargadas:', imagenesConPreview);
@@ -116,10 +119,9 @@ const EditarOrdenTrabajo = () => {
     }
   }, [id]);
 
-
   // Función para cerrar el formulario
   const cerrarFormulario = () => {
-    navigate("/ordenes");
+    navigate('/ordenes');
   };
 
   // Función para manejar subida de nuevas imágenes
@@ -164,7 +166,7 @@ const EditarOrdenTrabajo = () => {
     try {
       const response = await eliminarImagen(imagenId);
       if (response.success) {
-        setImagenesOrden(prev => prev.filter(img => img.id !== imagenId));
+        setImagenesOrden((prev) => prev.filter((img) => img.id !== imagenId));
         setPopup({
           isOpen: true,
           title: 'Imagen Eliminada',
@@ -172,7 +174,7 @@ const EditarOrdenTrabajo = () => {
           type: 'success',
           showButtons: true,
           confirmText: 'Aceptar',
-          onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+          onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
         });
       } else {
         setPopup({
@@ -182,7 +184,7 @@ const EditarOrdenTrabajo = () => {
           type: 'error',
           showButtons: true,
           confirmText: 'Aceptar',
-          onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+          onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
         });
       }
     } catch (error) {
@@ -194,35 +196,36 @@ const EditarOrdenTrabajo = () => {
         type: 'error',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
       });
     }
   };
 
   // Función para eliminar nueva imagen
   const removeNuevaImagen = (id) => {
-    setNuevasImagenes(prev => prev.filter(img => img.id !== id));
+    setNuevasImagenes((prev) => prev.filter((img) => img.id !== id));
   };
 
   // Función para manejar cambios en los inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Calcular saldo automáticamente cuando cambian total o adelanto
     if (name === 'total' || name === 'adelanto') {
       const total = name === 'total' ? parseFloat(value) || 0 : parseFloat(formData.total) || 0;
-      const adelanto = name === 'adelanto' ? parseFloat(value) || 0 : parseFloat(formData.adelanto) || 0;
+      const adelanto =
+        name === 'adelanto' ? parseFloat(value) || 0 : parseFloat(formData.adelanto) || 0;
       const saldo = total - adelanto;
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
         [name]: value,
-        saldo: saldo.toString()
+        saldo: saldo.toString(),
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
@@ -238,7 +241,7 @@ const EditarOrdenTrabajo = () => {
         type: 'warning',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
       });
       return;
     }
@@ -253,10 +256,10 @@ const EditarOrdenTrabajo = () => {
       confirmText: 'Guardar',
       cancelText: 'Cancelar',
       onConfirm: () => {
-        setPopup(prev => ({ ...prev, isOpen: false }));
+        setPopup((prev) => ({ ...prev, isOpen: false }));
         actualizarOrden();
       },
-      onCancel: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      onCancel: () => setPopup((prev) => ({ ...prev, isOpen: false })),
     });
   };
 
@@ -272,16 +275,16 @@ const EditarOrdenTrabajo = () => {
         direccion: formData.direccion,
         correo: formData.correo,
         telefono: formData.telefono,
-        fecha_recepcion: formData.fecha_recepcion,
-        fecha_entrega: formData.fecha_entrega,
+        fecha_recepcion: toGuatemalaDateTime(formData.fecha_recepcion),
+        fecha_entrega: formData.fecha_entrega ? toGuatemalaDateTime(formData.fecha_entrega) : null,
         total: parseFloat(formData.total) || 0,
         adelanto: parseFloat(formData.adelanto) || 0,
         saldo: parseFloat(formData.saldo) || 0,
-        observaciones: formData.observaciones
+        observaciones: formData.observaciones,
       };
 
       const response = await updateOrden(id, orderData);
-      
+
       if (response.ok) {
         // Subir nuevas imágenes si las hay
         if (nuevasImagenes.length > 0) {
@@ -304,9 +307,9 @@ const EditarOrdenTrabajo = () => {
           showButtons: true,
           confirmText: 'Aceptar',
           onConfirm: () => {
-            setPopup(prev => ({ ...prev, isOpen: false }));
-            navigate("/ordenes");
-          }
+            setPopup((prev) => ({ ...prev, isOpen: false }));
+            navigate('/ordenes');
+          },
         });
       } else {
         setPopup({
@@ -316,7 +319,7 @@ const EditarOrdenTrabajo = () => {
           type: 'error',
           showButtons: true,
           confirmText: 'Aceptar',
-          onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+          onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
         });
       }
     } catch (error) {
@@ -328,7 +331,7 @@ const EditarOrdenTrabajo = () => {
         type: 'error',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
       });
     } finally {
       setSaving(false);
@@ -352,8 +355,8 @@ const EditarOrdenTrabajo = () => {
       <div className="orden-container">
         <div className="text-center py-8 text-red-600">
           <p>Error: {error}</p>
-          <button 
-            onClick={() => navigate("/ordenes")} 
+          <button
+            onClick={() => navigate('/ordenes')}
             className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Volver a Órdenes
@@ -365,7 +368,7 @@ const EditarOrdenTrabajo = () => {
 
   return (
     <div className="orden-container">
-       {/* Header con logo y número de orden */}
+      {/* Header con logo y número de orden */}
       <div className="orden-header">
         <div className="orden-logo">
           <img src={logo} alt="Logo Empresa" />
@@ -379,18 +382,17 @@ const EditarOrdenTrabajo = () => {
       {/* Título centrado */}
       <Titulo text="Editar Orden de Trabajo" size={32} className="titulo" />
 
-
       {/* Información del paciente */}
       <div className="orden-info">
         <div className="orden-row">
           <div className="orden-field">
             <label>Paciente</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="paciente"
               value={formData.paciente}
               onChange={handleInputChange}
-              placeholder="Nombre del paciente" 
+              placeholder="Nombre del paciente"
             />
           </div>
         </div>
@@ -398,22 +400,22 @@ const EditarOrdenTrabajo = () => {
         <div className="orden-row">
           <div className="orden-field">
             <label>Dirección de domicilio</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="direccion"
               value={formData.direccion}
               onChange={handleInputChange}
-              placeholder="Dirección del paciente" 
+              placeholder="Dirección del paciente"
             />
           </div>
           <div className="orden-field">
             <label>Correo</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               name="correo"
               value={formData.correo}
               onChange={handleInputChange}
-              placeholder="ejemplo@correo.com" 
+              placeholder="ejemplo@correo.com"
             />
           </div>
         </div>
@@ -421,12 +423,12 @@ const EditarOrdenTrabajo = () => {
         <div className="orden-row">
           <div className="orden-field">
             <label>Teléfono</label>
-            <input 
-              type="tel" 
+            <input
+              type="tel"
               name="telefono"
               value={formData.telefono}
               onChange={handleInputChange}
-              placeholder="Número de teléfono" 
+              placeholder="Número de teléfono"
             />
           </div>
         </div>
@@ -434,8 +436,8 @@ const EditarOrdenTrabajo = () => {
         <div className="orden-row">
           <div className="orden-field">
             <label>Fecha Recepción</label>
-            <input 
-              type="date" 
+            <input
+              type="date"
               name="fecha_recepcion"
               value={formData.fecha_recepcion}
               onChange={handleInputChange}
@@ -444,8 +446,8 @@ const EditarOrdenTrabajo = () => {
           </div>
           <div className="orden-field">
             <label>Fecha Entrega</label>
-            <input 
-              type="date" 
+            <input
+              type="date"
               name="fecha_entrega"
               value={formData.fecha_entrega}
               onChange={handleInputChange}
@@ -459,47 +461,52 @@ const EditarOrdenTrabajo = () => {
       <div className="orden-totales">
         <div className="orden-total">
           <label>Total: Q</label>
-          <input 
-            type="number" 
+          <input
+            type="number"
             name="total"
             value={formData.total}
             onChange={handleInputChange}
             step="0.01"
             min="0"
-            placeholder="0.00" 
+            placeholder="0.00"
           />
         </div>
         <div className="orden-adelanto">
           <label>Adelanto: Q</label>
-          <input 
-            type="number" 
+          <input
+            type="number"
             name="adelanto"
             value={formData.adelanto}
             onChange={handleInputChange}
             step="0.01"
             min="0"
-            placeholder="0.00" 
+            placeholder="0.00"
           />
         </div>
         <div className="orden-saldo">
-          <label>Saldo: Q <span className="text-xs text-gray-500">(calculado automáticamente)</span></label>
-          <input 
-            type="number" 
+          <label>
+            Saldo: Q <span className="text-xs text-gray-500">(calculado automáticamente)</span>
+          </label>
+          <input
+            type="number"
             name="saldo"
             value={formData.saldo}
             readOnly
             className="bg-gray-300 text-gray-600 cursor-not-allowed"
             style={{ backgroundColor: '#d1d5db', color: '#4b5563' }}
-            placeholder="0.00" 
+            placeholder="0.00"
           />
         </div>
       </div>
 
       {/* Campo de Observaciones */}
       <div className="orden-observaciones" style={{ position: 'relative', zIndex: 5 }}>
-        <div className="orden-field observaciones-field" style={{ position: 'relative', zIndex: 6 }}>
+        <div
+          className="orden-field observaciones-field"
+          style={{ position: 'relative', zIndex: 6 }}
+        >
           <label>Observaciones</label>
-          <textarea 
+          <textarea
             name="observaciones"
             value={formData.observaciones}
             onChange={handleInputChange}
@@ -520,7 +527,7 @@ const EditarOrdenTrabajo = () => {
               outline: 'none',
               fontFamily: 'inherit',
               fontSize: '14px',
-              lineHeight: '1.4'
+              lineHeight: '1.4',
             }}
             onFocus={(e) => {
               e.target.style.borderColor = '#007bff';
@@ -537,7 +544,7 @@ const EditarOrdenTrabajo = () => {
       {/* Sección de Imágenes */}
       <div className="orden-imagenes">
         <h3>Imágenes de la Orden</h3>
-        
+
         {/* Imágenes existentes */}
         {imagenesOrden.length > 0 && (
           <div className="imagenes-existentes">
@@ -545,8 +552,8 @@ const EditarOrdenTrabajo = () => {
             <div className="imagenes-grid">
               {imagenesOrden.map((imagen, index) => (
                 <div key={imagen.id || index} className="imagen-item">
-                  <img 
-                    src={imagen.preview} 
+                  <img
+                    src={imagen.preview}
                     alt={`Imagen ${index + 1}`}
                     className="imagen-preview"
                     onError={(e) => {
@@ -557,7 +564,7 @@ const EditarOrdenTrabajo = () => {
                       e.target.parentNode.appendChild(errorSpan);
                     }}
                   />
-                  <button 
+                  <button
                     className="btn-eliminar-imagen"
                     onClick={() => removeImagenExistente(imagen.id)}
                     title="Eliminar imagen"
@@ -573,7 +580,7 @@ const EditarOrdenTrabajo = () => {
         {/* Área para subir nuevas imágenes */}
         <div className="nuevas-imagenes">
           <h4>Agregar Nuevas Imágenes:</h4>
-          <div 
+          <div
             className={`upload-area ${isDragOver ? 'drag-over' : ''}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -591,8 +598,8 @@ const EditarOrdenTrabajo = () => {
               <div className="upload-content">
                 <span className="upload-icon">📷</span>
                 <p>Arrastra imágenes aquí o</p>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn-seleccionar-imagenes"
                   onClick={() => document.getElementById('imagenes-input').click()}
                 >
@@ -610,12 +617,8 @@ const EditarOrdenTrabajo = () => {
               <div className="imagenes-grid">
                 {nuevasImagenes.map((imagen) => (
                   <div key={imagen.id} className="imagen-item">
-                    <img 
-                      src={imagen.preview} 
-                      alt="Nueva imagen"
-                      className="imagen-preview"
-                    />
-                    <button 
+                    <img src={imagen.preview} alt="Nueva imagen" className="imagen-preview" />
+                    <button
                       className="btn-eliminar-imagen"
                       onClick={() => removeNuevaImagen(imagen.id)}
                       title="Eliminar imagen"
@@ -632,11 +635,7 @@ const EditarOrdenTrabajo = () => {
 
       {/* Botones */}
       <div className="agregarorden-actions">
-        <button 
-          className="btn-save" 
-          onClick={handleGuardar}
-          disabled={saving}
-        >
+        <button className="btn-save" onClick={handleGuardar} disabled={saving}>
           {saving ? 'Guardando...' : 'Guardar'}
         </button>
         <button className="btn-close" onClick={cerrarFormulario}>
@@ -647,7 +646,7 @@ const EditarOrdenTrabajo = () => {
       {/* PopUp para mensajes */}
       <PopUp
         isOpen={popup.isOpen}
-        onClose={() => setPopup(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setPopup((prev) => ({ ...prev, isOpen: false }))}
         title={popup.title}
         message={popup.message}
         type={popup.type}
@@ -659,7 +658,6 @@ const EditarOrdenTrabajo = () => {
         autoClose={popup.type === 'success'}
         autoCloseDelay={2000}
       />
-
     </div>
   );
 };

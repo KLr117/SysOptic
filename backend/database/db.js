@@ -7,7 +7,7 @@ dotenv.config();
 export const getGuatemalaTime = () => {
   const now = new Date();
   // Guatemala está en UTC-6
-  const guatemalaTime = new Date(now.getTime() - (6 * 60 * 60 * 1000));
+  const guatemalaTime = new Date(now.getTime() - 6 * 60 * 60 * 1000);
   return guatemalaTime;
 };
 
@@ -29,10 +29,10 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  timezone: 'UTC'
+  timezone: "-06:00", // Zona horaria de Guatemala (GMT-6)
 });
 
-//  TEST DE CONEXIÓN AUTOMÁTICO 
+//  TEST DE CONEXIÓN AUTOMÁTICO
 (async () => {
   try {
     const conn = await pool.getConnection();
@@ -42,7 +42,10 @@ const pool = mysql.createPool({
     console.log("🇬🇹 Hora Guatemala (UTC-6):", getGuatemalaTime().toISOString());
     conn.release();
   } catch (err) {
-    console.error("❌ Error conectando desde Railway → Hostinger:", err.code || err.message);
+    console.error(
+      "❌ Error conectando desde Railway → Hostinger:",
+      err.code || err.message
+    );
   }
 })();
 
