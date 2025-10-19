@@ -58,9 +58,9 @@ export const logBitacoraMiddleware = (req, res, next) => {
           accion += ` (ID: ${recordId})`;
         }
 
-        // Insertar en bitácora
+        // Insertar en bitácora con fecha/hora actual en zona horaria de la conexión (GMT-6)
         await pool.query(
-          `INSERT INTO tbl_bitacora (fk_id_user, accion) VALUES (?, ?)`,
+          `INSERT INTO tbl_bitacora (fk_id_user, accion, fecha_accion) VALUES (?, ?, NOW())`,
           [userId, accion]
         );
       } catch (error) {
