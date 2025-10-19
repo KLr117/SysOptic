@@ -60,6 +60,10 @@ const NotificacionForm = ({ mode = 'create' }) => {
   const [showCambiarConfigModal, setShowCambiarConfigModal] = useState(false);
   const [pendingConfigChange, setPendingConfigChange] = useState(null);
 
+  const [registroAsociado, setRegistroAsociado] = useState({
+  correlativo: '',
+  nombre: '',
+});
 
   // ✅ Cargar datos según modo
   useEffect(() => {
@@ -84,6 +88,20 @@ const NotificacionForm = ({ mode = 'create' }) => {
               modulo: res.fk_id_modulo_notificacion?.toString() || '',
               tipo: 'Recordatorio',
             });
+
+            // 🟢 NUEVO: asignar registro asociado
+            if (res.fk_id_modulo_notificacion === 1) {
+              setRegistroAsociado({
+                correlativo: res.correlativo_expediente || '—',
+                nombre: res.nombre_expediente || '—',
+              });
+            } else if (res.fk_id_modulo_notificacion === 2) {
+              setRegistroAsociado({
+                correlativo: res.correlativo_orden || '—',
+                nombre: res.nombre_orden || '—',
+              });
+            }
+
             // Detectar si hay correos enviados
             setCorreosEnviados(res.correos_enviados > 0 || res.envios_registrados > 0);
             setCategoriaOriginal(res.fk_id_categoria_notificacion?.toString() || '');
@@ -109,6 +127,20 @@ const NotificacionForm = ({ mode = 'create' }) => {
             modulo: data.fk_id_modulo_notificacion?.toString() || '',
             tipo: data.nombre_tipo || 'General',
           });
+
+          // 🟢 Agregar información del registro asociado (igual que en editEspecifica)
+          if (data.fk_id_modulo_notificacion === 1) {
+            setRegistroAsociado({
+              correlativo: data.correlativo_expediente || '—',
+              nombre: data.nombre_expediente || '—',
+            });
+          } else if (data.fk_id_modulo_notificacion === 2) {
+            setRegistroAsociado({
+              correlativo: data.correlativo_orden || '—',
+              nombre: data.nombre_orden || '—',
+            });
+          }
+
           // Detectar si hay correos enviados
           setCorreosEnviados(data.correos_enviados > 0 || data.envios_registrados > 0);
           setCategoriaOriginal(data.fk_id_categoria_notificacion?.toString() || '');
@@ -154,22 +186,31 @@ const NotificacionForm = ({ mode = 'create' }) => {
     if (mode === 'edit' || mode === 'editEspecifica') {
       fetchData();
     } else if (mode === 'createExpediente' || mode === 'createOrden') {
-      if (mode === 'createExpediente') {
-        setFormData((prev) => ({
-          ...prev,
-          modulo: '1',
-          categoria: '1',
-          tipo: 'Recordatorio',
-          tipoIntervalo: 'despues_registro',
-        }));
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          modulo: '2',
-          categoria: '1',
-          tipo: 'Recordatorio',
-        }));
-      }
+        const storedData = location.state?.registro || {}; // puedes enviarlo al navegar
+        if (mode === 'createExpediente') {
+          setFormData((prev) => ({
+            ...prev,
+            modulo: '1',
+            categoria: '1',
+            tipo: 'Recordatorio',
+            tipoIntervalo: 'despues_registro',
+          }));
+          setRegistroAsociado({
+            correlativo: storedData.correlativo || '—',
+            nombre: storedData.nombre || '—',
+          });
+        } else {
+          setFormData((prev) => ({
+            ...prev,
+            modulo: '2',
+            categoria: '1',
+            tipo: 'Recordatorio',
+          }));
+          setRegistroAsociado({
+            correlativo: storedData.correlativo || '—',
+            nombre: storedData.paciente || '—',
+          });
+        }
     }
   }, [mode, id]);
 
@@ -503,6 +544,45 @@ const NotificacionForm = ({ mode = 'create' }) => {
       ) : (
         <>
           <form className="notificaciones-form" onSubmit={handleSubmit}>
+
+            {/* 🔹 Información del Registro Asociado */}
+            {isSpecific && (
+                <div className="form-section">
+                  <div className="section-header">
+                    <h3>📁 Registro Asociado</h3>
+                    <p>Información del registro vinculado a esta notificación</p>
+                  </div>
+
+                  <div className="form-grid">
+                    <div className="form-field">
+                      <label className="field-label">
+                        <span className="label-icon">#️⃣</span>
+                        {formData.modulo === '1' ? 'No. Correlativo (Expediente)' : 'No. Orden'}
+                      </label>
+                      <input
+                        type="text"
+                        value={registroAsociado.correlativo}
+                        disabled
+                        className="field-input disabled"
+                      />
+                    </div>
+
+                    <div className="form-field">
+                      <label className="field-label">
+                        <span className="label-icon">👤</span>
+                        {formData.modulo === '1' ? 'Nombre del Paciente' : 'Nombre del Cliente'}
+                      </label>
+                      <input
+                        type="text"
+                        value={registroAsociado.nombre}
+                        disabled
+                        className="field-input disabled"
+                      />
+                    </div>
+                  </div>
+                </div>
+            )}
+
             {/* Sección: Información Básica */}
             <div className="form-section">
               <div className="section-header">

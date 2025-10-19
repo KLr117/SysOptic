@@ -1404,9 +1404,14 @@ export default function Expedientes() {
                             const estado = notificacionesEstado[exp.pk_id_expediente];
 
                             if (valor === 'Crear' && !estado?.tieneNotificacion) {
-                              navigate(
-                                `/notificaciones-especificas/expediente/${exp.pk_id_expediente}`
-                              );
+                              navigate(`/notificaciones-especificas/expediente/${exp.pk_id_expediente}`, {
+                                state: {
+                                  registro: {
+                                    correlativo: exp.correlativo,
+                                    nombre: exp.nombre, // este nombre debe coincidir con el que usas en tu backend y en el form
+                                  },
+                                },
+                              });
                             } else if (valor === 'Mostrar' && estado?.tieneNotificacion) {
                               handleViewNotificacion(exp);
                             } else if (valor === 'Editar' && estado?.tieneNotificacion) {
@@ -2076,6 +2081,28 @@ export default function Expedientes() {
             </div>
 
             <div className="modal-body">
+              {/* Información del expediente asociado */}
+              <div className="modal-section">
+                <h4 className="section-title">
+                  <span className="section-icon">📁</span>
+                  Expediente Asociado
+                </h4>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">No. Correlativo:</span>
+                    <span className="info-value">
+                      {notificacionSeleccionada.correlativo_expediente || '—'}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Nombre del Paciente:</span>
+                    <span className="info-value">
+                      {notificacionSeleccionada.nombre_expediente || '—'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* Información Básica */}
               <div className="modal-section">
                 <h4 className="section-title">
@@ -2128,9 +2155,7 @@ export default function Expedientes() {
                         <span className="info-label">Fecha Fin:</span>
                         <span className="info-value">
                           {notificacionSeleccionada.fecha_fin
-                            ? new Date(notificacionSeleccionada.fecha_fin).toLocaleDateString(
-                                'es-ES'
-                              )
+                            ? new Date(notificacionSeleccionada.fecha_fin).toLocaleDateString('es-ES')
                             : '—'}
                         </span>
                       </div>
@@ -2200,6 +2225,7 @@ export default function Expedientes() {
           </div>
         </div>
       )}
+
 
       {/* 🔹 Modal de Zoom para Imágenes */}
       {showZoomModal && zoomImage && (
