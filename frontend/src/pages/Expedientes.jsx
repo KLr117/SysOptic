@@ -165,6 +165,15 @@ export default function Expedientes() {
   // Estado para notificaciones de expedientes
   const [notificacionesEstado, setNotificacionesEstado] = useState({});
 
+  // Estado para modal de confirmación de eliminación de notificación
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    onCancel: null
+  });
+
   // 🔹 Mostrar popup
   const mostrarPopup = (mensaje, tipo = 'success') => {
     console.log('🔔 Llamando mostrarPopup:', mensaje, 'tipo:', tipo);
@@ -437,19 +446,30 @@ export default function Expedientes() {
     }
   };
 
-  const handleDeleteNotificacion = async (idNotificacion, idExpediente) => {
-    if (!window.confirm('¿Seguro que deseas eliminar esta notificación?')) return;
+  const handleDeleteNotificacion = (idNotificacion, idExpediente) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirmar eliminación',
+      message: '¿Seguro que deseas eliminar esta notificación?',
+      onConfirm: () => confirmDeleteNotificacion(idNotificacion, idExpediente),
+      onCancel: () => setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null })
+    });
+  };
+
+  const confirmDeleteNotificacion = async (idNotificacion, idExpediente) => {
     try {
       const res = await deleteNotificacionEspecifica(idNotificacion);
       if (res.ok || res.success) {
         await refreshNotificaciones();
-        alert('Éxito: Notificación eliminada correctamente.');
-        } else {
-        alert('Error: No se pudo eliminar la notificación.');
+        mostrarPopup('Notificación eliminada correctamente.', 'success');
+      } else {
+        mostrarPopup('No se pudo eliminar la notificación.', 'error');
       }
     } catch (error) {
       console.error(error);
-      alert('Error: Error al eliminar la notificación.');
+      mostrarPopup('Error al eliminar la notificación.', 'error');
+    } finally {
+      setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null });
     }
   };
 
@@ -2317,6 +2337,15 @@ export default function Expedientes() {
           </div>
         </div>
       )}
+
+      {/* Modal de confirmación para eliminación de notificación */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={confirmModal.onCancel}
+      />
     </div>
   );
 }
