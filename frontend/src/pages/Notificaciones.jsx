@@ -36,7 +36,7 @@ const Notificaciones = () => {
   const [notificaciones, setNotificaciones] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Estado para fila seleccionada
   const [filaSeleccionada, setFilaSeleccionada] = useState(null);
 
@@ -88,6 +88,14 @@ const Notificaciones = () => {
         break;
       case 'modulo_desc':
         setSortField('modulo');
+        setSortDirection('desc');
+        break;
+      case 'tipo_asc':
+        setSortField('tipo');
+        setSortDirection('asc');
+        break;
+      case 'tipo_desc':
+        setSortField('tipo');
         setSortDirection('desc');
         break;
       case 'fecha_creacion_asc':
@@ -179,8 +187,10 @@ const Notificaciones = () => {
     result.sort((a, b) => {
       if (sortField === 'id') return dir * (a.pk_id_notificacion - b.pk_id_notificacion);
       if (sortField === 'titulo') return dir * (a.titulo || '').localeCompare(b.titulo || '');
-      if (sortField === 'descripcion') return dir * (a.descripcion || '').localeCompare(b.descripcion || '');
-      if (sortField === 'tipo') return dir * (a.tipo || '').localeCompare(b.tipo || '');
+      if (sortField === 'descripcion')
+        return dir * (a.descripcion || '').localeCompare(b.descripcion || '');
+      if (sortField === 'tipo')
+        return dir * (a.nombre_tipo || '').localeCompare(b.nombre_tipo || '');
       if (sortField === 'categoria')
         return dir * (a.nombre_categoria || '').localeCompare(b.nombre_categoria || '');
       if (sortField === 'modulo')
@@ -222,7 +232,7 @@ const Notificaciones = () => {
   const confirmDelete = async () => {
     // Guardar la página actual antes de eliminar
     const paginaActual = currentPage;
-    
+
     try {
       await deleteNotificacion(selectedNoti.pk_id_notificacion);
       await fetchNotificaciones();
@@ -278,22 +288,21 @@ const Notificaciones = () => {
     }
   };
 
-const handleView = async (notificacion) => {
-  try {
-    // Pide el detalle enriquecido por id
-    const det = await getNotificacionEspecificaById(notificacion.pk_id_notificacion);
+  const handleView = async (notificacion) => {
+    try {
+      // Pide el detalle enriquecido por id
+      const det = await getNotificacionEspecificaById(notificacion.pk_id_notificacion);
 
-    // Si el endpoint devuelve algo, úsalo; si no, cae al objeto original
-    setNotificacionSeleccionada(det?.pk_id_notificacion ? det : notificacion);
-    setModalVisible(true);
-  } catch (err) {
-    console.error('Error al cargar detalle:', err);
-    // Fallback: muestra al menos lo básico
-    setNotificacionSeleccionada(notificacion);
-    setModalVisible(true);
-  }
-};
-
+      // Si el endpoint devuelve algo, úsalo; si no, cae al objeto original
+      setNotificacionSeleccionada(det?.pk_id_notificacion ? det : notificacion);
+      setModalVisible(true);
+    } catch (err) {
+      console.error('Error al cargar detalle:', err);
+      // Fallback: muestra al menos lo básico
+      setNotificacionSeleccionada(notificacion);
+      setModalVisible(true);
+    }
+  };
 
   // Ordenar encabezado
   const toggleSort = (field) => {
@@ -307,7 +316,6 @@ const handleView = async (notificacion) => {
 
   const renderSortArrow = (field) =>
     sortField === field ? (sortDirection === 'asc' ? '↑' : '↓') : '↕';
-
 
   // Paginación input
   const commitPageInput = () => {
@@ -383,13 +391,17 @@ const handleView = async (notificacion) => {
             className="sort-combobox"
             data-tooltip="Selecciona una ordenación rápida"
           >
-            <option value="" disabled>Seleccione</option>
+            <option value="" disabled>
+              Seleccione
+            </option>
             <option value="id_asc">ID - Ascendente</option>
             <option value="id_desc">ID - Descendente</option>
             <option value="titulo_asc">Título A-Z</option>
             <option value="titulo_desc">Título Z-A</option>
             <option value="modulo_asc">Módulo A-Z</option>
             <option value="modulo_desc">Módulo Z-A</option>
+            <option value="tipo_asc">Tipo - Específica primero</option>
+            <option value="tipo_desc">Tipo - General primero</option>
             <option value="fecha_creacion_asc">Fecha Creación - Ascendente</option>
             <option value="fecha_creacion_desc">Fecha Creación - Descendente</option>
           </select>
@@ -408,7 +420,7 @@ const handleView = async (notificacion) => {
                   <th onClick={() => toggleSort('id')}>ID {renderSortArrow('id')}</th>
                   <th onClick={() => toggleSort('titulo')}>Título {renderSortArrow('titulo')}</th>
                   <th>Descripción</th>
-                  <th>Tipo</th>
+                  <th onClick={() => toggleSort('tipo')}>Tipo {renderSortArrow('tipo')}</th>
                   <th onClick={() => toggleSort('categoria')}>
                     Categoría {renderSortArrow('categoria')}
                   </th>
@@ -427,12 +439,12 @@ const handleView = async (notificacion) => {
 
               <tbody>
                 {currentData.map((n) => (
-                  <tr 
+                  <tr
                     key={n.pk_id_notificacion}
                     className={filaSeleccionada === n.pk_id_notificacion ? 'fila-seleccionada' : ''}
                     onClick={() => handleSeleccionarFila(n)}
-                    style={{ 
-                      cursor: 'pointer'
+                    style={{
+                      cursor: 'pointer',
                     }}
                   >
                     <td>{n.pk_id_notificacion}</td>
@@ -457,12 +469,28 @@ const handleView = async (notificacion) => {
                         defaultValue="Acciones"
                         onChange={(e) => {
                           const accion = e.target.value;
-                          if (accion === "Visualizar") handleView(n);
-                          else if (accion === "Editar") navigate(`/notificaciones/editar/${n.pk_id_notificacion}`);
-                          else if (accion === "Desactivar") handleEstadoClick(n, 'desactivar');
-                          else if (accion === "Reactivar") handleEstadoClick(n, 'reactivar');
-                          else if (accion === "Eliminar") handleDeleteClick(n);
-                          e.target.value = "Acciones";
+                          if (accion === 'Visualizar') handleView(n);
+                          else if (accion === 'Editar') {
+                            // Detectar si es notificación específica (tiene expediente u orden asociada)
+                            // Una notificación es específica si tiene fk_id_expediente o fk_id_orden
+                            const esEspecifica = !!(n.fk_id_expediente || n.fk_id_orden);
+
+                            if (esEspecifica) {
+                              // Redirigir a edición de notificación específica
+                              navigate(
+                                `/notificaciones-especificas/editar/${n.pk_id_notificacion}`,
+                                {
+                                  state: { from: 'notificaciones' },
+                                }
+                              );
+                            } else {
+                              // Redirigir a edición de notificación general
+                              navigate(`/notificaciones/editar/${n.pk_id_notificacion}`);
+                            }
+                          } else if (accion === 'Desactivar') handleEstadoClick(n, 'desactivar');
+                          else if (accion === 'Reactivar') handleEstadoClick(n, 'reactivar');
+                          else if (accion === 'Eliminar') handleDeleteClick(n);
+                          e.target.value = 'Acciones';
                         }}
                         data-tooltip="Acciones disponibles"
                       >
@@ -560,7 +588,7 @@ const handleView = async (notificacion) => {
         <div className="modal">
           <div className="modal-content view-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-            <h3 className="modal-title">
+              <h3 className="modal-title">
                 <span className="modal-icon">🔔</span>
                 Detalles de la Notificación
               </h3>
@@ -576,50 +604,56 @@ const handleView = async (notificacion) => {
             </div>
 
             <div className="modal-body">
+              {/* Información del Registro Asociado (Expediente u Orden) */}
+              {(notificacionSeleccionada.correlativo_expediente ||
+                notificacionSeleccionada.nombre_expediente ||
+                notificacionSeleccionada.correlativo_orden ||
+                notificacionSeleccionada.nombre_orden) && (
+                <div className="modal-section">
+                  <h4 className="section-title">
+                    <span className="section-icon">📁</span>
+                    {notificacionSeleccionada.correlativo_expediente ||
+                    notificacionSeleccionada.nombre_expediente
+                      ? 'Expediente Asociado'
+                      : 'Orden Asociada'}
+                  </h4>
+                  <div className="info-grid">
+                    {/* Datos del expediente */}
+                    {notificacionSeleccionada.correlativo_expediente && (
+                      <div className="info-item">
+                        <span className="info-label">Correlativo:</span>
+                        <span className="info-value">
+                          {notificacionSeleccionada.correlativo_expediente}
+                        </span>
+                      </div>
+                    )}
+                    {notificacionSeleccionada.nombre_expediente && (
+                      <div className="info-item">
+                        <span className="info-label">Nombre:</span>
+                        <span className="info-value">
+                          {notificacionSeleccionada.nombre_expediente}
+                        </span>
+                      </div>
+                    )}
 
-            {/* Información del Registro Asociado (Expediente u Orden) */}
-            {(notificacionSeleccionada.correlativo_expediente ||
-              notificacionSeleccionada.nombre_expediente ||
-              notificacionSeleccionada.correlativo_orden ||
-              notificacionSeleccionada.nombre_orden) && (
-              <div className="modal-section">
-                <h4 className="section-title">
-                  <span className="section-icon">📁</span>
-                  {notificacionSeleccionada.correlativo_expediente || notificacionSeleccionada.nombre_expediente
-                    ? 'Expediente Asociado'
-                    : 'Orden Asociada'}
-                </h4>
-                <div className="info-grid">
-                  {/* Datos del expediente */}
-                  {notificacionSeleccionada.correlativo_expediente && (
-                    <div className="info-item">
-                      <span className="info-label">Correlativo:</span>
-                      <span className="info-value">{notificacionSeleccionada.correlativo_expediente}</span>
-                    </div>
-                  )}
-                  {notificacionSeleccionada.nombre_expediente && (
-                    <div className="info-item">
-                      <span className="info-label">Nombre:</span>
-                      <span className="info-value">{notificacionSeleccionada.nombre_expediente}</span>
-                    </div>
-                  )}
-
-                  {/* Datos de la orden */}
-                  {notificacionSeleccionada.correlativo_orden && (
-                    <div className="info-item">
-                      <span className="info-label">No. Orden:</span>
-                      <span className="info-value">{notificacionSeleccionada.correlativo_orden}</span>
-                    </div>
-                  )}
-                  {notificacionSeleccionada.nombre_orden && (
-                    <div className="info-item">
-                      <span className="info-label">Paciente:</span>
-                      <span className="info-value">{notificacionSeleccionada.nombre_orden}</span>
-                    </div>
-                  )}
+                    {/* Datos de la orden */}
+                    {notificacionSeleccionada.correlativo_orden && (
+                      <div className="info-item">
+                        <span className="info-label">No. Orden:</span>
+                        <span className="info-value">
+                          {notificacionSeleccionada.correlativo_orden}
+                        </span>
+                      </div>
+                    )}
+                    {notificacionSeleccionada.nombre_orden && (
+                      <div className="info-item">
+                        <span className="info-label">Paciente:</span>
+                        <span className="info-value">{notificacionSeleccionada.nombre_orden}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )} 
+              )}
 
               {/* Sección: Información Básica */}
               <div className="modal-section">
@@ -630,7 +664,9 @@ const handleView = async (notificacion) => {
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">ID:</span>
-                    <span className="info-value">{notificacionSeleccionada.pk_id_notificacion}</span>
+                    <span className="info-value">
+                      {notificacionSeleccionada.pk_id_notificacion}
+                    </span>
                   </div>
                   <div className="info-item">
                     <span className="info-label">Título:</span>
@@ -641,7 +677,7 @@ const handleView = async (notificacion) => {
                     <span className="info-value">{notificacionSeleccionada.descripcion}</span>
                   </div>
                 </div>
-              </div>   
+              </div>
 
               {/* Sección: Configuración */}
               <div className="modal-section">
@@ -660,7 +696,9 @@ const handleView = async (notificacion) => {
                   </div>
                   <div className="info-item">
                     <span className="info-label">Estado:</span>
-                    <span className={`info-value status-badge ${getEstadoClass(notificacionSeleccionada)}`}>
+                    <span
+                      className={`info-value status-badge ${getEstadoClass(notificacionSeleccionada)}`}
+                    >
                       {getEstadoLabel(notificacionSeleccionada)}
                     </span>
                   </div>
@@ -691,19 +729,20 @@ const handleView = async (notificacion) => {
                           : 'No especificada'}
                       </span>
                     </div>
-                    {notificacionSeleccionada.fecha_objetivo && notificacionSeleccionada.fecha_fin && (
-                      <div className="info-item">
-                        <span className="info-label">Duración:</span>
-                        <span className="info-value">
-                  {(() => {
-                    const inicio = new Date(notificacionSeleccionada.fecha_objetivo);
-                    const fin = new Date(notificacionSeleccionada.fecha_fin);
-                    const diffDays = Math.round((fin - inicio) / (1000 * 60 * 60 * 24));
-                    return diffDays > 0 ? `${diffDays} días` : '—';
-                  })()}
-                        </span>
-                      </div>
-                    )}
+                    {notificacionSeleccionada.fecha_objetivo &&
+                      notificacionSeleccionada.fecha_fin && (
+                        <div className="info-item">
+                          <span className="info-label">Duración:</span>
+                          <span className="info-value">
+                            {(() => {
+                              const inicio = new Date(notificacionSeleccionada.fecha_objetivo);
+                              const fin = new Date(notificacionSeleccionada.fecha_fin);
+                              const diffDays = Math.round((fin - inicio) / (1000 * 60 * 60 * 24));
+                              return diffDays > 0 ? `${diffDays} días` : '—';
+                            })()}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 </div>
               )}
@@ -718,12 +757,15 @@ const handleView = async (notificacion) => {
                   <div className="info-grid">
                     <div className="info-item">
                       <span className="info-label">Intervalo:</span>
-                      <span className="info-value">{notificacionSeleccionada.intervalo_dias} días</span>
+                      <span className="info-value">
+                        {notificacionSeleccionada.intervalo_dias} días
+                      </span>
                     </div>
                     <div className="info-item">
                       <span className="info-label">Tipo de Intervalo:</span>
                       <span className="info-value">
-                        {intervaloLabels[notificacionSeleccionada.tipo_intervalo] || 'No especificado'}
+                        {intervaloLabels[notificacionSeleccionada.tipo_intervalo] ||
+                          'No especificado'}
                       </span>
                     </div>
                   </div>
@@ -744,7 +786,9 @@ const handleView = async (notificacion) => {
                     </div>
                     <div className="info-item full-width">
                       <span className="info-label">Cuerpo del Correo:</span>
-                      <span className="info-value email-body">{notificacionSeleccionada.cuerpo_email}</span>
+                      <span className="info-value email-body">
+                        {notificacionSeleccionada.cuerpo_email}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -754,8 +798,8 @@ const handleView = async (notificacion) => {
             <div className="modal-footer">
               <button onClick={() => setModalVisible(false)} className="btn-primary">
                 <span className="btn-icon">✅</span>
-              Cerrar
-            </button>
+                Cerrar
+              </button>
             </div>
           </div>
         </div>
