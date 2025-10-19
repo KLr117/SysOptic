@@ -8,6 +8,7 @@ import '../styles/vista-notificaciones.css';
 import Titulo from '../components/Titulo';
 import Button from '../components/Button';
 import PopUp from '../components/PopUp';
+import ConfirmModal from '../components/ConfirmModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getOrdenes, deleteOrden } from '../services/ordenTrabajoService';
 import { obtenerTodasLasImagenes } from '../services/imagenesOrdenesService';
@@ -141,6 +142,15 @@ const OrdenTrabajo = () => {
 
   // Estado para orden a eliminar
   const [ordenAEliminar, setOrdenAEliminar] = useState(null);
+
+  // Estado para modal de confirmación de eliminación de notificación
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    onCancel: null
+  });
 
   // Estado para imágenes de órdenes desde la base de datos
   const [imagenesOrdenes, setImagenesOrdenes] = useState({});
@@ -395,8 +405,17 @@ const OrdenTrabajo = () => {
     }
   };
 
-  const handleDeleteNotificacion = async (idNotificacion, idOrden) => {
-    if (!window.confirm('¿Seguro que deseas eliminar esta notificación?')) return;
+  const handleDeleteNotificacion = (idNotificacion, idOrden) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirmar eliminación',
+      message: '¿Seguro que deseas eliminar esta notificación?',
+      onConfirm: () => confirmDeleteNotificacion(idNotificacion, idOrden),
+      onCancel: () => setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null })
+    });
+  };
+
+  const confirmDeleteNotificacion = async (idNotificacion, idOrden) => {
     try {
       const res = await deleteNotificacionEspecifica(idNotificacion);
       if (res.ok || res.success) {
@@ -408,6 +427,8 @@ const OrdenTrabajo = () => {
     } catch (error) {
       console.error(error);
       showPopup('Error', 'Error al eliminar la notificación.', 'error');
+    } finally {
+      setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null });
     }
   };
 
@@ -1254,6 +1275,15 @@ const OrdenTrabajo = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de confirmación para eliminación de notificación */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={confirmModal.onCancel}
+      />
     </div>
   );
 };
