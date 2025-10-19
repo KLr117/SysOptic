@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Importar useNavigate
-import "../styles/orden-trabajo.css";
-import "../styles/vista-orden-trabajo.css";
-import "../styles/popup.css";
-import logo from "../assets/logo.jpg"; // Importamos el logo desde src
-import Titulo from "../components/Titulo"; // Importamos el nuevo componente Titulo
-import PopUp from "../components/PopUp";
-import { createOrden, getOrdenes, getLastCorrelativo } from "../services/ordenTrabajoService";
-import { subirImagen } from "../services/imagenesOrdenesService";
-
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Importar useNavigate
+import '../styles/orden-trabajo.css';
+import '../styles/vista-orden-trabajo.css';
+import '../styles/popup.css';
+import logo from '../assets/logo.jpg'; // Importamos el logo desde src
+import Titulo from '../components/Titulo'; // Importamos el nuevo componente Titulo
+import PopUp from '../components/PopUp';
+import { createOrden, getOrdenes, getLastCorrelativo } from '../services/ordenTrabajoService';
+import { subirImagen } from '../services/imagenesOrdenesService';
+import { toGuatemalaDateTime } from '../utils/dateUtils';
 
 const AgregarOrdenTrabajo = () => {
   const navigate = useNavigate(); // Hook para navegación
-  
+
   // Estados del formulario
   const [formData, setFormData] = useState({
     numero_orden: '',
@@ -25,7 +25,7 @@ const AgregarOrdenTrabajo = () => {
     total: '',
     adelanto: '',
     saldo: '',
-    observaciones: ''
+    observaciones: '',
   });
 
   // Estados para PopUp
@@ -33,13 +33,13 @@ const AgregarOrdenTrabajo = () => {
     isOpen: false,
     title: '',
     message: '',
-    type: 'success'
+    type: 'success',
   });
 
   // Estados para imágenes
   const [imagenes, setImagenes] = useState([]);
   const [isDragOver, setIsDragOver] = useState(false);
-  
+
   // Estado para sugerencia de correlativo
   const [sugerenciaCorrelativo, setSugerenciaCorrelativo] = useState('');
 
@@ -63,9 +63,9 @@ const AgregarOrdenTrabajo = () => {
   // Función para aplicar la sugerencia de correlativo
   const aplicarSugerencia = () => {
     if (sugerenciaCorrelativo) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        numero_orden: sugerenciaCorrelativo
+        numero_orden: sugerenciaCorrelativo,
       }));
     }
   };
@@ -110,52 +110,51 @@ const AgregarOrdenTrabajo = () => {
 
   // Función para eliminar imagen
   const removeImage = (id) => {
-    setImagenes(prev => prev.filter(img => img.id !== id));
+    setImagenes((prev) => prev.filter((img) => img.id !== id));
   };
 
   // Función para cerrar el formulario
   const cerrarFormulario = () => {
-    navigate("/ordenes"); // Redirige a la lista de órdenes
+    navigate('/ordenes'); // Redirige a la lista de órdenes
   };
-
 
   // Función para formatear teléfono automáticamente
   const formatearTelefono = (telefono) => {
     // Permitir números, guiones, paréntesis, espacios y signo +
     const telefonoLimpio = telefono.replace(/[^0-9\-\(\)\s\+]/g, '');
-    
+
     // Si tiene 8 dígitos, formatear como 1234-5678 (número local)
     const numeros = telefonoLimpio.replace(/\D/g, '');
     if (numeros.length === 8) {
       return `${numeros.slice(0, 4)}-${numeros.slice(4)}`;
     }
-    
+
     // Si tiene 10 dígitos, formatear como 123-4567-8901
     if (numeros.length === 10) {
       return `${numeros.slice(0, 3)}-${numeros.slice(3, 7)}-${numeros.slice(7)}`;
     }
-    
+
     // Si tiene 11 dígitos, asumir código de país de 3 dígitos
     if (numeros.length === 11) {
       const codigoPais = numeros.slice(0, 3);
       const numeroLocal = numeros.slice(3);
       return `(${codigoPais}) ${numeroLocal.slice(0, 4)}-${numeroLocal.slice(4)}`;
     }
-    
+
     // Si tiene 12 dígitos, asumir código de país de 3 dígitos + 9 dígitos
     if (numeros.length === 12) {
       const codigoPais = numeros.slice(0, 3);
       const numeroLocal = numeros.slice(3);
       return `(${codigoPais}) ${numeroLocal.slice(0, 3)}-${numeroLocal.slice(3, 6)}-${numeroLocal.slice(6)}`;
     }
-    
+
     // Si tiene 13 dígitos, asumir código de país de 3 dígitos + 10 dígitos
     if (numeros.length === 13) {
       const codigoPais = numeros.slice(0, 3);
       const numeroLocal = numeros.slice(3);
       return `(${codigoPais}) ${numeroLocal.slice(0, 3)}-${numeroLocal.slice(3, 6)}-${numeroLocal.slice(6)}`;
     }
-    
+
     // Para otros casos, devolver tal como está (solo números, guiones, paréntesis y espacios)
     return telefonoLimpio;
   };
@@ -163,32 +162,33 @@ const AgregarOrdenTrabajo = () => {
   // Función para manejar cambios en los inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Para teléfono, solo limpiar caracteres no permitidos, no formatear automáticamente
     if (name === 'telefono') {
       // Permitir números, guiones, paréntesis, espacios y signo +
       const telefonoLimpio = value.replace(/[^0-9\-\(\)\s\+]/g, '');
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: telefonoLimpio
+        [name]: telefonoLimpio,
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
 
     // Calcular saldo automáticamente cuando cambian total o adelanto
     if (name === 'total' || name === 'adelanto') {
       const total = name === 'total' ? parseFloat(value) || 0 : parseFloat(formData.total) || 0;
-      const adelanto = name === 'adelanto' ? parseFloat(value) || 0 : parseFloat(formData.adelanto) || 0;
+      const adelanto =
+        name === 'adelanto' ? parseFloat(value) || 0 : parseFloat(formData.adelanto) || 0;
       const saldo = total - adelanto;
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
         [name]: value,
-        saldo: saldo.toString()
+        saldo: saldo.toString(),
       }));
     }
   };
@@ -198,9 +198,9 @@ const AgregarOrdenTrabajo = () => {
     const telefono = e.target.value;
     if (telefono) {
       const telefonoFormateado = formatearTelefono(telefono);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        telefono: telefonoFormateado
+        telefono: telefonoFormateado,
       }));
     }
   };
@@ -212,27 +212,26 @@ const AgregarOrdenTrabajo = () => {
     return emailRegex.test(correo);
   };
 
-
   const validarFechas = (fechaRecepcion, fechaEntrega) => {
     // Si no hay fecha de recepción, no validar
     if (!fechaRecepcion) return { valido: true };
-    
+
     // Si no hay fecha de entrega, es válido (fecha de entrega es opcional)
     if (!fechaEntrega) return { valido: true };
-    
+
     // Convertir las fechas a objetos Date para comparar
     const fechaRec = new Date(fechaRecepcion);
     const fechaEnt = new Date(fechaEntrega);
-    
+
     // Verificar si la fecha de entrega es anterior a la de recepción
     if (fechaEnt < fechaRec) {
-      return { 
-        valido: false, 
+      return {
+        valido: false,
         mensaje: 'La fecha de entrega no puede ser anterior a la fecha de recepción.',
-        titulo: 'Fecha de Entrega Inválida'
+        titulo: 'Fecha de Entrega Inválida',
       };
     }
-    
+
     return { valido: true };
   };
 
@@ -246,7 +245,7 @@ const AgregarOrdenTrabajo = () => {
         type: 'warning',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
       });
       return false;
     }
@@ -259,7 +258,7 @@ const AgregarOrdenTrabajo = () => {
         type: 'warning',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
       });
       return false;
     }
@@ -272,7 +271,7 @@ const AgregarOrdenTrabajo = () => {
         type: 'warning',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
       });
       return false;
     }
@@ -285,7 +284,7 @@ const AgregarOrdenTrabajo = () => {
         type: 'warning',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
       });
       return false;
     }
@@ -299,11 +298,10 @@ const AgregarOrdenTrabajo = () => {
         type: 'warning',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
       });
       return false;
     }
-
 
     // Validar fechas
     const validacionFechas = validarFechas(formData.fecha_recepcion, formData.fecha_entrega);
@@ -315,7 +313,7 @@ const AgregarOrdenTrabajo = () => {
         type: 'warning',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
       });
       return false;
     }
@@ -339,17 +337,16 @@ const AgregarOrdenTrabajo = () => {
       confirmText: 'Aceptar',
       cancelText: 'Cancelar',
       onConfirm: () => {
-        setPopup(prev => ({ ...prev, isOpen: false }));
+        setPopup((prev) => ({ ...prev, isOpen: false }));
         guardarOrden();
       },
-      onCancel: () => setPopup(prev => ({ ...prev, isOpen: false }))
+      onCancel: () => setPopup((prev) => ({ ...prev, isOpen: false })),
     });
   };
 
   // Función para guardar la orden (lógica original)
   const guardarOrden = async () => {
     try {
-
       // Preparar datos para enviar
       const orderData = {
         correlativo: formData.numero_orden,
@@ -357,19 +354,19 @@ const AgregarOrdenTrabajo = () => {
         direccion: formData.direccion,
         correo: formData.correo,
         telefono: formData.telefono,
-        fecha_recepcion: formData.fecha_recepcion,
-        fecha_entrega: formData.fecha_entrega || null, // Enviar null si está vacío
+        fecha_recepcion: toGuatemalaDateTime(formData.fecha_recepcion),
+        fecha_entrega: formData.fecha_entrega ? toGuatemalaDateTime(formData.fecha_entrega) : null,
         total: parseFloat(formData.total) || 0,
         adelanto: parseFloat(formData.adelanto) || 0,
         saldo: parseFloat(formData.saldo) || 0,
         observaciones: formData.observaciones,
-        imagenes: imagenes.map(img => ({
+        imagenes: imagenes.map((img) => ({
           id: img.id,
           nombre: img.file.name,
-          preview: img.preview
-        }))
+          preview: img.preview,
+        })),
       };
-      
+
       console.log('=== DATOS A ENVIAR ===');
       console.log('Correlativo a enviar:', orderData.correlativo);
       console.log('Tipo:', typeof orderData.correlativo);
@@ -379,20 +376,20 @@ const AgregarOrdenTrabajo = () => {
       console.log('========================');
 
       const response = await createOrden(orderData);
-      
+
       if (response.ok) {
         // Subir imágenes a la base de datos si existen
         if (imagenes.length > 0) {
           const ordenId = response.id; // El backend devuelve { ok: true, id: newOrderId }
           console.log('Subiendo imágenes para orden ID:', ordenId);
-          
+
           try {
             // Subir cada imagen a la base de datos
             for (const imagen of imagenes) {
               await subirImagen(ordenId, imagen.file);
               console.log(`Imagen ${imagen.file.name} subida exitosamente`);
             }
-            
+
             console.log('Todas las imágenes subidas exitosamente');
           } catch (error) {
             console.error('Error subiendo imágenes:', error);
@@ -408,9 +405,9 @@ const AgregarOrdenTrabajo = () => {
           showButtons: true,
           confirmText: 'Aceptar',
           onConfirm: () => {
-            setPopup(prev => ({ ...prev, isOpen: false }));
-            navigate("/ordenes");
-          }
+            setPopup((prev) => ({ ...prev, isOpen: false }));
+            navigate('/ordenes');
+          },
         });
       } else {
         setPopup({
@@ -420,7 +417,7 @@ const AgregarOrdenTrabajo = () => {
           type: 'error',
           showButtons: true,
           confirmText: 'Aceptar',
-          onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+          onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
         });
       }
     } catch (error) {
@@ -432,7 +429,7 @@ const AgregarOrdenTrabajo = () => {
         type: 'error',
         showButtons: true,
         confirmText: 'Aceptar',
-        onConfirm: () => setPopup(prev => ({ ...prev, isOpen: false }))
+        onConfirm: () => setPopup((prev) => ({ ...prev, isOpen: false })),
       });
     }
   };
@@ -444,19 +441,19 @@ const AgregarOrdenTrabajo = () => {
 
   return (
     <div className="orden-container">
-       {/* Header con logo y número de orden */}
+      {/* Header con logo y número de orden */}
       <div className="orden-header">
         <div className="orden-logo">
           <img src={logo} alt="Logo Empresa" />
         </div>
-        
+
         <div className="orden-no-section">
           <div className="orden-no">
             <label>No. Orden</label>
             <div className="orden-no-container">
               <div className="tooltip">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   name="numero_orden"
                   value={formData.numero_orden}
                   onChange={handleInputChange}
@@ -464,21 +461,19 @@ const AgregarOrdenTrabajo = () => {
                   style={{
                     backgroundColor: 'var(--color-bg)',
                     color: 'var(--color-text)',
-                    cursor: 'text'
+                    cursor: 'text',
                   }}
                 />
                 <span className="tooltiptext">Este campo es obligatorio</span>
               </div>
             </div>
           </div>
-          
+
           {/* Sugerencia de correlativo - Ahora abajo del No de Orden */}
           {sugerenciaCorrelativo && (
             <div className="sugerencia-correlativo">
-              <span className="sugerencia-texto">
-                💡 Sugerencia: {sugerenciaCorrelativo}
-              </span>
-              <button 
+              <span className="sugerencia-texto">💡 Sugerencia: {sugerenciaCorrelativo}</span>
+              <button
                 type="button"
                 onClick={aplicarSugerencia}
                 className="btn-aplicar-sugerencia"
@@ -491,9 +486,8 @@ const AgregarOrdenTrabajo = () => {
         </div>
       </div>
 
-  {/* 🔹 Aquí colocamos el título centrado */}
-     <Titulo text="Agregar Orden de Trabajo" size={32} className="titulo" />
-
+      {/* 🔹 Aquí colocamos el título centrado */}
+      <Titulo text="Agregar Orden de Trabajo" size={32} className="titulo" />
 
       {/* Información del paciente */}
       <div className="orden-info">
@@ -501,12 +495,12 @@ const AgregarOrdenTrabajo = () => {
           <div className="orden-field paciente-field">
             <label>Paciente *</label>
             <div className="tooltip">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 name="paciente"
                 value={formData.paciente}
                 onChange={handleInputChange}
-                placeholder="Nombre del paciente" 
+                placeholder="Nombre del paciente"
               />
               <span className="tooltiptext">Este campo es obligatorio</span>
             </div>
@@ -516,24 +510,24 @@ const AgregarOrdenTrabajo = () => {
         <div className="orden-row">
           <div className="orden-field">
             <label>Dirección de domicilio</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="direccion"
               value={formData.direccion}
               onChange={handleInputChange}
-              placeholder="Dirección del paciente" 
+              placeholder="Dirección del paciente"
             />
           </div>
           <div className="orden-field telefono-field">
             <label>Teléfono *</label>
             <div className="tooltip">
-              <input 
-                type="tel" 
+              <input
+                type="tel"
                 name="telefono"
                 value={formData.telefono}
                 onChange={handleInputChange}
                 onBlur={handleTelefonoBlur}
-                placeholder="Número de teléfono" 
+                placeholder="Número de teléfono"
               />
               <span className="tooltiptext">Este campo es obligatorio</span>
             </div>
@@ -543,18 +537,18 @@ const AgregarOrdenTrabajo = () => {
         <div className="orden-row">
           <div className="orden-field correo-field">
             <label>Correo (Opcional)</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               name="correo"
               value={formData.correo}
               onChange={handleInputChange}
-              placeholder="ejemplo@correo.com" 
+              placeholder="ejemplo@correo.com"
             />
           </div>
           <div className="orden-field">
             <label>Fecha Recepción *</label>
-            <input 
-              type="date" 
+            <input
+              type="date"
               name="fecha_recepcion"
               value={formData.fecha_recepcion}
               onChange={handleInputChange}
@@ -564,8 +558,8 @@ const AgregarOrdenTrabajo = () => {
           </div>
           <div className="orden-field">
             <label>Fecha Entrega (Opcional)</label>
-            <input 
-              type="date" 
+            <input
+              type="date"
               name="fecha_entrega"
               value={formData.fecha_entrega}
               onChange={handleInputChange}
@@ -579,47 +573,52 @@ const AgregarOrdenTrabajo = () => {
       <div className="orden-totales">
         <div className="orden-total">
           <label>Total: Q</label>
-          <input 
-            type="number" 
+          <input
+            type="number"
             name="total"
             value={formData.total}
             onChange={handleInputChange}
             step="0.01"
             min="0"
-            placeholder="0.00" 
+            placeholder="0.00"
           />
         </div>
         <div className="orden-adelanto">
           <label>Adelanto: Q</label>
-          <input 
-            type="number" 
+          <input
+            type="number"
             name="adelanto"
             value={formData.adelanto}
             onChange={handleInputChange}
             step="0.01"
             min="0"
-            placeholder="0.00" 
+            placeholder="0.00"
           />
         </div>
         <div className="orden-saldo">
-          <label>Saldo: Q <span className="text-xs text-gray-500">(calculado automáticamente)</span></label>
-          <input 
-            type="number" 
+          <label>
+            Saldo: Q <span className="text-xs text-gray-500">(calculado automáticamente)</span>
+          </label>
+          <input
+            type="number"
             name="saldo"
             value={formData.saldo}
             readOnly
             className="bg-gray-300 text-gray-600 cursor-not-allowed"
             style={{ backgroundColor: '#d1d5db', color: '#4b5563' }}
-            placeholder="0.00" 
+            placeholder="0.00"
           />
         </div>
       </div>
 
       {/* Campo de Observaciones */}
       <div className="orden-observaciones" style={{ position: 'relative', zIndex: 5 }}>
-        <div className="orden-field observaciones-field" style={{ position: 'relative', zIndex: 6 }}>
+        <div
+          className="orden-field observaciones-field"
+          style={{ position: 'relative', zIndex: 6 }}
+        >
           <label>Observaciones</label>
-          <textarea 
+          <textarea
             name="observaciones"
             value={formData.observaciones}
             onChange={handleInputChange}
@@ -640,7 +639,7 @@ const AgregarOrdenTrabajo = () => {
               outline: 'none',
               fontFamily: 'inherit',
               fontSize: '14px',
-              lineHeight: '1.4'
+              lineHeight: '1.4',
             }}
             onFocus={(e) => {
               e.target.style.borderColor = '#007bff';
@@ -658,7 +657,7 @@ const AgregarOrdenTrabajo = () => {
       <div className="orden-fotografias">
         <h3>Fotografías (Opcional)</h3>
         <div className="fotografias-container">
-          <div 
+          <div
             className={`fotografias-upload ${isDragOver ? 'drag-over' : ''}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -690,18 +689,14 @@ const AgregarOrdenTrabajo = () => {
               <div className="imagenes-grid">
                 {imagenes.map((imagen) => (
                   <div key={imagen.id} className="imagen-item">
-                    <img 
-                      src={imagen.preview} 
-                      alt="Preview" 
-                      className="imagen-preview"
-                    />
+                    <img src={imagen.preview} alt="Preview" className="imagen-preview" />
                     <div className="imagen-info">
                       <span className="imagen-nombre">{imagen.file.name}</span>
                       <span className="imagen-tamaño">
                         {(imagen.file.size / 1024).toFixed(1)} KB
                       </span>
                     </div>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => removeImage(imagen.id)}
                       className="imagen-remove"
@@ -719,14 +714,18 @@ const AgregarOrdenTrabajo = () => {
 
       {/* Botones */}
       <div className="agregarorden-actions">
-        <button className="btn-save" onClick={handleGuardar}>Guardar</button>
-        <button className="btn-close" onClick={cerrarFormulario}>Cerrar</button>
+        <button className="btn-save" onClick={handleGuardar}>
+          Guardar
+        </button>
+        <button className="btn-close" onClick={cerrarFormulario}>
+          Cerrar
+        </button>
       </div>
 
       {/* PopUp para mensajes */}
       <PopUp
         isOpen={popup.isOpen}
-        onClose={() => setPopup(prev => ({ ...prev, isOpen: false }))}
+        onClose={() => setPopup((prev) => ({ ...prev, isOpen: false }))}
         title={popup.title}
         message={popup.message}
         type={popup.type}

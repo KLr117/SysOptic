@@ -25,6 +25,7 @@ import {
   getNotificacionEspecificaById,
   deleteNotificacionEspecifica,
 } from '../services/notificacionesService';
+import { toGuatemalaDateTime } from '../utils/dateUtils';
 
 // 🔧 Función auxiliar para obtener URL completa (sin modificar services)
 // 🔧 Función auxiliar para obtener URL completa (sin modificar services)
@@ -807,7 +808,10 @@ export default function Expedientes() {
         console.log('🔄 Actualizando expediente directamente...');
 
         // Preparar datos para actualización (sin fotos en el payload)
-        const expedienteData = { ...formData };
+        const expedienteData = {
+          ...formData,
+          fecha_registro: toGuatemalaDateTime(formData.fecha_registro),
+        };
         delete expedienteData.foto;
 
         // Actualizar expediente
@@ -845,7 +849,10 @@ export default function Expedientes() {
         return;
       } else {
         // Crear nuevo expediente (sin fotos en el payload)
-        const expedienteData = { ...formData };
+        const expedienteData = {
+          ...formData,
+          fecha_registro: toGuatemalaDateTime(formData.fecha_registro),
+        };
 
         // Remover el campo foto del objeto principal (no se envía en el payload)
         delete expedienteData.foto;
