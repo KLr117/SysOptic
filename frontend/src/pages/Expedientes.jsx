@@ -76,6 +76,20 @@ export default function Expedientes() {
   const [expedientes, setExpedientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Estado para fila seleccionada
+  const [filaSeleccionada, setFilaSeleccionada] = useState(null);
+
+  // Función para manejar la selección de filas
+  const handleSeleccionarFila = (expediente) => {
+    if (filaSeleccionada === expediente.pk_id_expediente) {
+      // Si ya está seleccionada, deseleccionar
+      setFilaSeleccionada(null);
+    } else {
+      // Seleccionar nueva fila
+      setFilaSeleccionada(expediente.pk_id_expediente);
+    }
+  };
 
   // Estados para modal de visualización
   const [modalVisible, setModalVisible] = useState(false);
@@ -1294,7 +1308,14 @@ export default function Expedientes() {
               <tbody>
                 {expedientesPaginados.length > 0 ? (
                   expedientesPaginados.map((exp, index) => (
-                    <tr key={exp.pk_id_expediente}>
+                    <tr 
+                      key={exp.pk_id_expediente}
+                      className={filaSeleccionada === exp.pk_id_expediente ? 'fila-seleccionada' : ''}
+                      onClick={() => handleSeleccionarFila(exp)}
+                      style={{ 
+                        cursor: 'pointer'
+                      }}
+                    >
                       <td className="celda-numero">{exp.pk_id_expediente}</td>
                       <td>{exp.correlativo}</td>
                       <td>{exp.nombre}</td>

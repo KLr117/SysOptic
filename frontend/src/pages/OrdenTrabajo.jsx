@@ -46,6 +46,20 @@ const OrdenTrabajo = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notificacionesEstado, setNotificacionesEstado] = useState({});
+  
+  // Estado para fila seleccionada
+  const [filaSeleccionada, setFilaSeleccionada] = useState(null);
+
+  // Función para manejar la selección de filas
+  const handleSeleccionarFila = (orden) => {
+    if (filaSeleccionada === orden.pk_id_orden) {
+      // Si ya está seleccionada, deseleccionar
+      setFilaSeleccionada(null);
+    } else {
+      // Seleccionar nueva fila
+      setFilaSeleccionada(orden.pk_id_orden);
+    }
+  };
 
   // Estados para modal de visualización
   const [modalVisible, setModalVisible] = useState(false);
@@ -600,7 +614,7 @@ const OrdenTrabajo = () => {
           </label>
           <select
             id="sortSelect"
-            className="acciones-select"
+            className="sort-combobox"
             value={sortOption}
             onChange={(e) => handleSortChange(e.target.value)}
             style={{ width: '200px', fontSize: '12px' }}
@@ -689,7 +703,14 @@ const OrdenTrabajo = () => {
           <tbody>
             {ordenesPaginadas.length > 0 ? (
               ordenesPaginadas.map((orden) => (
-                <tr key={orden.pk_id_orden}>
+                <tr 
+                  key={orden.pk_id_orden}
+                  className={filaSeleccionada === orden.pk_id_orden ? 'fila-seleccionada' : ''}
+                  onClick={() => handleSeleccionarFila(orden)}
+                  style={{ 
+                    cursor: 'pointer'
+                  }}
+                >
                   <td>{orden.pk_id_orden}</td>
                   <td>{orden.correlativo}</td>
                   <td>{orden.paciente}</td>
