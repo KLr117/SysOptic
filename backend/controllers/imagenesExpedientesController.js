@@ -52,7 +52,7 @@ async function subirAHostinger(localPath, subcarpeta) {
 
   try {
     const response = await fetch(
-      "https://lightsteelblue-termite-871777.hostingersite.com/upload-handler.php",
+      "https://palegoldenrod-ibex-328556.hostingersite.com/upload-handler.php",
       { method: "POST", body: form }
     );
 
