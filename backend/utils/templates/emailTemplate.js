@@ -11,12 +11,9 @@ export const buildEmailTemplate = ({ cuerpo }) => {
 
   // 📋 Datos de contacto
   const brand = process.env.MAIL_BRAND_NAME || "Fundación Visual Óptica";
-  const address =
-    process.env.MAIL_BRAND_ADDRESS ||
-    "4ta. Avenida 10-23 zona 1, Guatemala, Guatemala";
+  const address = "12 Calle 3-44 Zona 1, Guatemala, Guatemala";
   const email = process.env.MAIL_BRAND_EMAIL || "fundacionvisual@gmail.com";
   const phone1 = process.env.MAIL_BRAND_PHONE1 || "2220-7521";
-  const phone2 = process.env.MAIL_BRAND_PHONE2 || "2250-0748";
   const whatsapp = process.env.MAIL_BRAND_WHATSAPP || "58770030";
   const whatsappDisplay = whatsapp.replace(/(\d{4})(\d{4})/, "$1-$2");
   const facebookUrl =
@@ -28,9 +25,7 @@ export const buildEmailTemplate = ({ cuerpo }) => {
   const colorFondo = "#f6f7fb";
 
   // 🗺️ Enlaces de mapas
-  const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    address
-  )}`;
+  const googleMapsLink = "https://maps.app.goo.gl/ZN1BQ5pthny4b4No8";
   const wazeLink = `https://waze.com/ul?q=${encodeURIComponent(address)}`;
 
   // SVGs (compatibles con correo)
@@ -88,7 +83,7 @@ export const buildEmailTemplate = ({ cuerpo }) => {
               <a href="${googleMapsLink}" style="color:${colorPrincipal}; font-weight:bold;" target="_blank">📍 Ver en Google Maps</a> |
               <a href="${wazeLink}" style="color:${colorPrincipal}; font-weight:bold;" target="_blank">🚗 Abrir en Waze</a><br>
               ✉️ <strong>E-mail:</strong> ${email}<br>
-              ☎️ <strong>Teléfonos:</strong> ${phone1} / ${phone2}<br>
+              ☎️ <strong>Teléfono:</strong> ${phone1} <br>
 
               <!-- WhatsApp con ícono -->
               ${whatsappIcon}

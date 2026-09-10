@@ -777,14 +777,6 @@ export default function Expedientes() {
       return;
     }
 
-    // Validación especial para el campo nombre - solo letras y espacios
-    if (name === 'nombre') {
-      // Permitir solo letras, espacios y acentos
-      const soloLetras = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
-      setFormData({ ...formData, [name]: soloLetras });
-      return;
-    }
-
     // Validación especial para el campo teléfono - formato internacional
     if (name === 'telefono') {
       // Permitir números, +, (), espacios y guiones
