@@ -18,23 +18,44 @@ export const testMail = async (req, res) => {
       cuerpo: body || "Este es un correo de prueba desde el sistema SysOptic.",
     });
 
-    // 📤 Enviar correo
-    await sendEmail({
+    // 📤 Capturamos el resultado real retornado por sendEmail
+    const result = await sendEmail({
       to,
       subject: subject || "Correo de prueba - Fundación Visual Óptica",
       html,
       fromName: "Fundación Visual Óptica",
     });
 
-    res.json({
+    // 🔍 Si sendEmail retornó simulación o fallo, lo exponemos directamente
+    if (result.simulated) {
+      return res.status(200).json({
+        success: false,
+        reason: "MAIL_ENABLED_FALSE",
+        message: "El backend tiene MAIL_ENABLED apagado o en false en Railway.",
+        result,
+      });
+    }
+
+    if (!result.success) {
+      return res.status(502).json({
+        success: false,
+        reason: "GMAIL_API_ERROR",
+        message: "Fallo directo de la API de Gmail.",
+        error: result.error,
+        result,
+      });
+    }
+
+    return res.json({
       success: true,
-      message: `Correo enviado correctamente a ${to}.`,
+      message: `Correo enviado y confirmado por Gmail a ${to}.`,
+      result,
     });
   } catch (error) {
-    console.error("❌ Error al enviar correo de prueba:", error);
-    res.status(500).json({
+    console.error("❌ Error no controlado:", error);
+    return res.status(500).json({
       success: false,
-      message: "Error al enviar el correo de prueba.",
+      message: "Error en el servidor al procesar la solicitud.",
       error: error.message,
     });
   }
